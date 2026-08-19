@@ -5,8 +5,8 @@
   "entries": {
     "Compiler.Lockfile.LockEntry": {
       "file": "Compiler/Lockfile.py",
-      "text": "stores, per named entry, its file, text hash, and code hash",
-      "text_hash": "c31fb3624495f3257d63ba94a67b89b0bcfcfb7afbe056b8b59cb7fac3b6225b",
+      "text": "stores, per named entry, its file, text hash, code hash, and an optional last-change disposition carried from the most recent finalize",
+      "text_hash": "ce1de2ab847e849b87489273f639051b71a2596bdddecc5588ce651651d97cdd",
       "code_hash": "30f675d30ed4fd587c8d2cfe4c619f1824d8e8c92560d769aeb4c68d534b0103"
     },
     "Compiler.Lockfile.LOCKFILE_SCHEMA_VERSION": {
@@ -35,15 +35,15 @@
     },
     "Compiler.LockfileBuilder.build": {
       "file": "Compiler/LockfileBuilder.py",
-      "text": "accepts an llmlang file path and a lockfile output path\nbuilds a lockfile by using Parser to read llmlang, Extractor to locate each entry's code, and Lockfile to record a text and code hash per entry\nshould reproduce the same hashes when run again against an unchanged codebase\nreturns the built lock data",
-      "text_hash": "a3018ce49543ea6a15ef3eab7788d2d6b5a593a6f2f0862bf727d90c2e0bdc25",
-      "code_hash": "5253d321c9734173a139616dcbe0be3b96aa17c6e71b6b9019c6367a9518d403"
+      "text": "accepts an llmlang file path, a lockfile output path, and an optional change manifest\nbuilds a lockfile by using Parser to read llmlang, Extractor to locate each entry's code, and Lockfile to record a text and code hash per entry\nwhen a manifest is given, uses Checker to find every named entry currently flagged, and refuses to build unless the manifest covers every one of them with a non-empty disposition\nstores each entry's disposition from the manifest, or carries forward its prior disposition unchanged for an entry the manifest didn't touch\nshould reproduce the same hashes when run again against an unchanged codebase\nreturns the built lock data",
+      "text_hash": "a99e7c7489fbe1725c8cfed1332ec7c7285b11c715889d67e19acf4b46b3e28f",
+      "code_hash": "9d9470671e1501d2fb3e36d7f6cf4092ce020fcc750dea1a61d4ca564447327f"
     },
     "Compiler.LockfileChecker.check": {
       "file": "Compiler/LockfileChecker.py",
-      "text": "accepts an llmlang file path and a lockfile path\nchecks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as dirty, missing or corrupt, or unchanged\nshould report an entry as dirty when its llmlang text changed since the last build\nshould report an entry as missing or corrupt when its handle is missing from the code\nshould report an unmodified codebase as fully clean\nreturns whether everything checked out clean",
-      "text_hash": "cff181918027640b7bddc13eeab3a2dd0db03e3f1d1389d99a4d32586d28e69f",
-      "code_hash": "de40bb1ae4669753344cb8d4190f3b8dac742630936b7432e1aef876a9742f18"
+      "text": "accepts an llmlang file path and a lockfile path\nchecks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as dirty, missing or corrupt, or unchanged\nshould report an entry as dirty when its llmlang text changed since the last build\nshould report an entry as missing or corrupt when its handle is missing from the code\nshould report an unmodified codebase as fully clean\nreturns whether everything checked out clean, and the set of named-entry tracking keys currently flagged for any reason",
+      "text_hash": "1c8678738746f964a4980467f601046b0aa7ff0240942dca3bbe73515315825e",
+      "code_hash": "9c48d3826f84c172a31c81624d7cec85df5736b203dc2547c0c525450cda5e08"
     }
   },
   "class_bullets": {}

@@ -8,7 +8,7 @@ llmlang is a plain-text architecture-description language that sits between a pr
 
 Explicitly not in scope for llmlang itself: function signatures, control flow, algorithms — anything at the logic level. That stays the compiler's (the LLM's) discretion, bounded by the mechanisms in §3.
 
-**The compiler isn't software to build — it's an LLM, prompted correctly.** Given a dirty entry's bullets and the surrounding context, an LLM already writes the code; that's exactly what happened by hand, in conversation, for every example in this repo. Everything described in §4 (the lockfile/tooling) verifies *consistency* between already-written llmlang and already-written code — it doesn't invoke an LLM itself, so nothing here runs that step automatically yet. What's actually missing is a portable, repeatable procedure for doing it consistently — the forward-direction counterpart to the onboarding methodology (§5), not a new engine. See §7.
+**The compiler isn't software to build — it's an LLM, prompted correctly.** Given a dirty entry's bullets and the surrounding context, an LLM already writes the code; that's exactly what happened by hand, in conversation, for every example in this repo. Everything described in §4 (the lockfile/tooling) verifies *consistency* between already-written llmlang and already-written code, and, via `--finalize` (§4.4), guarantees nothing gets silently skipped while an LLM works through a batch of changes — but it doesn't invoke an LLM itself. See §7.
 
 ## 2. Precedents (context, not a mechanism to copy)
 
@@ -93,6 +93,16 @@ Two version fields, both lockfile-only:
 
 A hash mismatch is not a verdict, it's a prompt: "go look at what changed in this region." A false positive costs one quick review, not a wrong result — this is why the deterministic (non-heuristic), fairly coarse handle-region rule in §4.1 is acceptable rather than a problem to solve more precisely.
 
+### 4.4 Finalize — a guarded rebuild that can't silently skip an entry
+
+Plain rebuild (`build.py <file>.llm`, no flags) is unguarded: it hashes whatever code currently sits at each handle and stamps it as correct, with no comparison to the prior lockfile at all. That's fine for bootstrapping a brand new lockfile, or for a human directly supervising their own paired edit — but it's a real gap for a multi-entry LLM-driven pass: if 4 of 5 flagged entries get fixed and one is forgotten, plain rebuild will happily hash the forgotten entry's *stale* code alongside its *new* bullets and record that pair as consistent, and the next `--check` reports clean even though that entry no longer matches its spec.
+
+`build.py <file>.llm --finalize <manifest.json>` closes that gap. The manifest is `{tracking_key: "free text describing what changed, or why nothing needed to"}` — one entry per currently flagged key. Before writing anything, finalize re-runs the same check `--check` does and refuses outright, listing exactly which keys are missing, unless every currently flagged named entry has a non-empty disposition in the manifest. There's no fixed vocabulary for the disposition text (same "not a fixed vocabulary" stance as Hints) — the only mechanically enforced thing is *presence*, not content.
+
+This guarantees **coverage** (nothing gets silently skipped), not **correctness** (whether a disposition is actually true). Those are different problems: a hash — or a human-readable disposition string — can prove an entry was addressed, but neither can prove it was addressed *correctly*, since an LLM could fabricate a disposition as easily as it could write wrong code. Correctness stays exactly where it's always been in this design: a human reviewing the diff. What finalize adds is that an omission can no longer hide — a forgotten entry shows up as a specific, named gap in the manifest, not silent drift discovered later.
+
+Each entry's disposition, once accepted, is stored on it (`LockEntry`'s `last_change` field) and carried forward unchanged on later rebuilds until that entry is flagged again — an entry that wasn't touched in a given round doesn't need to be re-justified in that round's manifest.
+
 ## 5. Onboarding an existing codebase
 
 Concrete step-by-step methodology (extraction and ongoing sync, both directions of drift) lives in [onboarding-spec.md](onboarding-spec.md). This section covers the design rationale; that document is the actual procedure to follow.
@@ -120,14 +130,14 @@ Built and verified end-to-end (in [`compiler/`](compiler/)):
 
 - `Compiler/Parser.py` — the grammar in [the format spec](llmlang-format.md), stack-based (item depth varies by context, so a fixed-depth parser doesn't work).
 - `Compiler/Extractor.py` — handle-based code lookup (§4.1).
-- `Compiler/LockfileBuilder.py` / `LockfileChecker.py` — the lockfile and all three cascades in §4.
-- `build.py` — generic CLI (`build.py <file>.llm [--check]`), works on any llmlang file, self-hosts (compiles its own `compiler.llm`).
+- `Compiler/LockfileBuilder.py` / `LockfileChecker.py` — the lockfile, all three cascades in §4, and the guarded `--finalize` path (§4.4).
+- `build.py` — generic CLI (`build.py <file>.llm [--check | --finalize <manifest.json>]`), works on any llmlang file, self-hosts (compiles its own `compiler.llm`).
 
-**Not built**: an automated harness that takes `LockfileChecker`'s DIRTY list and drives an LLM to write the corresponding code for each entry. The compiler itself isn't missing software — an LLM reading a dirty entry's bullets and writing the code is exactly what happened, by hand, for every example in this repo. What's missing is (1) a portable instructions document encoding the rules in §3 precisely enough for any LLM to follow as a repeatable procedure — the same role `onboarding-spec.md` plays for the reverse direction — and (2), optionally, something that invokes that procedure automatically instead of by hand in conversation; a VSCode Chat Participant reading such a document is one sketched integration point for that, not yet built.
+Compiling (llmlang → code) still isn't automated, but that's not missing software — it's an LLM given the format spec, this doc, and the target `.llm` file, writing code that satisfies every bullet. That's exactly what happened, by hand, for every example in this repo, and it doesn't need a separate portable instructions document restating rules the format spec and this doc already state in full — that would just be the duplication §3.5's single-sourcing discipline exists to avoid. What `--finalize` actually adds is narrower and more useful: a mechanical guarantee that whoever does the compiling, human or LLM, can't silently skip an entry while doing it.
 
 ## 8. Summary of open questions
 
 - §3.2 — no fixed rule for which decisions are "significant enough" to require a proposal; an accepted judgment call.
 - §6 — no mitigation for correct-but-flawed generated code that hasn't triggered a bug report yet.
-- §7 — the forward-direction instructions document (the compiler procedure itself, mirroring `onboarding-spec.md`) doesn't exist yet, and there's no automated harness driving an LLM against a DIRTY list; only the verification tooling and by-hand compilation exist so far.
+- §4.4 — `--finalize` guarantees coverage (nothing silently skipped), not correctness (whether a disposition is true); a fabricated disposition is still possible, and still ultimately a human-review problem, same as generated code always has been.
 - Not yet touched: what compile-time LLM context looks like in practice (how much of the rest of the codebase a given entry's compile step sees), what language(s) beyond Python/HTML/JS the tooling has been proven against, the split-a-method direction of the 1:1 rule (only the merge-bullets direction has come up in practice so far).

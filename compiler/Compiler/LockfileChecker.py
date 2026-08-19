@@ -36,11 +36,11 @@ def _policy_in_scope(policy_scope: tuple, entry_file: str) -> bool:
     return entry_file == prefix or entry_file.startswith(prefix + "/") or entry_file.startswith(prefix + ".")
 
 
-# checks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as dirty, missing or corrupt, or unchanged [llm:check]
-def check(llmlang_path: Path, lockfile_path: Path) -> bool:
+# checks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as dirty, missing or corrupt, or unchanged, and returns the set of named-entry tracking keys currently flagged for any reason [llm:check]
+def check(llmlang_path: Path, lockfile_path: Path) -> tuple:
     if not lockfile_path.exists():
         print("No lockfile found.")
-        return False
+        return False, set()
 
     lock = json.loads(lockfile_path.read_text())
 
@@ -50,7 +50,7 @@ def check(llmlang_path: Path, lockfile_path: Path) -> bool:
             f"{lock.get('lockfile_schema_version')!r}, expected {LOCKFILE_SCHEMA_VERSION}). "
             f"Rebuild it."
         )
-        return False
+        return False, set()
 
     root = parse(llmlang_path)
     ok = True
@@ -129,4 +129,4 @@ def check(llmlang_path: Path, lockfile_path: Path) -> bool:
 
     if ok:
         print("OK — lockfile matches llmlang and code.")
-    return ok
+    return ok, flagged_entries

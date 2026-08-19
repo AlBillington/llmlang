@@ -1,13 +1,25 @@
 """Builds a lockfile: hashes every named entry's combined bullets and
 located code, every class/file-level bullet group's combined bullets,
 and every policy's text. Class-level bullet groups and policies have no
-code location of their own, so they're tracked with text_hash only."""
+code location of their own, so they're tracked with text_hash only.
+
+A build may optionally be given a change manifest - {tracking_key: "free
+text describing what changed, or why nothing needed to"} - covering a
+round of edits. When one is given, every named entry Checker currently
+flags (DIRTY, MISSING/CORRUPT, or NEEDS REVIEW) must have a non-empty
+entry in it, or the build refuses outright and lists exactly which keys
+are missing, rather than silently accepting an entry nobody actually
+looked at. This only guarantees every flagged entry was *addressed* -
+it says nothing about whether the disposition given is true; that's
+still a human-review question, same as everything else generated code
+isn't automatically trusted for."""
 import hashlib
 import json
 from pathlib import Path
 
 from Compiler.Extractor import extract_by_handle
 from Compiler.Lockfile import LOCKFILE_SCHEMA_VERSION, RULESET_VERSION
+from Compiler.LockfileChecker import check
 from Compiler.Parser import parse, walk_class_bullet_groups, walk_entries, walk_policies
 
 
@@ -19,8 +31,23 @@ def _combined(bullets: list) -> str:
     return "\n".join(bullets)
 
 
-# builds a lockfile by using Parser to read llmlang, Extractor to locate each entry's code, and Lockfile to record a text and code hash per entry [llm:build]
-def build(llmlang_path: Path, lockfile_path: Path):
+# builds a lockfile by using Parser to read llmlang, Extractor to locate each entry's code, and Lockfile to record a text and code hash per entry, optionally requiring a change manifest covering every currently flagged entry first [llm:build]
+def build(llmlang_path: Path, lockfile_path: Path, manifest: dict = None):
+    if manifest is not None:
+        ok, flagged_entries = check(llmlang_path, lockfile_path)
+        if not ok and not flagged_entries:
+            raise ValueError(
+                "finalize refused: no valid lockfile to check against "
+                "(missing, or schema out of date) - bootstrap with a plain rebuild first"
+            )
+        missing = flagged_entries - {k for k, v in manifest.items() if v}
+        if missing:
+            raise ValueError(
+                f"finalize refused: no disposition given for currently flagged entries: {sorted(missing)}"
+            )
+
+    old_lock = json.loads(lockfile_path.read_text()) if lockfile_path.exists() else {}
+
     root = parse(llmlang_path)
     lock = {
         "lockfile_schema_version": LOCKFILE_SCHEMA_VERSION,
@@ -42,12 +69,19 @@ def build(llmlang_path: Path, lockfile_path: Path):
         if code is None:
             print(f"WARNING: no handle [llm:{handle_key}] found for {tracking_key} in {file_rel}")
             continue
-        lock["entries"][tracking_key] = {
+        entry_record = {
             "file": file_rel,
             "text": text,
             "text_hash": _sha256(text),
             "code_hash": _sha256(code),
         }
+        if manifest is not None and manifest.get(tracking_key):
+            entry_record["last_change"] = manifest[tracking_key]
+        else:
+            prior = old_lock.get("entries", {}).get(tracking_key, {}).get("last_change")
+            if prior is not None:
+                entry_record["last_change"] = prior
+        lock["entries"][tracking_key] = entry_record
 
     for tracking_key, sibling_keys, bullets in walk_class_bullet_groups(root):
         text = _combined(bullets)
