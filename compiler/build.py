@@ -10,18 +10,21 @@ names are its path.
 unless <stem>.llmchanges.json - a real, git-tracked sibling file, not
 a throwaway CLI argument - covers every entry currently flagged by
 --check. That file is authored the same way the .llm file itself is
-(by hand or by an LLM, reviewed via its own git diff), never written
-by this tool; --finalize only reads it. Plain (no-flag) rebuild stays
-unguarded, for bootstrapping a brand new lockfile or for a human
-directly supervising their own edit.
+(by hand or by an LLM, reviewed via its own git diff) - a fresh entry
+is just {key: "disposition text"}. finalize() upgrades an accepted
+entry into a hash-bound record and prunes any entry whose hash no
+longer matches current reality, but never invents or edits the
+disposition text itself. Plain (no-flag) rebuild stays completely
+unguarded and has no notion of dispositions at all, for bootstrapping
+a brand new lockfile or for a human directly supervising their own
+edit.
 """
-import json
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from Compiler.LockfileBuilder import build
+from Compiler.LockfileBuilder import build, finalize
 from Compiler.LockfileChecker import check
 
 
@@ -35,9 +38,8 @@ def main():
 
     if "--finalize" in sys.argv:
         changes_path = llmlang_path.parent / (llmlang_path.stem + ".llmchanges.json")
-        manifest = json.loads(changes_path.read_text()) if changes_path.exists() else {}
         try:
-            build(llmlang_path, lockfile_path, manifest=manifest)
+            finalize(llmlang_path, lockfile_path, changes_path)
         except ValueError as e:
             print(e)
             sys.exit(1)

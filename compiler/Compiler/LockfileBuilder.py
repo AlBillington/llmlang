@@ -3,24 +3,13 @@ located code, every class/file-level bullet group's combined bullets,
 and every policy's text. Class-level bullet groups and policies have no
 code location of their own, so they're tracked with text_hash only.
 
-A build may optionally be given a change manifest - {tracking_key: "free
-text describing what changed, or why nothing needed to"} - covering a
-round of edits. When one is given, every named entry Checker currently
-flags (DIRTY, MISSING/CORRUPT, or NEEDS REVIEW) must have a non-empty
-entry in it, or the build refuses outright and lists exactly which keys
-are missing, rather than silently accepting an entry nobody actually
-looked at. This only guarantees every flagged entry was *addressed* -
-it says nothing about whether the disposition given is true; that's
-still a human-review question, same as everything else generated code
-isn't automatically trusted for.
-
-An accepted disposition is stored bound to the exact text_hash/code_hash
-it was recorded against, not as a bare string - so a later unguarded
-rebuild that lets an entry drift again can't silently carry the old
-disposition forward next to hashes it was never actually about. A
-carried-forward disposition is only kept when both hashes still match
-what they were when it was written; otherwise it's dropped rather than
-misrepresented as still describing the current state."""
+Two entry points:
+- build() is the plain, unguarded path - hashes whatever's currently
+  there and writes it, no comparison to any prior state, no awareness
+  of dispositions at all. For bootstrapping a brand new lockfile, or a
+  human directly supervising their own paired edit.
+- finalize() is the guarded incremental path - see its own docstring.
+"""
 import hashlib
 import json
 from pathlib import Path
@@ -39,37 +28,11 @@ def _combined(bullets: list) -> str:
     return "\n".join(bullets)
 
 
-# builds a lockfile by using Parser to read llmlang, Extractor to locate each entry's code, and Lockfile to record a text and code hash per entry, optionally requiring a change manifest covering every currently flagged entry first [llm:build]
-def build(llmlang_path: Path, lockfile_path: Path, manifest: dict = None):
-    if manifest is not None:
-        ok, flagged_entries = check(llmlang_path, lockfile_path)
-        if not ok and not flagged_entries:
-            raise ValueError(
-                "finalize refused: no valid lockfile to check against "
-                "(missing, or schema out of date) - bootstrap with a plain rebuild first"
-            )
-        missing = flagged_entries - {k for k, v in manifest.items() if v}
-        if missing:
-            raise ValueError(
-                f"finalize refused: no disposition given for currently flagged entries: {sorted(missing)}"
-            )
-
-    old_lock = json.loads(lockfile_path.read_text()) if lockfile_path.exists() else {}
-
-    root = parse(llmlang_path)
-    lock = {
-        "lockfile_schema_version": LOCKFILE_SCHEMA_VERSION,
-        "ruleset_version": RULESET_VERSION,
-        "policies": {},
-        "entries": {},
-        "class_bullets": {},
-    }
-
-    for scope, i, text in walk_policies(root):
-        scope_str = ".".join(scope) if scope else "root"
-        lock["policies"].setdefault(scope_str, {})
-        lock["policies"][scope_str][f"policy[{i}]"] = {"text": text, "text_hash": _sha256(text)}
-
+def _hash_all_entries(llmlang_path: Path, root) -> dict:
+    """tracking_key -> (file_rel, text, text_hash, code_hash) for every
+    named entry, computed fresh from the current llmlang text and code -
+    never from any prior lockfile."""
+    result = {}
     for file_rel, handle_key, tracking_key, bullets in walk_entries(root):
         text = _combined(bullets)
         file_path = llmlang_path.parent / file_rel
@@ -77,41 +40,102 @@ def build(llmlang_path: Path, lockfile_path: Path, manifest: dict = None):
         if code is None:
             print(f"WARNING: no handle [llm:{handle_key}] found for {tracking_key} in {file_rel}")
             continue
-        text_hash = _sha256(text)
-        code_hash = _sha256(code)
-        entry_record = {
-            "file": file_rel,
-            "text": text,
-            "text_hash": text_hash,
-            "code_hash": code_hash,
-        }
-        if manifest is not None and manifest.get(tracking_key):
-            entry_record["last_change"] = {
-                "disposition": manifest[tracking_key],
-                "for_text_hash": text_hash,
-                "for_code_hash": code_hash,
-            }
-        else:
-            prior = old_lock.get("entries", {}).get(tracking_key, {}).get("last_change")
-            if (
-                isinstance(prior, dict)
-                and prior.get("for_text_hash") == text_hash
-                and prior.get("for_code_hash") == code_hash
-            ):
-                # still describes exactly this state - carry it forward
-                entry_record["last_change"] = prior
-            # else: hashes moved since this disposition was recorded (most
-            # likely via an unguarded plain rebuild) - drop it rather than
-            # silently re-stamp a claim next to state it no longer describes
-        lock["entries"][tracking_key] = entry_record
+        result[tracking_key] = (file_rel, text, _sha256(text), _sha256(code))
+    return result
 
+
+def _policies_and_class_bullets(root) -> tuple:
+    policies = {}
+    for scope, i, text in walk_policies(root):
+        scope_str = ".".join(scope) if scope else "root"
+        policies.setdefault(scope_str, {})
+        policies[scope_str][f"policy[{i}]"] = {"text": text, "text_hash": _sha256(text)}
+
+    class_bullets = {}
     for tracking_key, sibling_keys, bullets in walk_class_bullet_groups(root):
         text = _combined(bullets)
-        lock["class_bullets"][tracking_key] = {
+        class_bullets[tracking_key] = {
             "text": text,
             "text_hash": _sha256(text),
             "depends_on": sibling_keys,
         }
+    return policies, class_bullets
+
+
+# builds a lockfile by using Parser to read llmlang, Extractor to locate each entry's code, and Lockfile to record a text and code hash per entry [llm:build]
+def build(llmlang_path: Path, lockfile_path: Path):
+    root = parse(llmlang_path)
+    hashed = _hash_all_entries(llmlang_path, root)
+    policies, class_bullets = _policies_and_class_bullets(root)
+
+    lock = {
+        "lockfile_schema_version": LOCKFILE_SCHEMA_VERSION,
+        "ruleset_version": RULESET_VERSION,
+        "policies": policies,
+        "entries": {
+            key: {"file": file_rel, "text": text, "text_hash": text_hash, "code_hash": code_hash}
+            for key, (file_rel, text, text_hash, code_hash) in hashed.items()
+        },
+        "class_bullets": class_bullets,
+    }
+    lockfile_path.write_text(json.dumps(lock, indent=2))
+    return lock
+
+
+# guards an incremental rebuild against silently skipping a flagged entry, reading and updating a change manifest bound to the exact hashes it describes [llm:finalize]
+# known gap: an entry flagged NEEDS REVIEW by an upstream @policy: change (not by its own text/code changing) can be satisfied by a disposition whose hash still matches, since the entry's own hash never moved - this doesn't force a fresh look at whether it still complies with the changed policy, only proves nothing else about it changed unexpectedly
+def finalize(llmlang_path: Path, lockfile_path: Path, changes_path: Path):
+    ok, flagged_entries = check(llmlang_path, lockfile_path)
+    if not ok and not flagged_entries:
+        raise ValueError(
+            "finalize refused: no valid lockfile to check against "
+            "(missing, or schema out of date) - bootstrap with a plain rebuild first"
+        )
+
+    changes = json.loads(changes_path.read_text()) if changes_path.exists() else {}
+
+    root = parse(llmlang_path)
+    hashed = _hash_all_entries(llmlang_path, root)
+    policies, class_bullets = _policies_and_class_bullets(root)
+
+    new_changes = {}
+    resolved = {}
+    for key, value in changes.items():
+        if key not in hashed:
+            continue  # orphaned - this entry no longer exists in the llmlang tree
+        _, _, text_hash, code_hash = hashed[key]
+        if isinstance(value, dict):
+            if value.get("for_text_hash") == text_hash and value.get("for_code_hash") == code_hash:
+                # still describes exactly the current state - keep it
+                new_changes[key] = value
+                resolved[key] = value
+            # else: stale - the entry moved on since this was recorded, drop it
+        elif isinstance(value, str) and value:
+            # fresh submission - stamp it against the current state
+            stamped = {"disposition": value, "for_text_hash": text_hash, "for_code_hash": code_hash}
+            new_changes[key] = stamped
+            resolved[key] = stamped
+        # else: empty or malformed value, drop it
+
+    missing = flagged_entries - resolved.keys()
+    if missing:
+        raise ValueError(
+            f"finalize refused: no disposition given for currently flagged entries: {sorted(missing)}"
+        )
+
+    lock = {
+        "lockfile_schema_version": LOCKFILE_SCHEMA_VERSION,
+        "ruleset_version": RULESET_VERSION,
+        "policies": policies,
+        "entries": {},
+        "class_bullets": class_bullets,
+    }
+    for key, (file_rel, text, text_hash, code_hash) in hashed.items():
+        entry_record = {"file": file_rel, "text": text, "text_hash": text_hash, "code_hash": code_hash}
+        if key in resolved:
+            entry_record["last_change"] = resolved[key]
+        lock["entries"][key] = entry_record
 
     lockfile_path.write_text(json.dumps(lock, indent=2))
+    changes_path.write_text(json.dumps(new_changes, indent=2))
     return lock

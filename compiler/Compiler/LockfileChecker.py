@@ -82,14 +82,16 @@ def check(llmlang_path: Path, lockfile_path: Path) -> tuple:
         text = _combined(bullets)
         entry = lock.get("entries", {}).get(tracking_key)
 
+        location = f"{tracking_key} — {file_rel} [llm:{handle_key}]"
+
         if entry is None:
-            print(f"MISSING in lockfile: {tracking_key}")
+            print(f"MISSING in lockfile: {location}")
             ok = False
             flagged_entries.add(tracking_key)
             continue
 
         if _sha256(text) != entry["text_hash"]:
-            print(f"DIRTY (spec changed, needs recompile): {tracking_key}")
+            print(f"DIRTY (spec changed, needs recompile): {location}")
             ok = False
             flagged_entries.add(tracking_key)
             continue
@@ -97,15 +99,15 @@ def check(llmlang_path: Path, lockfile_path: Path) -> tuple:
         file_path = llmlang_path.parent / file_rel
         code = extract_by_handle(file_path, handle_key)
         if code is None:
-            print(f"MISSING/CORRUPT (handle [llm:{handle_key}] not found): {tracking_key}")
+            print(f"MISSING/CORRUPT (handle [llm:{handle_key}] not found): {location}")
             ok = False
             flagged_entries.add(tracking_key)
         elif _sha256(code) != entry["code_hash"]:
-            print(f"MISSING/CORRUPT (code changed unexpectedly): {tracking_key}")
+            print(f"MISSING/CORRUPT (code changed unexpectedly): {location}")
             ok = False
             flagged_entries.add(tracking_key)
         elif any(_policy_in_scope(scope, file_rel) for scope in changed_policy_scopes):
-            print(f"NEEDS REVIEW (upstream policy changed): {tracking_key}")
+            print(f"NEEDS REVIEW (upstream policy changed): {location}")
             ok = False
             flagged_entries.add(tracking_key)
 

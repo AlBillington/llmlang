@@ -35,15 +35,21 @@
     },
     "Compiler.LockfileBuilder.build": {
       "file": "Compiler/LockfileBuilder.py",
-      "text": "accepts an llmlang file path, a lockfile output path, and an optional change manifest\nbuilds a lockfile by using Parser to read llmlang, Extractor to locate each entry's code, and Lockfile to record a text and code hash per entry\nwhen a manifest is given, uses Checker to find every named entry currently flagged, and refuses to build unless the manifest covers every one of them with a non-empty disposition\nstores each manifest entry's disposition bound to that entry's current text hash and code hash\nfor an entry the manifest didn't touch, carries its prior disposition forward only if both hashes still match what they were when it was recorded; otherwise drops it rather than misrepresenting it as still describing the current state\nshould reproduce the same hashes when run again against an unchanged codebase\nreturns the built lock data",
-      "text_hash": "89b08136682807179b09c3c59e158f05301a077b5b06f2e478081f276cb7663c",
-      "code_hash": "5f28574f22228cca800f687d314fb4434bd6cbeae61d7164090ff44f7f9f5c15"
+      "text": "accepts an llmlang file path and a lockfile output path\nbuilds a lockfile by using Parser to read llmlang, Extractor to locate each entry's code, and Lockfile to record a text and code hash per entry\nhas no notion of dispositions or a change manifest at all; never reads or writes anything but the lockfile itself\nshould reproduce the same hashes when run again against an unchanged codebase\nreturns the built lock data",
+      "text_hash": "8514c410ce67ce7afab7e75a87d7853fe46395f62086f43fc39251807a9939e8",
+      "code_hash": "0290c121b1ce2b7cdcb9dd6efa367d5e193867d7829ccd9397140981dd9a6029"
+    },
+    "Compiler.LockfileBuilder.finalize": {
+      "file": "Compiler/LockfileBuilder.py",
+      "text": "accepts an llmlang file path, a lockfile output path, and a change manifest file path\nuses Checker to find every named entry currently flagged against the existing lockfile, and refuses to write anything unless the change manifest covers every one of them with a non-empty disposition\naccepts a fresh disposition in the manifest as a plain string, and stamps it with the entry's current text hash and code hash\nfor a manifest entry that's already stamped, keeps it only if both hashes still match the entry's current state; otherwise drops it as stale, along with any entry whose key no longer exists in the llmlang tree at all\nbuilds every hash and disposition fresh from the current llmlang text, current code, and current manifest only; never carries anything forward from the lockfile's own prior content\nwrites both the new lockfile and the updated (stamped and pruned) manifest file, but never alters a disposition's own text\nreturns the built lock data",
+      "text_hash": "4e06fe39902e9abc730da0b3c36abadd9cdb00fe678aa7e0ddb0e4bd28be8209",
+      "code_hash": "f51316307ed87fe3d0eda21eb5a99d63323808eabc0649211cb389744ad9e7a1"
     },
     "Compiler.LockfileChecker.check": {
       "file": "Compiler/LockfileChecker.py",
-      "text": "accepts an llmlang file path and a lockfile path\nchecks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as dirty, missing or corrupt, or unchanged\nshould report an entry as dirty when its llmlang text changed since the last build\nshould report an entry as missing or corrupt when its handle is missing from the code\nshould report an unmodified codebase as fully clean\nreturns whether everything checked out clean, and the set of named-entry tracking keys currently flagged for any reason",
-      "text_hash": "1c8678738746f964a4980467f601046b0aa7ff0240942dca3bbe73515315825e",
-      "code_hash": "9c48d3826f84c172a31c81624d7cec85df5736b203dc2547c0c525450cda5e08"
+      "text": "accepts an llmlang file path and a lockfile path\nchecks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as dirty, missing or corrupt, or unchanged, alongside its file and comment handle\nshould report an entry as dirty when its llmlang text changed since the last build\nshould report an entry as missing or corrupt when its handle is missing from the code\nshould report an unmodified codebase as fully clean\nreturns whether everything checked out clean, and the set of named-entry tracking keys currently flagged for any reason",
+      "text_hash": "db368441a30de6a4989726adc7a006b5212955bee037a6486c169cfc34a9dbdc",
+      "code_hash": "076547706ce9aef4963fde515833badc9f0630e38d957110a297e5708c133dcf"
     }
   },
   "class_bullets": {}
