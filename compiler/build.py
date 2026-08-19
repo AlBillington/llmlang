@@ -1,5 +1,5 @@
 """
-CLI: python build.py <llmlang_file> [--check | --finalize <manifest.json>]
+CLI: python build.py <llmlang_file> [--check | --finalize]
 
 File location needs no discovery step or manifest, ever - the tree
 itself already carries it, since a file-typed node's own header
@@ -7,9 +7,13 @@ itself already carries it, since a file-typed node's own header
 names are its path.
 
 --finalize is the guarded incremental path: it refuses to rebuild
-unless the given manifest covers every entry currently flagged by
---check. Plain (no-flag) rebuild stays unguarded, for bootstrapping a
-brand new lockfile or for a human directly supervising their own edit.
+unless <stem>.llmchanges.json - a real, git-tracked sibling file, not
+a throwaway CLI argument - covers every entry currently flagged by
+--check. That file is authored the same way the .llm file itself is
+(by hand or by an LLM, reviewed via its own git diff), never written
+by this tool; --finalize only reads it. Plain (no-flag) rebuild stays
+unguarded, for bootstrapping a brand new lockfile or for a human
+directly supervising their own edit.
 """
 import json
 import sys
@@ -30,8 +34,8 @@ def main():
         sys.exit(0 if ok else 1)
 
     if "--finalize" in sys.argv:
-        manifest_path = Path(sys.argv[sys.argv.index("--finalize") + 1])
-        manifest = json.loads(manifest_path.read_text())
+        changes_path = llmlang_path.parent / (llmlang_path.stem + ".llmchanges.json")
+        manifest = json.loads(changes_path.read_text()) if changes_path.exists() else {}
         try:
             build(llmlang_path, lockfile_path, manifest=manifest)
         except ValueError as e:
