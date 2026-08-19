@@ -1,7 +1,8 @@
 Compiler:
 	Lockfile.py:
 		LockEntry:
-			- stores, per named entry, its file, text hash, code hash, and an optional last-change disposition carried from the most recent finalize
+			- stores, per named entry, its file, text hash, and code hash
+			- may also store a last-change disposition, bound to the exact text hash and code hash it was recorded against
 
 		LOCKFILE_SCHEMA_VERSION:
 			- the lockfile's own schema version, bumped whenever its shape changes
@@ -27,7 +28,8 @@ Compiler:
 			- accepts an llmlang file path, a lockfile output path, and an optional change manifest
 			- builds a lockfile by using Parser to read llmlang, Extractor to locate each entry's code, and Lockfile to record a text and code hash per entry
 			- when a manifest is given, uses Checker to find every named entry currently flagged, and refuses to build unless the manifest covers every one of them with a non-empty disposition
-			- stores each entry's disposition from the manifest, or carries forward its prior disposition unchanged for an entry the manifest didn't touch
+			- stores each manifest entry's disposition bound to that entry's current text hash and code hash
+			- for an entry the manifest didn't touch, carries its prior disposition forward only if both hashes still match what they were when it was recorded; otherwise drops it rather than misrepresenting it as still describing the current state
 			- should reproduce the same hashes when run again against an unchanged codebase
 			- returns the built lock data
 

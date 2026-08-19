@@ -5,8 +5,8 @@
   "entries": {
     "Compiler.Lockfile.LockEntry": {
       "file": "Compiler/Lockfile.py",
-      "text": "stores, per named entry, its file, text hash, code hash, and an optional last-change disposition carried from the most recent finalize",
-      "text_hash": "ce1de2ab847e849b87489273f639051b71a2596bdddecc5588ce651651d97cdd",
+      "text": "stores, per named entry, its file, text hash, and code hash\nmay also store a last-change disposition, bound to the exact text hash and code hash it was recorded against",
+      "text_hash": "4a7dc3f80d93a4f6b272be28b481c84e81b097278b5cb0b4887b96c82d46f66b",
       "code_hash": "30f675d30ed4fd587c8d2cfe4c619f1824d8e8c92560d769aeb4c68d534b0103"
     },
     "Compiler.Lockfile.LOCKFILE_SCHEMA_VERSION": {
@@ -35,9 +35,9 @@
     },
     "Compiler.LockfileBuilder.build": {
       "file": "Compiler/LockfileBuilder.py",
-      "text": "accepts an llmlang file path, a lockfile output path, and an optional change manifest\nbuilds a lockfile by using Parser to read llmlang, Extractor to locate each entry's code, and Lockfile to record a text and code hash per entry\nwhen a manifest is given, uses Checker to find every named entry currently flagged, and refuses to build unless the manifest covers every one of them with a non-empty disposition\nstores each entry's disposition from the manifest, or carries forward its prior disposition unchanged for an entry the manifest didn't touch\nshould reproduce the same hashes when run again against an unchanged codebase\nreturns the built lock data",
-      "text_hash": "a99e7c7489fbe1725c8cfed1332ec7c7285b11c715889d67e19acf4b46b3e28f",
-      "code_hash": "9d9470671e1501d2fb3e36d7f6cf4092ce020fcc750dea1a61d4ca564447327f"
+      "text": "accepts an llmlang file path, a lockfile output path, and an optional change manifest\nbuilds a lockfile by using Parser to read llmlang, Extractor to locate each entry's code, and Lockfile to record a text and code hash per entry\nwhen a manifest is given, uses Checker to find every named entry currently flagged, and refuses to build unless the manifest covers every one of them with a non-empty disposition\nstores each manifest entry's disposition bound to that entry's current text hash and code hash\nfor an entry the manifest didn't touch, carries its prior disposition forward only if both hashes still match what they were when it was recorded; otherwise drops it rather than misrepresenting it as still describing the current state\nshould reproduce the same hashes when run again against an unchanged codebase\nreturns the built lock data",
+      "text_hash": "89b08136682807179b09c3c59e158f05301a077b5b06f2e478081f276cb7663c",
+      "code_hash": "5f28574f22228cca800f687d314fb4434bd6cbeae61d7164090ff44f7f9f5c15"
     },
     "Compiler.LockfileChecker.check": {
       "file": "Compiler/LockfileChecker.py",

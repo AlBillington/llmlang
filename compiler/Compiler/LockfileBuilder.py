@@ -12,7 +12,15 @@ are missing, rather than silently accepting an entry nobody actually
 looked at. This only guarantees every flagged entry was *addressed* -
 it says nothing about whether the disposition given is true; that's
 still a human-review question, same as everything else generated code
-isn't automatically trusted for."""
+isn't automatically trusted for.
+
+An accepted disposition is stored bound to the exact text_hash/code_hash
+it was recorded against, not as a bare string - so a later unguarded
+rebuild that lets an entry drift again can't silently carry the old
+disposition forward next to hashes it was never actually about. A
+carried-forward disposition is only kept when both hashes still match
+what they were when it was written; otherwise it's dropped rather than
+misrepresented as still describing the current state."""
 import hashlib
 import json
 from pathlib import Path
@@ -69,18 +77,32 @@ def build(llmlang_path: Path, lockfile_path: Path, manifest: dict = None):
         if code is None:
             print(f"WARNING: no handle [llm:{handle_key}] found for {tracking_key} in {file_rel}")
             continue
+        text_hash = _sha256(text)
+        code_hash = _sha256(code)
         entry_record = {
             "file": file_rel,
             "text": text,
-            "text_hash": _sha256(text),
-            "code_hash": _sha256(code),
+            "text_hash": text_hash,
+            "code_hash": code_hash,
         }
         if manifest is not None and manifest.get(tracking_key):
-            entry_record["last_change"] = manifest[tracking_key]
+            entry_record["last_change"] = {
+                "disposition": manifest[tracking_key],
+                "for_text_hash": text_hash,
+                "for_code_hash": code_hash,
+            }
         else:
             prior = old_lock.get("entries", {}).get(tracking_key, {}).get("last_change")
-            if prior is not None:
+            if (
+                isinstance(prior, dict)
+                and prior.get("for_text_hash") == text_hash
+                and prior.get("for_code_hash") == code_hash
+            ):
+                # still describes exactly this state - carry it forward
                 entry_record["last_change"] = prior
+            # else: hashes moved since this disposition was recorded (most
+            # likely via an unguarded plain rebuild) - drop it rather than
+            # silently re-stamp a claim next to state it no longer describes
         lock["entries"][tracking_key] = entry_record
 
     for tracking_key, sibling_keys, bullets in walk_class_bullet_groups(root):
