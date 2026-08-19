@@ -5,7 +5,7 @@ legacy_app:
 
 			add_note:
 				- accepts the note's text
-				- adds a note and returns a randomly generated ID
+				- adds a note and returns a randomly generated 8-character lowercase ID
 
 			list_notes:
 				- lists all notes

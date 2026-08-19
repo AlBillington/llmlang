@@ -5,9 +5,10 @@
   "entries": {
     "legacy_app.notes.NotesStore.add_note": {
       "file": "legacy_app/notes.py",
-      "text": "accepts the note's text\nadds a note and returns a randomly generated ID",
-      "text_hash": "aa95506022e712657035d04a4e7b19ff030352015705c189fb29ef3e3bea86a6",
-      "code_hash": "abd1ea6701a3bb1f0b13a60e66b4a179d527025914362abff7a095db47532e74"
+      "text": "accepts the note's text\nadds a note and returns a randomly generated 8-character lowercase ID",
+      "text_hash": "ae9b8d1d9479c28628d1559ded59834879c7bce0ef3f1fa256d68892229f29eb",
+      "code_hash": "abd1ea6701a3bb1f0b13a60e66b4a179d527025914362abff7a095db47532e74",
+      "last_change": "completeness fix only - bullet now states the exact ID format (8-char lowercase); code already did this, no code change needed"
     },
     "legacy_app.notes.NotesStore.list_notes": {
       "file": "legacy_app/notes.py",
