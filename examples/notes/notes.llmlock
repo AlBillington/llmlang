@@ -28,7 +28,7 @@
       "code_hash": "fb10024f11ef92f7bfb4edbe103ac0489634c655cc3f54e89380441b9f06c2e1",
       "last_change": {
         "disposition": "completeness fix only - bullet now states the exact rule (rejects whitespace-only text, not just empty text); code already did this, no code change needed",
-        "for_text_hash": "e703f6bf79b8bd5d7224c83463ed415ed1051e8801041f02c5ece8c5f52847f4",
+        "for_spec_hash": "e703f6bf79b8bd5d7224c83463ed415ed1051e8801041f02c5ece8c5f52847f4",
         "for_code_hash": "fb10024f11ef92f7bfb4edbe103ac0489634c655cc3f54e89380441b9f06c2e1"
       }
     }

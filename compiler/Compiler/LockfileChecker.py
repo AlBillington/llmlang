@@ -1,13 +1,24 @@
 """Checks a lockfile against the current llmlang and code.
 
+Every flagged entry is one of two kinds:
+  - SPEC_DIVERGED: the llmlang side moved since the last build - the
+    entry's own bullets changed, it's brand new, or an upstream
+    @policy: covering it changed. Safe default: update the code to
+    satisfy what's currently written.
+  - CODE_DIVERGED: the code side moved with no corresponding spec
+    change to explain it (handle missing, or its hash just doesn't
+    match). Not safe to blindly regenerate - investigate first, since
+    this usually means something broke rather than an intentional
+    change nobody documented.
+
 Cascades in two ways:
   - Policy -> entries: if a policy's text changed, every entry within
-    that policy's scope gets flagged NEEDS REVIEW even if its own
+    that policy's scope gets flagged SPEC_DIVERGED even if its own
     text/code hashes still match. Root-scope policies affect
     everything; folder/file/class-scope policies affect everything
     nested beneath them.
   - Entry -> class bullets: a class/file-level bullet group (spanning
-    more than one entry) gets flagged NEEDS REVIEW whenever any entry
+    more than one entry) gets flagged SPEC_DIVERGED whenever any entry
     it depends on was flagged for any reason.
 """
 import hashlib
@@ -16,7 +27,7 @@ from pathlib import Path
 
 from Compiler.Extractor import extract_by_handle
 from Compiler.Lockfile import LOCKFILE_SCHEMA_VERSION, RULESET_VERSION
-from Compiler.Parser import parse, walk_class_bullet_groups, walk_entries, walk_policies
+from Compiler.Parser import parse, policy_in_scope, walk_class_bullet_groups, walk_entries, walk_policies
 
 
 def _sha256(text: str) -> str:
@@ -27,16 +38,7 @@ def _combined(bullets: list) -> str:
     return "\n".join(bullets)
 
 
-def _policy_in_scope(policy_scope: tuple, entry_file: str) -> bool:
-    """A policy at scope ('a','b') covers an entry whose file lives under
-    folder path a/b/... (root scope, empty tuple, covers everything)."""
-    if not policy_scope:
-        return True
-    prefix = "/".join(policy_scope)
-    return entry_file == prefix or entry_file.startswith(prefix + "/") or entry_file.startswith(prefix + ".")
-
-
-# checks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as dirty, missing or corrupt, or unchanged, and returns the set of named-entry tracking keys currently flagged for any reason [llm:check]
+# checks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as SPEC_DIVERGED, CODE_DIVERGED, or unchanged, alongside its file and comment handle [llm:check]
 def check(llmlang_path: Path, lockfile_path: Path) -> tuple:
     if not lockfile_path.exists():
         print("No lockfile found.")
@@ -85,13 +87,13 @@ def check(llmlang_path: Path, lockfile_path: Path) -> tuple:
         location = f"{tracking_key} — {file_rel} [llm:{handle_key}]"
 
         if entry is None:
-            print(f"MISSING in lockfile: {location}")
+            print(f"SPEC_DIVERGED (new entry, not yet in lockfile): {location}")
             ok = False
             flagged_entries.add(tracking_key)
             continue
 
         if _sha256(text) != entry["text_hash"]:
-            print(f"DIRTY (spec changed, needs recompile): {location}")
+            print(f"SPEC_DIVERGED (bullets changed since last build): {location}")
             ok = False
             flagged_entries.add(tracking_key)
             continue
@@ -99,15 +101,15 @@ def check(llmlang_path: Path, lockfile_path: Path) -> tuple:
         file_path = llmlang_path.parent / file_rel
         code = extract_by_handle(file_path, handle_key)
         if code is None:
-            print(f"MISSING/CORRUPT (handle [llm:{handle_key}] not found): {location}")
+            print(f"CODE_DIVERGED (handle [llm:{handle_key}] not found): {location}")
             ok = False
             flagged_entries.add(tracking_key)
         elif _sha256(code) != entry["code_hash"]:
-            print(f"MISSING/CORRUPT (code changed unexpectedly): {location}")
+            print(f"CODE_DIVERGED (code changed unexpectedly): {location}")
             ok = False
             flagged_entries.add(tracking_key)
-        elif any(_policy_in_scope(scope, file_rel) for scope in changed_policy_scopes):
-            print(f"NEEDS REVIEW (upstream policy changed): {location}")
+        elif any(policy_in_scope(scope, file_rel) for scope in changed_policy_scopes):
+            print(f"SPEC_DIVERGED (upstream policy changed): {location}")
             ok = False
             flagged_entries.add(tracking_key)
 
@@ -116,17 +118,17 @@ def check(llmlang_path: Path, lockfile_path: Path) -> tuple:
         entry = lock.get("class_bullets", {}).get(tracking_key)
 
         if entry is None:
-            print(f"MISSING in lockfile: {tracking_key} (class-level)")
+            print(f"SPEC_DIVERGED (new class-level bullet, not yet in lockfile): {tracking_key}")
             ok = False
             continue
 
         if _sha256(text) != entry["text_hash"]:
-            print(f"DIRTY (spec changed, needs recompile): {tracking_key} (class-level)")
+            print(f"SPEC_DIVERGED (bullets changed since last build): {tracking_key} (class-level)")
             ok = False
             continue
 
         if any(key in flagged_entries for key in sibling_keys):
-            print(f"NEEDS REVIEW (an entry it depends on changed): {tracking_key} (class-level)")
+            print(f"SPEC_DIVERGED (an entry it depends on changed): {tracking_key} (class-level)")
             ok = False
 
     if ok:

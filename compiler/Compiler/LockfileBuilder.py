@@ -17,7 +17,7 @@ from pathlib import Path
 from Compiler.Extractor import extract_by_handle
 from Compiler.Lockfile import LOCKFILE_SCHEMA_VERSION, RULESET_VERSION
 from Compiler.LockfileChecker import check
-from Compiler.Parser import parse, walk_class_bullet_groups, walk_entries, walk_policies
+from Compiler.Parser import applicable_policy_text, parse, walk_class_bullet_groups, walk_entries, walk_policies
 
 
 def _sha256(text: str) -> str:
@@ -29,9 +29,12 @@ def _combined(bullets: list) -> str:
 
 
 def _hash_all_entries(llmlang_path: Path, root) -> dict:
-    """tracking_key -> (file_rel, text, text_hash, code_hash) for every
-    named entry, computed fresh from the current llmlang text and code -
-    never from any prior lockfile."""
+    """tracking_key -> (file_rel, text, text_hash, code_hash, spec_hash) for
+    every named entry, computed fresh from the current llmlang text, current
+    code, and every policy currently covering it - never from any prior
+    lockfile. spec_hash folds the entry's own text together with every
+    applicable policy's text, so it moves if either one does; when nothing
+    covers the entry it reduces to exactly text_hash."""
     result = {}
     for file_rel, handle_key, tracking_key, bullets in walk_entries(root):
         text = _combined(bullets)
@@ -40,7 +43,9 @@ def _hash_all_entries(llmlang_path: Path, root) -> dict:
         if code is None:
             print(f"WARNING: no handle [llm:{handle_key}] found for {tracking_key} in {file_rel}")
             continue
-        result[tracking_key] = (file_rel, text, _sha256(text), _sha256(code))
+        policy_texts = applicable_policy_text(root, file_rel)
+        spec_hash = _sha256("\n".join([text] + policy_texts))
+        result[tracking_key] = (file_rel, text, _sha256(text), _sha256(code), spec_hash)
     return result
 
 
@@ -74,7 +79,7 @@ def build(llmlang_path: Path, lockfile_path: Path):
         "policies": policies,
         "entries": {
             key: {"file": file_rel, "text": text, "text_hash": text_hash, "code_hash": code_hash}
-            for key, (file_rel, text, text_hash, code_hash) in hashed.items()
+            for key, (file_rel, text, text_hash, code_hash, spec_hash) in hashed.items()
         },
         "class_bullets": class_bullets,
     }
@@ -82,8 +87,7 @@ def build(llmlang_path: Path, lockfile_path: Path):
     return lock
 
 
-# guards an incremental rebuild against silently skipping a flagged entry, reading and updating a change manifest bound to the exact hashes it describes [llm:finalize]
-# known gap: an entry flagged NEEDS REVIEW by an upstream @policy: change (not by its own text/code changing) can be satisfied by a disposition whose hash still matches, since the entry's own hash never moved - this doesn't force a fresh look at whether it still complies with the changed policy, only proves nothing else about it changed unexpectedly
+# guards an incremental rebuild against silently skipping a flagged entry, reading and updating a change manifest bound to the exact spec and code hashes it describes [llm:finalize]
 def finalize(llmlang_path: Path, lockfile_path: Path, changes_path: Path):
     ok, flagged_entries = check(llmlang_path, lockfile_path)
     if not ok and not flagged_entries:
@@ -103,16 +107,16 @@ def finalize(llmlang_path: Path, lockfile_path: Path, changes_path: Path):
     for key, value in changes.items():
         if key not in hashed:
             continue  # orphaned - this entry no longer exists in the llmlang tree
-        _, _, text_hash, code_hash = hashed[key]
+        _, _, _, code_hash, spec_hash = hashed[key]
         if isinstance(value, dict):
-            if value.get("for_text_hash") == text_hash and value.get("for_code_hash") == code_hash:
+            if value.get("for_spec_hash") == spec_hash and value.get("for_code_hash") == code_hash:
                 # still describes exactly the current state - keep it
                 new_changes[key] = value
                 resolved[key] = value
-            # else: stale - the entry moved on since this was recorded, drop it
+            # else: stale - the entry or an applicable policy moved on since this was recorded, drop it
         elif isinstance(value, str) and value:
             # fresh submission - stamp it against the current state
-            stamped = {"disposition": value, "for_text_hash": text_hash, "for_code_hash": code_hash}
+            stamped = {"disposition": value, "for_spec_hash": spec_hash, "for_code_hash": code_hash}
             new_changes[key] = stamped
             resolved[key] = stamped
         # else: empty or malformed value, drop it
@@ -130,7 +134,7 @@ def finalize(llmlang_path: Path, lockfile_path: Path, changes_path: Path):
         "entries": {},
         "class_bullets": class_bullets,
     }
-    for key, (file_rel, text, text_hash, code_hash) in hashed.items():
+    for key, (file_rel, text, text_hash, code_hash, spec_hash) in hashed.items():
         entry_record = {"file": file_rel, "text": text, "text_hash": text_hash, "code_hash": code_hash}
         if key in resolved:
             entry_record["last_change"] = resolved[key]

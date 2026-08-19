@@ -173,3 +173,20 @@ def walk_class_bullet_groups(node, folder_parts=(), file_rel=None, class_name=No
                 tracking_key = f"{_file_label(file_rel)}.{name}"
                 yield tracking_key, _entry_keys_beneath(child, file_rel, name), child["bullets"]
             yield from walk_class_bullet_groups(child, folder_parts, file_rel, name)
+
+
+def policy_in_scope(policy_scope: tuple, entry_file: str) -> bool:
+    """A policy at scope ('a','b') covers an entry whose file lives under
+    folder path a/b/... (root scope, empty tuple, covers everything)."""
+    if not policy_scope:
+        return True
+    prefix = "/".join(policy_scope)
+    return entry_file == prefix or entry_file.startswith(prefix + "/") or entry_file.startswith(prefix + ".")
+
+
+def applicable_policy_text(root, file_rel: str) -> list:
+    """Every policy's text currently covering the given file, in a stable
+    order - used both to detect a policy-driven cascade and to fold policy
+    state into a disposition's own staleness check, so it goes stale if
+    either the entry's own text or an applicable policy changes."""
+    return [text for scope, i, text in walk_policies(root) if policy_in_scope(scope, file_rel)]
