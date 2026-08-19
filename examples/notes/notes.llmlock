@@ -1,0 +1,42 @@
+{
+  "lockfile_schema_version": 2,
+  "ruleset_version": "2026-08-15",
+  "policies": {},
+  "entries": {
+    "legacy_app.notes.NotesStore.add_note": {
+      "file": "legacy_app/notes.py",
+      "text": "accepts the note's text\nadds a note and returns a randomly generated ID",
+      "text_hash": "aa95506022e712657035d04a4e7b19ff030352015705c189fb29ef3e3bea86a6",
+      "code_hash": "abd1ea6701a3bb1f0b13a60e66b4a179d527025914362abff7a095db47532e74"
+    },
+    "legacy_app.notes.NotesStore.list_notes": {
+      "file": "legacy_app/notes.py",
+      "text": "lists all notes\nreturns all notes",
+      "text_hash": "a0a5407bbf5b4b1b028cac3e25f51a77ee06963d9fcb91092914d08ebcb75d4f",
+      "code_hash": "52d37c9e18d5571ec479655f284aacd61385c58e8b674ce3df11392ae95607c3"
+    },
+    "legacy_app.notes.NotesStore._notes": {
+      "file": "legacy_app/notes.py",
+      "text": "stores notes keyed by their ID",
+      "text_hash": "4a5d609c72b030ef5a9b3bc80138978b7b6f9f23a6c71191b13634a5d2658b05",
+      "code_hash": "196f9524f23f487d7bb82510610b96809cb5f686274da97acc931f17ed39c5fc"
+    },
+    "legacy_app.notes.NotesValidator.is_valid": {
+      "file": "legacy_app/notes.py",
+      "text": "accepts note text\nchecks that note text is non-empty\nreturns whether the text is valid",
+      "text_hash": "0cec98c793b3522fd9e68a61b56166ebc6c63f85bd49e1e9715181e942af07b7",
+      "code_hash": "fb10024f11ef92f7bfb4edbe103ac0489634c655cc3f54e89380441b9f06c2e1"
+    }
+  },
+  "class_bullets": {
+    "legacy_app.notes.NotesStore": {
+      "text": "should include a note that was added, when listing all notes",
+      "text_hash": "068f08ecbb2700403a3bcb2516ed87d95a6effd511ea41ec4f3fa9f26e80bfd8",
+      "depends_on": [
+        "legacy_app.notes.NotesStore.add_note",
+        "legacy_app.notes.NotesStore.list_notes",
+        "legacy_app.notes.NotesStore._notes"
+      ]
+    }
+  }
+}

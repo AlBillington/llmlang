@@ -1,0 +1,21 @@
+legacy_app:
+	notes.py:
+		NotesStore class:
+			- should include a note that was added, when listing all notes
+
+			add_note:
+				- accepts the note's text
+				- adds a note and returns a randomly generated ID
+
+			list_notes:
+				- lists all notes
+				- returns all notes
+
+			_notes:
+				- stores notes keyed by their ID
+
+		NotesValidator class:
+			is_valid:
+				- accepts note text
+				- checks that note text is non-empty
+				- returns whether the text is valid

@@ -1,0 +1,50 @@
+{
+  "lockfile_schema_version": 2,
+  "ruleset_version": "2026-08-15",
+  "policies": {},
+  "entries": {
+    "Compiler.Lockfile.LockEntry": {
+      "file": "Compiler/Lockfile.py",
+      "text": "stores, per named entry, its file, text hash, and code hash",
+      "text_hash": "c31fb3624495f3257d63ba94a67b89b0bcfcfb7afbe056b8b59cb7fac3b6225b",
+      "code_hash": "30f675d30ed4fd587c8d2cfe4c619f1824d8e8c92560d769aeb4c68d534b0103"
+    },
+    "Compiler.Lockfile.LOCKFILE_SCHEMA_VERSION": {
+      "file": "Compiler/Lockfile.py",
+      "text": "the lockfile's own schema version, bumped whenever its shape changes",
+      "text_hash": "37cf82f74e5a9235ff583257db36ad64d39b6abed83850e38a317d6d84fdff65",
+      "code_hash": "744ce12c9d346de3e3543611b0e266086170d1e65e105d4d4355d08936772dd0"
+    },
+    "Compiler.Lockfile.RULESET_VERSION": {
+      "file": "Compiler/Lockfile.py",
+      "text": "the ruleset version every entry in a lockfile is built under together",
+      "text_hash": "a0bb4f90f8ca9fb01e11a110dd50429a2e6b1e9909f44bc491134e3d88f21bf0",
+      "code_hash": "29f9757650925448b6bc5a66631455e62ba0b96aafbcb2a0bda535a77b7102b2"
+    },
+    "Compiler.Parser.parse": {
+      "file": "Compiler/Parser.py",
+      "text": "accepts a file path\nparses a tab-indented llmlang file into a tree of folders, files, classes, and named entries\na header's real name is always its first word; any words after it up to the colon are a freetext hint, discarded once the name is extracted\nreturns the parsed tree",
+      "text_hash": "049ff1b7999911fc9b6c8aa142e09bd3eaaf88872178505fc9484d66b0f0227f",
+      "code_hash": "b3c6927a3afdae45966ddb0b06e63b143a242dd0fbaa474799d4955e745d11cb"
+    },
+    "Compiler.Extractor.extract_by_handle": {
+      "file": "Compiler/Extractor.py",
+      "text": "accepts a file path and a handle key\nextracts the code implementing an entry by locating its comment handle and taking everything up to the next handle\nreturns the extracted code, or nothing if the handle isn't found",
+      "text_hash": "f023dca0a6c5b547671fa2c7914e574835e8ae8e493ffd9f33931b763ee8507e",
+      "code_hash": "fdda20927cdb707da06e1583397bd1a646472a33fc65b3e0b14a63f7ee375800"
+    },
+    "Compiler.LockfileBuilder.build": {
+      "file": "Compiler/LockfileBuilder.py",
+      "text": "accepts an llmlang file path and a lockfile output path\nbuilds a lockfile by using Parser to read llmlang, Extractor to locate each entry's code, and Lockfile to record a text and code hash per entry\nshould reproduce the same hashes when run again against an unchanged codebase\nreturns the built lock data",
+      "text_hash": "a3018ce49543ea6a15ef3eab7788d2d6b5a593a6f2f0862bf727d90c2e0bdc25",
+      "code_hash": "5253d321c9734173a139616dcbe0be3b96aa17c6e71b6b9019c6367a9518d403"
+    },
+    "Compiler.LockfileChecker.check": {
+      "file": "Compiler/LockfileChecker.py",
+      "text": "accepts an llmlang file path and a lockfile path\nchecks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as dirty, missing or corrupt, or unchanged\nshould report an entry as dirty when its llmlang text changed since the last build\nshould report an entry as missing or corrupt when its handle is missing from the code\nshould report an unmodified codebase as fully clean\nreturns whether everything checked out clean",
+      "text_hash": "cff181918027640b7bddc13eeab3a2dd0db03e3f1d1389d99a4d32586d28e69f",
+      "code_hash": "de40bb1ae4669753344cb8d4190f3b8dac742630936b7432e1aef876a9742f18"
+    }
+  },
+  "class_bullets": {}
+}

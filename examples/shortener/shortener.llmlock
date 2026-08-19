@@ -1,0 +1,67 @@
+{
+  "lockfile_schema_version": 2,
+  "ruleset_version": "2026-08-15",
+  "policies": {
+    "Backend": {
+      "policy[0]": {
+        "text": "failures are handled gracefully and never crash the app",
+        "text_hash": "9fa1d028cfeaca0d7d942f464452fd9a1dcb9f70f156569d0e7bb54c5766517f"
+      }
+    }
+  },
+  "entries": {
+    "Backend.UrlShortener.create_short_code": {
+      "file": "Backend/UrlShortener.py",
+      "text": "accepts a long URL\ncreates a unique short code for a given long URL\nuses CodeGenerator to generate the code\ngenerated codes must be unique per URL\nshould return the same code when called twice with the same URL\nreturns the short code",
+      "text_hash": "85cb64cd9406b63b6ac66a45277e2528f991e0880a3da5c1dcc6bc090d1e0622",
+      "code_hash": "eb4e6e3d930cb74fe2a2ccf9484376f17ab9be935c5a5b68d8e89dd70af984f6"
+    },
+    "Backend.UrlShortener.get_url": {
+      "file": "Backend/UrlShortener.py",
+      "text": "accepts a short code\nlooks up the original URL for a given short code\nshould return not found for an unknown short code\nreturns the original URL",
+      "text_hash": "9da711c00bc85c2d3a80fc2639915386c8d46bb5ad2967405c35ff11cbf8730b",
+      "code_hash": "19aaf6589cd34a91b7f124a00b64cae2bf604e1c32209194831f01208699d5f2"
+    },
+    "Backend.UrlShortener._code_to_url": {
+      "file": "Backend/UrlShortener.py",
+      "text": "stores a mapping of short code to original URL",
+      "text_hash": "89729aceff3b0dedd9c82bb58a04157d2b566a4a5090fafefc02bb012acf3ab6",
+      "code_hash": "c686aaad70c0f9d353d5ba081bbbef76b87533d67023d16e12b7f3ea81167bec"
+    },
+    "Backend.CodeGenerator.generate": {
+      "file": "Backend/CodeGenerator.py",
+      "text": "generates a random 6-character alphanumeric code\nreturns the generated code",
+      "text_hash": "6a60afb844a645fcc099ffb72b18939fac2a9e99697222d2ead066cf1a8a1f18",
+      "code_hash": "2da5c623d68900fc4d7b6965e05eb1a672b133a7a0dbd11a51adfe71e2fa493e"
+    },
+    "Frontend.ShortenerUI.form": {
+      "file": "Frontend/ShortenerUI.html",
+      "text": "shows a text input for a long URL and a submit button",
+      "text_hash": "7b6c2b992ef99cfe02320e89e9d786566477d6c30b826b0dc1bd472cc783e58d",
+      "code_hash": "3b4ecb545eeba731a7057cea51316a8c2bc18d79d8865f8529c128c02953ea15"
+    },
+    "Frontend.ShortenerUI.shortenUrl": {
+      "file": "Frontend/ShortenerUI.html",
+      "text": "accepts the long URL\nuses UrlShortener to create a short code when submitted\nreturns the short code",
+      "text_hash": "17de3ffa629be074fa63e25acd2263c63731bf39c2b631415a2c1e8be1cf1a2f",
+      "code_hash": "7735859ca58fe3cf0127d58e1728e973264ae4156f26f08e81730b15fd4dbd2d"
+    },
+    "Frontend.ShortenerUI.renderShortUrl": {
+      "file": "Frontend/ShortenerUI.html",
+      "text": "accepts the short code\ndisplays the resulting short URL as a clickable link to the original URL",
+      "text_hash": "dedd50d44a33d7ff088ab756439dd5e71e40a79bc253ecb99991f1091b2c595f",
+      "code_hash": "c8da4ed45ba4f83c97fa98e8b2a0a95158c7b46a83df6545849db85d349bfc10"
+    }
+  },
+  "class_bullets": {
+    "Backend.UrlShortener": {
+      "text": "should return the original URL for a code that was previously created",
+      "text_hash": "ca2083b90ddc8cb096d98becf7e31b39e13f9f2bd6655ab2c0c0427fc65dccc9",
+      "depends_on": [
+        "Backend.UrlShortener.create_short_code",
+        "Backend.UrlShortener.get_url",
+        "Backend.UrlShortener._code_to_url"
+      ]
+    }
+  }
+}

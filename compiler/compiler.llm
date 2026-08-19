@@ -1,0 +1,39 @@
+Compiler:
+	Lockfile.py:
+		LockEntry:
+			- stores, per named entry, its file, text hash, and code hash
+
+		LOCKFILE_SCHEMA_VERSION:
+			- the lockfile's own schema version, bumped whenever its shape changes
+
+		RULESET_VERSION:
+			- the ruleset version every entry in a lockfile is built under together
+
+	Parser.py:
+		parse function:
+			- accepts a file path
+			- parses a tab-indented llmlang file into a tree of folders, files, classes, and named entries
+			- a header's real name is always its first word; any words after it up to the colon are a freetext hint, discarded once the name is extracted
+			- returns the parsed tree
+
+	Extractor.py:
+		extract_by_handle function:
+			- accepts a file path and a handle key
+			- extracts the code implementing an entry by locating its comment handle and taking everything up to the next handle
+			- returns the extracted code, or nothing if the handle isn't found
+
+	LockfileBuilder.py:
+		build function:
+			- accepts an llmlang file path and a lockfile output path
+			- builds a lockfile by using Parser to read llmlang, Extractor to locate each entry's code, and Lockfile to record a text and code hash per entry
+			- should reproduce the same hashes when run again against an unchanged codebase
+			- returns the built lock data
+
+	LockfileChecker.py:
+		check function:
+			- accepts an llmlang file path and a lockfile path
+			- checks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as dirty, missing or corrupt, or unchanged
+			- should report an entry as dirty when its llmlang text changed since the last build
+			- should report an entry as missing or corrupt when its handle is missing from the code
+			- should report an unmodified codebase as fully clean
+			- returns whether everything checked out clean
