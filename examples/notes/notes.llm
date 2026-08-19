@@ -17,5 +17,5 @@ legacy_app:
 		NotesValidator class:
 			is_valid:
 				- accepts note text
-				- checks that note text is non-empty
+				- checks that note text contains at least one non-whitespace character
 				- returns whether the text is valid
