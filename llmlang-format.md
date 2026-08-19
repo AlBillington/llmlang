@@ -1,6 +1,6 @@
 # llmlang — Format & Grammar Spec (v0.2)
 
-Status: the concrete syntax and writing conventions for llmlang source files (`.llm`) — what to type and how to structure it. For what llmlang is for, the compilation/review model, the lockfile mechanism, and open questions, see the concept doc (`llmlang-concept.md`).
+Status: the concrete syntax and writing conventions for llmlang source files (`.llm`) — what to type and how to structure it. For what llmlang is for, the compilation/review model, the lockfile mechanism, and open questions, see the [concept doc](readme.md).
 
 ## 1. Terms
 
@@ -54,7 +54,7 @@ There is no `tests:` keyword. A bullet phrased `"should ..."` is read by the com
 
 ## 4a. "?" bullets — flagging suspected bugs, without deciding to fix them
 
-A bullet prefixed `- ? ` states something the code genuinely does that looks unintentional — a real behavior, described faithfully (the concept doc §5's "describe, don't decide" applies here too), just flagged for a human to look at rather than silently corrected or silently left unremarkable. Same treatment as `should`: a pure prose convention, not parsed, not enforced, scannable at a glance the way a paragraph buried mid-bullet isn't.
+A bullet prefixed `- ? ` states something the code genuinely does that looks unintentional — a real behavior, described faithfully ([the concept doc](readme.md) §5's "describe, don't decide" applies here too), just flagged for a human to look at rather than silently corrected or silently left unremarkable. Same treatment as `should`: a pure prose convention, not parsed, not enforced, scannable at a glance the way a paragraph buried mid-bullet isn't.
 
 Non-functional/performance claims follow a hard rule regardless of where they live: only valid if quantified enough to become an actual assertion ("responds within 200ms for lists under 10k"). "Should feel fast" is not valid llmlang.
 
@@ -70,11 +70,11 @@ A behavior is described in exactly one named entry. A second entry that needs it
 
 ## 6. Completeness — enough detail to reconstruct, not a summary
 
-Bullets must fully specify the *behavior* they describe — exact thresholds, formulas, timing values, and edge-case outcomes — not a high-level gist a reader would need to check the code to fill in. The target is **behavioral** reconstruction: regenerating code from llmlang alone should produce something that behaves identically when tested, even though the exact code (naming, style, structure) is still expected to vary between compiles — the concept doc §3.1's non-determinism is fully still in play, this is about the spec being complete, not the output being deterministic.
+Bullets must fully specify the *behavior* they describe — exact thresholds, formulas, timing values, and edge-case outcomes — not a high-level gist a reader would need to check the code to fill in. The target is **behavioral** reconstruction: regenerating code from llmlang alone should produce something that behaves identically when tested, even though the exact code (naming, style, structure) is still expected to vary between compiles — [the concept doc](readme.md) §3.1's non-determinism is fully still in play, this is about the spec being complete, not the output being deterministic.
 
-This does not reopen the "no control flow, no algorithms" boundary from the concept doc §1. The distinction is **declarative vs. procedural**, not **detailed vs. vague**: describe *what must be true* — a rule, a constraint, an outcome — never *the steps to compute it*. "Never adds more mass in one tick than the printer's speed, the filament remaining, or the part's remaining unprinted mass" is a complete, precise rule a compiler can satisfy however it wants (a `min()` call, three sequential clamps, whatever) — it is not pseudocode, and it is not vague either. A bullet that only gestures at the gist ("adds mass at the printer's speed") isn't detailed vs. undetailed so much as *incomplete* — it's silently missing a real constraint.
+This does not reopen the "no control flow, no algorithms" boundary from [the concept doc](readme.md) §1. The distinction is **declarative vs. procedural**, not **detailed vs. vague**: describe *what must be true* — a rule, a constraint, an outcome — never *the steps to compute it*. "Never adds more mass in one tick than the printer's speed, the filament remaining, or the part's remaining unprinted mass" is a complete, precise rule a compiler can satisfy however it wants (a `min()` call, three sequential clamps, whatever) — it is not pseudocode, and it is not vague either. A bullet that only gestures at the gist ("adds mass at the printer's speed") isn't detailed vs. undetailed so much as *incomplete* — it's silently missing a real constraint.
 
-Completeness and "should" bullets are related but not the same move. When a human and the compiler are actively deciding what's worth guaranteeing — greenfield authoring, or reviewing a proposed addition (the concept doc §3.2) — pairing a precise rule with a "should" bullet that checks it is the right instinct, since someone is there to approve that it's actually worth asserting as a permanent guarantee. During extraction specifically (the concept doc §5, and the onboarding methodology it points to), that approval hasn't happened yet: a rule gets written completely as a regular bullet and verified true against the real code, but does not become a "should" bullet unless a test for it already existed in the source. Asserting a new guarantee is a decision, not a description, and extraction only describes.
+Completeness and "should" bullets are related but not the same move. When a human and the compiler are actively deciding what's worth guaranteeing — greenfield authoring, or reviewing a proposed addition ([the concept doc](readme.md) §3.2) — pairing a precise rule with a "should" bullet that checks it is the right instinct, since someone is there to approve that it's actually worth asserting as a permanent guarantee. During extraction specifically ([the concept doc](readme.md) §5, and the onboarding methodology it points to), that approval hasn't happened yet: a rule gets written completely as a regular bullet and verified true against the real code, but does not become a "should" bullet unless a test for it already existed in the source. Asserting a new guarantee is a decision, not a description, and extraction only describes.
 
 ## 7. Worked example
 
@@ -125,4 +125,4 @@ Frontend:
 
 ## 8. Layout convention
 
-Folder-per-Domain, file-per-Component is inherited directly from the llmlang tree — a file's own header carries its extension, and the folder chain above it carries its path, so `Backend/UrlShortener.py:` resolves to exactly that path with zero manifest and zero discovery step. This is a hard requirement for native (non-onboarded) code — see the concept doc §5 for what happens when it doesn't hold.
+Folder-per-Domain, file-per-Component is inherited directly from the llmlang tree — a file's own header carries its extension, and the folder chain above it carries its path, so `Backend/UrlShortener.py:` resolves to exactly that path with zero manifest and zero discovery step. This is a hard requirement for native (non-onboarded) code — see [the concept doc](readme.md) §5 for what happens when it doesn't hold.
