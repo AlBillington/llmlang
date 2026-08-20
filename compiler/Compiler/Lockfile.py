@@ -10,8 +10,16 @@ class LockEntry(TypedDict, total=False):
     code_hash: str
 
 
+# stores, per linked test comment, the explanation text and backing code hash [llm:Compiler.Lockfile.TestTrace]
+class TestTrace(TypedDict, total=False):
+    text: str
+    path: str
+    code_hash: str
+    code_excerpt: str
+
+
 # the lockfile's own schema version, bumped whenever its shape changes [llm:Compiler.Lockfile.LOCKFILE_SCHEMA_VERSION]
-LOCKFILE_SCHEMA_VERSION = 2
+LOCKFILE_SCHEMA_VERSION = 3
 
 # the ruleset version every entry in a lockfile is built under together [llm:Compiler.Lockfile.RULESET_VERSION]
-RULESET_VERSION = "2026-08-20-test-trace"
+RULESET_VERSION = "2026-08-20-test-code-trace"

@@ -1,6 +1,6 @@
 {
-  "lockfile_schema_version": 2,
-  "ruleset_version": "2026-08-20-test-trace",
+  "lockfile_schema_version": 3,
+  "ruleset_version": "2026-08-20-test-code-trace",
   "policies": {},
   "entries": {
     "Compiler.Lockfile.LockEntry": {
@@ -9,17 +9,23 @@
       "text_hash": "2d5a4539123d3106851c43beef2872e7c12ae3176127a2015bd869fbd915d1b5",
       "code_hash": "30f675d30ed4fd587c8d2cfe4c619f1824d8e8c92560d769aeb4c68d534b0103"
     },
+    "Compiler.Lockfile.TestTrace": {
+      "file": "Compiler/Lockfile.py",
+      "text": "+ stores, per linked test comment, the explanation text and backing code hash\nstores, per linked test comment, the explanation text, relative path, backing code hash, and code excerpt",
+      "text_hash": "6e96d16afbd969d0ddaebb8011ee4ff487e5716e47dc6ea7783b9a7ee7a9dfb2",
+      "code_hash": "85be124c32c7efe21180f592cd154659320fd8bf773c14223d488fba74755fc1"
+    },
     "Compiler.Lockfile.LOCKFILE_SCHEMA_VERSION": {
       "file": "Compiler/Lockfile.py",
       "text": "+ the lockfile's own schema version, bumped whenever its shape changes\nthe lockfile's own schema version, bumped whenever its shape changes",
       "text_hash": "b9f92471aa22fd03ab91f3b557549276034892eb0e1f302621a907dde3363810",
-      "code_hash": "744ce12c9d346de3e3543611b0e266086170d1e65e105d4d4355d08936772dd0"
+      "code_hash": "2c02709ca8ba1f9952a942f22b208c7a6bd547971ca2e15aadaf3d0ce7ada082"
     },
     "Compiler.Lockfile.RULESET_VERSION": {
       "file": "Compiler/Lockfile.py",
       "text": "+ the ruleset version every entry in a lockfile is built under together\nthe ruleset version every entry in a lockfile is built under together",
       "text_hash": "e601f7998dd91fd4a4749025f2de0e57027e38c9c95c0c412f4fb5df430aacda",
-      "code_hash": "d0b9db4e144641d29b80c7b2afbbe58e65079d808daa5d98f2fd97e07b44875e"
+      "code_hash": "7adefbcfc269fba503a15ac0930aeb2a140a3726df51feb643f089de3c5aa5f1"
     },
     "Compiler.Parser.parse": {
       "file": "Compiler/Parser.py",
@@ -27,42 +33,55 @@
       "text_hash": "0abb06f4b5547b8051bd2c573a0262be3932b2432ad4005c47428b93962a85e3",
       "code_hash": "b51d170408218c0889945f21385477903af4843f72618aea032d58c79a6edde2"
     },
+    "Compiler.Extractor.TestComment": {
+      "file": "Compiler/Extractor.py",
+      "text": "+ stores a linked llm-test comment and the backing code it anchors\nstores a linked llm-test comment's canonical node, explanation text, relative path, and backing code\nexposes a code hash derived from the backing code",
+      "text_hash": "0c93c3b87b1a76d8887c97c673e2c71fce28ece961e443e835ce4c313cd998a5",
+      "code_hash": "3e3d87ff71ee8e3f5dde97c5a118ea7b09256280dc73d0d7e4f6e9a566ad972d"
+    },
     "Compiler.Extractor.extract_by_handle": {
       "file": "Compiler/Extractor.py",
       "text": "+ extracts the code implementing an entry by locating its comment handle and taking everything up to the next handle\naccepts a file path and canonical entry name\nextracts the code implementing an entry by locating its comment handle and taking everything up to the next handle\nreturns the extracted code, or nothing if the handle isn't found",
       "text_hash": "6480e177208d9ef97f68098f2c5b7ce36c6e1aedc1f936649b14728f990960eb",
-      "code_hash": "8680e0a442d622457dbb1ff52fd963d56d42258862ff335e8b1f4e03ec44d707"
+      "code_hash": "915f7659e61c17603000497c112b05330a13f1db047733593f0c298ae8a399c9"
     },
     "Compiler.Extractor.test_comment_roots": {
       "file": "Compiler/Extractor.py",
       "text": "+ chooses where llm-test comments are scanned\naccepts an llmlang file path\nreturns the llmlang file directory and the repository tests directory when a repository root is found",
       "text_hash": "555eff9210bda9dbfdca0093fd62ad021685bc5bb139635b3e2759a17dbd05d1",
-      "code_hash": "37caed6e4b98f9413c5b12fc5d6d67dc99cdaa38934b6c27d17496592de07572"
+      "code_hash": "026031bb54e03bf4180c8e7e6a6037360dec16b0406daf1f27d883714c39a229"
+    },
+    "Compiler.Extractor.test_comment_base": {
+      "file": "Compiler/Extractor.py",
+      "text": "+ chooses the stable base path for test trace paths\naccepts an llmlang file path\nreturns the repository root when one is found, otherwise the llmlang file directory",
+      "text_hash": "036a14bad4f6f52675b6e1fd6f661121e5f761196c3f673ff68c3f2d1d18d7e1",
+      "code_hash": "bba09ee1b26bdf1a7fa6c95c5496adfc6a2ec8d76a27d5faf2732f0e9571f7c5"
     },
     "Compiler.Extractor.test_comments_by_node": {
       "file": "Compiler/Extractor.py",
-      "text": "+ collects llm-test comments by canonical node name\naccepts one or more root paths\nscans source-like text files under the root paths for llm-test handles\nrecords the comment text before each llm-test handle by canonical node name\nreturns a mapping of canonical node name to linked test comment texts",
-      "text_hash": "3527699971d0aeb85be3f48e75c88de0efda17ff767d7ef590b4b53917755960",
-      "code_hash": "ab7026a07c962b9a15a6c50330b018ec56a1366ead898236c75da75db9d0b4d4"
+      "text": "+ collects llm-test comments by canonical node name\naccepts one or more root paths\nscans source-like text files under the root paths for llm-test handles\nrecords each llm-test comment's canonical node, exact explanation text, relative path, and backing test code\nreturns a mapping of canonical node name to linked test comment records",
+      "text_hash": "1c1c838652c93e0fe20728989c381cfda758c15639411ef60a646283f716c368",
+      "code_hash": "888410da175970bfb59610a9fdf14f7053f4723518c86d2d53a80bc1f365acfb"
     },
     "Compiler.LockfileBuilder.build": {
       "file": "Compiler/LockfileBuilder.py",
-      "text": "+ builds a lockfile by using Parser to read llmlang, Extractor to locate each entry's code, and Lockfile to record a text and code hash per entry\naccepts an llmlang file path and a lockfile output path\nbuilds a lockfile by using Parser to read llmlang, Extractor to locate each entry's code, and Lockfile to record a text and code hash per entry\nrefuses to write the lockfile when any test bullet lacks a matching llm-test comment with the same text and canonical node name\nhas no notion of dispositions or a change manifest at all; never reads or writes anything but the lockfile itself\nshould reproduce the same hashes when run again against an unchanged codebase\nreturns the built lock data",
-      "text_hash": "d0e45088db10f736339961823a42a855468401363c3529412c0ec421874750a1",
-      "code_hash": "bffa987548281f8f764017de44b3f5ed273c52329684890ccfeb06eae164c528"
+      "text": "+ builds a lockfile by using Parser to read llmlang, Extractor to locate each entry's code, and Lockfile to record a text and code hash per entry\naccepts an llmlang file path and a lockfile output path\nbuilds a lockfile by using Parser to read llmlang, Extractor to locate each entry's code, and Lockfile to record a text and code hash per entry\nwrites test trace records with the llm-test explanation text, relative path, backing code hash, and code excerpt\nrefuses to write the lockfile when any test bullet lacks a matching llm-test comment or any llm-test comment lacks a matching test bullet\nhas no notion of dispositions or a change manifest at all; never reads or writes anything but the lockfile itself\nshould reproduce the same hashes when run again against an unchanged codebase\nreturns the built lock data",
+      "text_hash": "0bd24b91462f56d4604cdb8d32477cd1818a724365800348cba2479fc645afbb",
+      "code_hash": "f131470a27d5506492b00c2138a66bdf8655330d7583c3ead662ef96bd6d4140"
     },
     "Compiler.LockfileBuilder.finalize": {
       "file": "Compiler/LockfileBuilder.py",
       "text": "+ guards an incremental rebuild against silently skipping a flagged entry, reading and updating a change manifest bound to the exact spec and code hashes it describes\naccepts an llmlang file path, a lockfile output path, and a change manifest file path\nuses Checker to find every named entry currently flagged against the existing lockfile, and refuses to write anything unless the change manifest covers every one of them with a non-empty disposition\naccepts a fresh disposition in the manifest as a plain string, and stamps it with the entry's current spec hash and code hash\na spec hash combines the entry's own text with every policy currently covering it, so a disposition goes stale whether the entry's own text changed or an applicable policy did\nfor a manifest entry that's already stamped, keeps it only if both hashes still match the entry's current state; otherwise drops it as stale, along with any entry whose key no longer exists in the llmlang tree at all\nbuilds every hash and disposition fresh from the current llmlang text, current code, current policies, and current manifest only; never carries anything forward from the lockfile's own prior content\nwrites both the new lockfile and the updated (stamped and pruned) manifest file, but never alters a disposition's own text\nreturns the built lock data",
       "text_hash": "a2ae9afba0e5e4aeb1babdf4611893990774fd787fa86d8dca3e8718f2689e6f",
-      "code_hash": "9854665e5d14ef450eeffbeb48c0bf5e62571784be3f2acfd1ce3bd5c711cdc6"
+      "code_hash": "d6048fc229279d141037ab6db24d21cf48c754657eb75ecd0218e1a78ffb1258"
     },
     "Compiler.LockfileChecker.check": {
       "file": "Compiler/LockfileChecker.py",
-      "text": "+ checks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as SPEC_DIVERGED, CODE_DIVERGED, or unchanged, alongside its file and comment handle\naccepts an llmlang file path and a lockfile path\nchecks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as SPEC_DIVERGED, CODE_DIVERGED, or unchanged, alongside its file and comment handle\nreports SPEC_DIVERGED when any test bullet lacks a matching llm-test comment with the same text and canonical node name\nshould report an entry as SPEC_DIVERGED when its own llmlang text changed, it's brand new, or an upstream policy covering it changed\nshould report an entry as CODE_DIVERGED when its handle is missing from the code or its code changed unexpectedly\nshould report an unmodified codebase as fully clean\nreturns whether everything checked out clean, and the set of named-entry tracking keys currently flagged for any reason",
-      "text_hash": "4e77cd952ec9b20b1068b677ff9f0ebc1098104531c4bc6cdd3e97b966bc10e2",
-      "code_hash": "0664a1511f8df62c5a2f91cb22e95b3a21a25f0b8b6b447bb779fbca624acfaf"
+      "text": "+ checks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as SPEC_DIVERGED, CODE_DIVERGED, or unchanged, alongside its file and comment handle\naccepts an llmlang file path and a lockfile path\nchecks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as SPEC_DIVERGED, CODE_DIVERGED, or unchanged, alongside its file and comment handle\nreports TEST_LINK_MISSING when any test bullet lacks a matching llm-test comment with the same text and canonical node name\nreports TEST_TRACE_STALE when any llm-test comment lacks a matching test bullet with the same text and canonical node name\nreports TEST_CODE_DIVERGED when a linked test's backing code hash differs from the lockfile\nshould report an entry as SPEC_DIVERGED when its own llmlang text changed, it's brand new, or an upstream policy covering it changed\nshould report an entry as CODE_DIVERGED when its handle is missing from the code or its code changed unexpectedly\nshould report an unmodified codebase as fully clean\nreturns whether everything checked out clean, and the set of named-entry tracking keys currently flagged for any reason",
+      "text_hash": "eb5ac191cf13c4c6c86eea079b166bc0c4183591b8e9dccded3cb6bf0207f422",
+      "code_hash": "814adfd1234a3cde5da8fbf713b8fc411e4c0d98f0cea8a5f45b227717bd4f65"
     }
   },
-  "class_bullets": {}
+  "class_bullets": {},
+  "test_traces": {}
 }

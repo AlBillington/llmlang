@@ -59,7 +59,9 @@ def test_get_url_unknown():
     ...
 ```
 
-The comment text before `[llm-test:...]` must exactly match the `~` bullet text, and the handle must be the canonical name of the tested entry, file, or class node. A test that covers multiple entries should usually link to the nearest owning file/class node, not duplicate the same test comment under every participating entry. The lockfile builder and checker fail when a `~` bullet has no matching test comment.
+The comment text before `[llm-test:...]` must exactly match the `~` bullet text, and the handle must be the canonical name of the tested entry, file, or class node. A test that covers multiple entries should usually link to the nearest owning file/class node, not duplicate the same test comment under every participating entry.
+
+The lockfile records each linked test trace by explanation text, relative source path, backing code hash, and a code excerpt. The builder refuses both directions of broken linkage: a `~` bullet with no matching test comment, and a stale `llm-test` comment with no matching `~` bullet. The checker reports missing links, stale links, moved/new traces, and backing test code changes without relying on line numbers.
 
 ## 4a. "?" bullets — flagging suspected bugs, without deciding to fix them
 

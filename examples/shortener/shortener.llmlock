@@ -1,6 +1,6 @@
 {
-  "lockfile_schema_version": 2,
-  "ruleset_version": "2026-08-20-test-trace",
+  "lockfile_schema_version": 3,
+  "ruleset_version": "2026-08-20-test-code-trace",
   "policies": {
     "Backend": {
       "policy[0]": {
@@ -63,5 +63,37 @@
         "Backend.UrlShortener._code_to_url"
       ]
     }
+  },
+  "test_traces": {
+    "Backend.UrlShortener": [
+      {
+        "text": "should return the original URL for a code that was previously created",
+        "path": "examples/shortener/tests/Backend/test_UrlShortener.py",
+        "code_hash": "b63df069ec7b0e385cdb56197b48c3d8447898729edf19ba1fa0ebb21ec2e2de",
+        "code_excerpt": "    def test_shortened_code_resolves_to_original_url(self):\n        shortener = UrlShortener(CodeGenerator())\n        url = \"https://example.com/b\"\n        code = shortener.create_short_code(url)\n        self.assertEqual(shortener.get_url(code), url)"
+      }
+    ],
+    "Backend.UrlShortener.create_short_code": [
+      {
+        "text": "should return the same code when called twice with the same URL",
+        "path": "examples/shortener/tests/Backend/test_UrlShortener.py",
+        "code_hash": "573c4b2875afcf5dedf57d74b67f6ac9ebe81baf9414f9f16bcdae02a1c6bf22",
+        "code_excerpt": "    def test_shortening_same_url_twice_returns_same_code(self):\n        shortener = UrlShortener(CodeGenerator())\n        url = \"https://example.com/a\"\n        code1 = shortener.create_short_code(url)\n        code2 = shortener.create_short_code(url)\n        self.assertEqual(code1, code2)"
+      },
+      {
+        "text": "should generate unique codes per URL",
+        "path": "examples/shortener/tests/Backend/test_UrlShortener.py",
+        "code_hash": "8d345358d6167646b6d62f97dc206187a2d6fab141bc56c5ac08eebc6a238c75",
+        "code_excerpt": "    def test_collision_falls_back_to_a_new_code(self):\n        generator = SequentialCodeGenerator([\"aaaaaa\", \"aaaaaa\", \"bbbbbb\"])\n        shortener = UrlShortener(generator)\n        code1 = shortener.create_short_code(\"https://example.com/one\")\n        code2 = shortener.create_short_code(\"https://example.com/two\")\n        self.assertNotEqual(code1, code2)\n        self.assertEqual(shortener.get_url(code1), \"https://example.com/one\")\n        self.assertEqual(shortener.get_url(code2), \"https://example.com/two\")"
+      }
+    ],
+    "Backend.UrlShortener.get_url": [
+      {
+        "text": "should return not found for an unknown short code",
+        "path": "examples/shortener/tests/Backend/test_UrlShortener.py",
+        "code_hash": "cdc50c218e90e55d0b2067966446a517729aa91ae3acd700d11e6b3b46af9a1d",
+        "code_excerpt": "    def test_unknown_code_returns_not_found(self):\n        shortener = UrlShortener(CodeGenerator())\n        self.assertIsNone(shortener.get_url(\"nope00\"))"
+      }
+    ]
   }
 }

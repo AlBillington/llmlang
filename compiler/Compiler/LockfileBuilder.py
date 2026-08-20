@@ -14,7 +14,12 @@ import hashlib
 import json
 from pathlib import Path
 
-from Compiler.Extractor import extract_by_handle, test_comment_roots, test_comments_by_node
+from Compiler.Extractor import (
+    extract_by_handle,
+    test_comment_base,
+    test_comment_roots,
+    test_comments_by_node,
+)
 from Compiler.Lockfile import LOCKFILE_SCHEMA_VERSION, RULESET_VERSION
 from Compiler.LockfileChecker import check
 from Compiler.Parser import (
@@ -74,28 +79,66 @@ def _policies_and_class_bullets(root) -> tuple:
     return policies, class_bullets
 
 
-def _missing_test_comments(llmlang_path: Path, root) -> list:
-    comments = test_comments_by_node(test_comment_roots(llmlang_path))
+def _test_comment_lookup(llmlang_path: Path):
+    return test_comments_by_node(
+        test_comment_roots(llmlang_path),
+        base_path=test_comment_base(llmlang_path),
+    )
+
+
+def _test_trace_record(comment) -> dict:
+    return {
+        "text": comment.text,
+        "path": comment.path,
+        "code_hash": comment.code_hash,
+        "code_excerpt": comment.code,
+    }
+
+
+def _test_traces(llmlang_path: Path, root) -> dict:
+    comments = _test_comment_lookup(llmlang_path)
+    traces = {}
+    stale_comments = [
+        (canonical_name, comment.text)
+        for canonical_name, comments_for_node in comments.items()
+        for comment in comments_for_node
+    ]
+    expected_tests = set(walk_tests(root))
+    stale_comments = [
+        (canonical_name, test_text)
+        for canonical_name, test_text in stale_comments
+        if (canonical_name, test_text) not in expected_tests
+    ]
+    if stale_comments:
+        details = "\n".join(
+            f"- {canonical_name}: {test_text}" for canonical_name, test_text in stale_comments
+        )
+        raise ValueError("stale llm-test comments without matching test bullets:\n" + details)
+
     missing = []
     for canonical_name, test_text in walk_tests(root):
-        if test_text not in comments.get(canonical_name, set()):
+        matches = [
+            comment for comment in comments.get(canonical_name, []) if comment.text == test_text
+        ]
+        if not matches:
             missing.append((canonical_name, test_text))
-    return missing
-
-
-def _assert_test_comments_linked(llmlang_path: Path, root) -> None:
-    missing = _missing_test_comments(llmlang_path, root)
     if missing:
         details = "\n".join(
             f"- {canonical_name}: {test_text}" for canonical_name, test_text in missing
         )
         raise ValueError("missing llm-test comments for test bullets:\n" + details)
+    for canonical_name, test_text in walk_tests(root):
+        matches = [
+            comment for comment in comments.get(canonical_name, []) if comment.text == test_text
+        ]
+        traces.setdefault(canonical_name, []).extend(_test_trace_record(match) for match in matches)
+    return traces
 
 
 # builds a lockfile by using Parser to read llmlang, Extractor to locate each entry's code, and Lockfile to record a text and code hash per entry [llm:Compiler.LockfileBuilder.build]
 def build(llmlang_path: Path, lockfile_path: Path):
     root = parse(llmlang_path)
-    _assert_test_comments_linked(llmlang_path, root)
+    test_traces = _test_traces(llmlang_path, root)
     hashed = _hash_all_entries(llmlang_path, root)
     policies, class_bullets = _policies_and_class_bullets(root)
 
@@ -108,6 +151,7 @@ def build(llmlang_path: Path, lockfile_path: Path):
             for key, (file_rel, text, text_hash, code_hash, spec_hash) in hashed.items()
         },
         "class_bullets": class_bullets,
+        "test_traces": test_traces,
     }
     lockfile_path.write_text(json.dumps(lock, indent=2))
     return lock
@@ -125,7 +169,7 @@ def finalize(llmlang_path: Path, lockfile_path: Path, changes_path: Path):
     changes = json.loads(changes_path.read_text()) if changes_path.exists() else {}
 
     root = parse(llmlang_path)
-    _assert_test_comments_linked(llmlang_path, root)
+    test_traces = _test_traces(llmlang_path, root)
     hashed = _hash_all_entries(llmlang_path, root)
     policies, class_bullets = _policies_and_class_bullets(root)
 
@@ -160,6 +204,7 @@ def finalize(llmlang_path: Path, lockfile_path: Path, changes_path: Path):
         "policies": policies,
         "entries": {},
         "class_bullets": class_bullets,
+        "test_traces": test_traces,
     }
     for key, (file_rel, text, text_hash, code_hash, spec_hash) in hashed.items():
         entry_record = {"file": file_rel, "text": text, "text_hash": text_hash, "code_hash": code_hash}

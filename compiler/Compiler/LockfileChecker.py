@@ -25,7 +25,12 @@ import hashlib
 import json
 from pathlib import Path
 
-from Compiler.Extractor import extract_by_handle, test_comment_roots, test_comments_by_node
+from Compiler.Extractor import (
+    extract_by_handle,
+    test_comment_base,
+    test_comment_roots,
+    test_comments_by_node,
+)
 from Compiler.Lockfile import LOCKFILE_SCHEMA_VERSION, RULESET_VERSION
 from Compiler.Parser import (
     parse,
@@ -43,6 +48,76 @@ def _sha256(text: str) -> str:
 
 def _combined(bullets: list) -> str:
     return "\n".join(bullets)
+
+
+def _test_comment_lookup(llmlang_path: Path):
+    return test_comments_by_node(
+        test_comment_roots(llmlang_path),
+        base_path=test_comment_base(llmlang_path),
+    )
+
+
+def _trace_location(canonical_name: str, text: str, path: str) -> str:
+    return f"{canonical_name} — {path} — {text}"
+
+
+def _check_test_traces(llmlang_path: Path, root, lock: dict) -> tuple[bool, set]:
+    ok = True
+    flagged = set()
+    comments = _test_comment_lookup(llmlang_path)
+    expected_tests = set(walk_tests(root))
+    current_traces = [
+        (canonical_name, comment.text, comment.path, comment.code_hash)
+        for canonical_name, comments_for_node in comments.items()
+        for comment in comments_for_node
+    ]
+    current_text_paths = {
+        (canonical_name, text, path) for canonical_name, text, path, _code_hash in current_traces
+    }
+    current_texts = {(canonical_name, text) for canonical_name, text, _path, _hash in current_traces}
+
+    for canonical_name, test_text in expected_tests:
+        if (canonical_name, test_text) not in current_texts:
+            print(f"TEST_LINK_MISSING: {canonical_name} — {test_text}")
+            ok = False
+            flagged.add(canonical_name)
+
+    for canonical_name, test_text, path, code_hash in current_traces:
+        if (canonical_name, test_text) not in expected_tests:
+            print(f"TEST_TRACE_STALE: {_trace_location(canonical_name, test_text, path)}")
+            ok = False
+            flagged.add(canonical_name)
+            continue
+        locked_matches = [
+            trace
+            for trace in lock.get("test_traces", {}).get(canonical_name, [])
+            if trace.get("text") == test_text and trace.get("path") == path
+        ]
+        if not locked_matches:
+            print(f"TEST_TRACE_DIVERGED (new or moved test trace): {path} — {canonical_name}")
+            ok = False
+            flagged.add(canonical_name)
+            continue
+        if not any(trace.get("code_hash") == code_hash for trace in locked_matches):
+            print(f"TEST_CODE_DIVERGED: {_trace_location(canonical_name, test_text, path)}")
+            ok = False
+            flagged.add(canonical_name)
+
+    for canonical_name, traces in lock.get("test_traces", {}).items():
+        for trace in traces:
+            test_text = trace.get("text", "")
+            path = trace.get("path", "")
+            if (canonical_name, test_text, path) in current_text_paths:
+                continue
+            if (canonical_name, test_text) in expected_tests:
+                print(
+                    "TEST_TRACE_DIVERGED (locked test trace missing): "
+                    f"{_trace_location(canonical_name, test_text, path)}"
+                )
+                ok = False
+                flagged.add(canonical_name)
+
+    return ok, flagged
 
 
 # checks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as SPEC_DIVERGED, CODE_DIVERGED, or unchanged, alongside its file and comment handle [llm:Compiler.LockfileChecker.check]
@@ -65,16 +140,10 @@ def check(llmlang_path: Path, lockfile_path: Path) -> tuple:
     ok = True
     changed_policy_scopes = []
     flagged_entries = set()
-    test_comments = test_comments_by_node(test_comment_roots(llmlang_path))
-
-    for canonical_name, test_text in walk_tests(root):
-        if test_text not in test_comments.get(canonical_name, set()):
-            print(
-                "SPEC_DIVERGED (missing llm-test comment): "
-                f"{canonical_name} — {test_text}"
-            )
-            ok = False
-            flagged_entries.add(canonical_name)
+    test_traces_ok, flagged_test_traces = _check_test_traces(llmlang_path, root, lock)
+    if not test_traces_ok:
+        ok = False
+        flagged_entries.update(flagged_test_traces)
 
     if lock.get("ruleset_version") != RULESET_VERSION:
         print(

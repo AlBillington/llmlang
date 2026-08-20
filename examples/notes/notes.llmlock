@@ -1,6 +1,6 @@
 {
-  "lockfile_schema_version": 2,
-  "ruleset_version": "2026-08-20-test-trace",
+  "lockfile_schema_version": 3,
+  "ruleset_version": "2026-08-20-test-code-trace",
   "policies": {},
   "entries": {
     "legacy_app.notes.NotesStore.add_note": {
@@ -38,5 +38,29 @@
         "legacy_app.notes.NotesStore._notes"
       ]
     }
+  },
+  "test_traces": {
+    "legacy_app.notes.NotesStore": [
+      {
+        "text": "should include a note that was added, when listing all notes",
+        "path": "examples/notes/verify_notes.py",
+        "code_hash": "e1fa069b0c1336946116550739efcfc0e03ba44bfb0eead74a6d9e438018f01d",
+        "code_excerpt": "# should include a note that was added, when listing all notes [llm-test:legacy_app.notes.NotesStore]\nassert \"buy milk\" in store.list_notes(), \"should include a note that was added, when listing all notes\"\n\nvalidator = NotesValidator()"
+      }
+    ],
+    "legacy_app.notes.NotesValidator.is_valid": [
+      {
+        "text": "should reject empty and whitespace-only note text",
+        "path": "examples/notes/verify_notes.py",
+        "code_hash": "51d04ced80d4b1820599ea0584b2519c630d2daf2674575c962727a0c58af4c8",
+        "code_excerpt": "# should reject empty and whitespace-only note text [llm-test:legacy_app.notes.NotesValidator.is_valid]\nassert not validator.is_valid(\"\") and not validator.is_valid(\"   \")"
+      },
+      {
+        "text": "should accept non-empty note text",
+        "path": "examples/notes/verify_notes.py",
+        "code_hash": "b01d63b23d3a10a719acc2f39120de451dd76b55a3efc18cd881679eaf3deb0b",
+        "code_excerpt": "# should accept non-empty note text [llm-test:legacy_app.notes.NotesValidator.is_valid]\nassert validator.is_valid(\"buy milk\")\n\nprint(\"All proposed claims hold against the real code.\")"
+      }
+    ]
   }
 }
