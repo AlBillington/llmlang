@@ -3,7 +3,7 @@ Backend:
 		- failures are handled gracefully and never crash the app
 
 	UrlShortener.py class:
-		create_short_code:
+		create_short_code (creates a unique short code for a given long URL, using CodeGenerator to generate the code):
 			- accepts a long URL
 			- creates a unique short code for a given long URL
 			- uses CodeGenerator to generate the code
@@ -11,32 +11,32 @@ Backend:
 			- should return the same code when called twice with the same URL
 			- returns the short code
 
-		get_url:
+		get_url (looks up the original URL for a given short code):
 			- accepts a short code
 			- looks up the original URL for a given short code
 			- should return not found for an unknown short code
 			- returns the original URL
 
-		_code_to_url:
+		_code_to_url (stores a mapping of short code to original URL):
 			- stores a mapping of short code to original URL
 
 		- should return the original URL for a code that was previously created
 
 	CodeGenerator.py class:
-		generate:
+		generate (generates a random 6-character alphanumeric code):
 			- generates a random 6-character alphanumeric code
 			- returns the generated code
 
 Frontend:
 	ShortenerUI.html:
-		form:
+		form (shows a text input for a long URL and a submit button):
 			- shows a text input for a long URL and a submit button
 
-		shortenUrl function:
+		shortenUrl (uses UrlShortener to create a short code when submitted):
 			- accepts the long URL
 			- uses UrlShortener to create a short code when submitted
 			- returns the short code
 
-		renderShortUrl function:
+		renderShortUrl (displays the resulting short URL as a clickable link to the original URL):
 			- accepts the short code
 			- displays the resulting short URL as a clickable link to the original URL

@@ -59,19 +59,21 @@ The compiler inlines a policy's effect directly into each generated entry's lite
 
 ### 4.1 Comment handles
 
-Every named entry gets exactly one comment, human-readable text immediately followed by a machine handle:
+Every named entry has one canonical name: its full llmlang path, built from the folder chain, file name without extension, optional class header, and entry identifier. Source comments use that exact canonical name in the handle.
+
+Every named entry gets exactly one source comment: the entry's parenthesized summary, rendered in the source language's comment syntax, immediately followed by its canonical-name handle:
 
 ```python
-# creates a unique short code for a given long URL, using CodeGenerator to generate the code [llm:create_short_code]
+# creates a unique short code for a given long URL [llm:Backend.UrlShortener.create_short_code]
 def create_short_code(self, url: str) -> str:
     ...
 ```
 
-The handle key is the entry's own name — stable across reordering, unlike an earlier index-based scheme (`function0`, `function1`) that silently changed identity when bullets were reordered. When a file holds multiple classes, the key is qualified by class (`[llm:NotesValidator.is_valid]`); a file with one implicit grouping uses the bare name.
+The canonical name is stable across reordering, unlike an earlier index-based scheme (`function0`, `function1`) that silently changed identity when bullets were reordered.
 
 **Deliberately not heuristic.** A named entry's code is everything from its handle to the *next* handle in the file, or EOF — nothing inferred from indentation or blank lines. This can include unrelated code sitting between two handles (known, accepted coarseness — see below), but what it includes never depends on how surrounding code happens to be formatted. An indentation/blank-line heuristic was tried and explicitly rejected: its correctness would silently depend on formatting, which conflicts with the project's bias toward mechanisms that fail loud over ones that can be silently wrong.
 
-The name is expected to match the real code identifier (soft convention, guides the compiler) but this is never tooling-enforced — enforcing it would require language-specific identifier rules, which conflicts with staying language-agnostic. Only the handle is authoritative.
+The entry identifier is expected to match the real code identifier (soft convention, guides the compiler) but this is never tooling-enforced — enforcing it would require language-specific identifier rules, which conflicts with staying language-agnostic. Only the canonical-name handle is authoritative.
 
 ### 4.2 The lockfile
 

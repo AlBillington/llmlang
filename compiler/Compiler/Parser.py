@@ -26,8 +26,16 @@ Everything else is shape-inferred, not keyword-driven:
 from pathlib import Path
 
 
-def _new_node(name, ext=None):
-    return {"kind": None, "name": name, "ext": ext, "policy": [], "bullets": [], "children": {}}
+def _new_node(name, ext=None, summary=None):
+    return {
+        "kind": None,
+        "name": name,
+        "ext": ext,
+        "summary": summary,
+        "policy": [],
+        "bullets": [],
+        "children": {},
+    }
 
 
 def _finalize(node, path_desc):
@@ -35,11 +43,23 @@ def _finalize(node, path_desc):
         if not node["bullets"]:
             raise ValueError(f"{path_desc} has no content (needs at least one bullet or nested entry)")
         node["kind"] = "entry"
+    if node["kind"] == "entry" and not node["summary"]:
+        raise ValueError(f"{path_desc} is missing a parenthesized summary")
     for name, child in node["children"].items():
         _finalize(child, f"{path_desc}.{name}")
 
 
-# parses a tab-indented llmlang file into a tree of folders, files, classes, and named entries [llm:parse]
+def _parse_header(content):
+    header = content[:-1]
+    summary = None
+    if header.endswith(")") and " (" in header:
+        header, summary = header.rsplit(" (", 1)
+        summary = summary[:-1].strip()
+    name = header.split(None, 1)[0]
+    return name, summary
+
+
+# parses a tab-indented llmlang file into a tree of folders, files, classes, and entries [llm:Compiler.Parser.parse]
 def parse(path):
     lines = [line for line in Path(path).read_text().splitlines() if line.strip()]
     root = _new_node("", None)
@@ -78,11 +98,7 @@ def parse(path):
             continue
 
         assert content.endswith(":"), f"expected a header: {content!r}"
-        # the real name is always the first token; anything after it up to
-        # the colon is an optional freetext hint for whoever's reading the
-        # raw file (human or compiler) - not tracked, not enforced, not
-        # even retained once the name's been pulled out of it
-        name = content[:-1].split(None, 1)[0]
+        name, summary = _parse_header(content)
         assert isinstance(parent, dict), f"unexpected nesting under a bullet or policy item: {content!r}"
 
         if parent["kind"] is None:
@@ -93,15 +109,15 @@ def parse(path):
         if parent["kind"] == "folder":
             if "." in name:
                 base, ext = name.rsplit(".", 1)
-                node = _new_node(base, ext)
+                node = _new_node(base, ext, summary)
                 node["kind"] = "file"
             else:
-                node = _new_node(name)
+                node = _new_node(name, summary=summary)
                 node["kind"] = "folder"
             parent["children"][node["name"]] = node
             stack.append((depth, node))
         elif parent["kind"] in ("file", "class"):
-            node = _new_node(name)
+            node = _new_node(name, summary=summary)
             parent["children"][name] = node
             stack.append((depth, node))
         else:
@@ -131,8 +147,8 @@ def _entry_keys_beneath(node, file_rel, class_name):
     keys = []
     for name, child in node["children"].items():
         if child["kind"] == "entry":
-            handle_key = f"{class_name}.{name}" if class_name else name
-            keys.append(f"{file_label}.{handle_key}")
+            local_key = f"{class_name}.{name}" if class_name else name
+            keys.append(f"{file_label}.{local_key}")
         elif child["kind"] == "class":
             keys.extend(_entry_keys_beneath(child, file_rel, name))
     return keys
@@ -150,9 +166,9 @@ def walk_entries(node, folder_parts=(), file_rel=None, class_name=None):
         elif kind == "class":
             yield from walk_entries(child, folder_parts, file_rel, name)
         elif kind == "entry":
-            handle_key = f"{class_name}.{name}" if class_name else name
-            tracking_key = f"{_file_label(file_rel)}.{handle_key}"
-            yield file_rel, handle_key, tracking_key, child["bullets"]
+            local_key = f"{class_name}.{name}" if class_name else name
+            tracking_key = f"{_file_label(file_rel)}.{local_key}"
+            yield file_rel, tracking_key, tracking_key, [f"+ {child['summary']}"] + child["bullets"]
 
 
 def walk_class_bullet_groups(node, folder_parts=(), file_rel=None, class_name=None):

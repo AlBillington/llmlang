@@ -13,7 +13,7 @@
 <body>
 <h1>URL Shortener</h1>
 
-<!-- shows a text input for a long URL and a submit button [llm:form] -->
+<!-- shows a text input for a long URL and a submit button [llm:Frontend.ShortenerUI.form] -->
 <form id="shorten-form">
   <input id="url-input" type="text" placeholder="https://example.com/very/long/url" required>
   <button type="submit">Shorten</button>
@@ -22,7 +22,7 @@
 <div id="result"></div>
 
 <script>
-// uses UrlShortener to create a short code when submitted [llm:shortenUrl]
+// uses UrlShortener to create a short code when submitted [llm:Frontend.ShortenerUI.shortenUrl]
 async function shortenUrl(url) {
   const res = await fetch('/api/shorten', {
     method: 'POST',
@@ -33,7 +33,7 @@ async function shortenUrl(url) {
   return data.code;
 }
 
-// displays the resulting short URL as a clickable link to the original URL [llm:renderShortUrl]
+// displays the resulting short URL as a clickable link to the original URL [llm:Frontend.ShortenerUI.renderShortUrl]
 function renderShortUrl(code) {
   const shortUrl = window.location.origin + '/' + code;
   document.getElementById('result').innerHTML =

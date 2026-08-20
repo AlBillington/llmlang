@@ -67,7 +67,7 @@ def _policies_and_class_bullets(root) -> tuple:
     return policies, class_bullets
 
 
-# builds a lockfile by using Parser to read llmlang, Extractor to locate each entry's code, and Lockfile to record a text and code hash per entry [llm:build]
+# builds a lockfile by using Parser to read llmlang, Extractor to locate each entry's code, and Lockfile to record a text and code hash per entry [llm:Compiler.LockfileBuilder.build]
 def build(llmlang_path: Path, lockfile_path: Path):
     root = parse(llmlang_path)
     hashed = _hash_all_entries(llmlang_path, root)
@@ -87,7 +87,7 @@ def build(llmlang_path: Path, lockfile_path: Path):
     return lock
 
 
-# guards an incremental rebuild against silently skipping a flagged entry, reading and updating a change manifest bound to the exact spec and code hashes it describes [llm:finalize]
+# guards an incremental rebuild against silently skipping a flagged entry, reading and updating a change manifest bound to the exact spec and code hashes it describes [llm:Compiler.LockfileBuilder.finalize]
 def finalize(llmlang_path: Path, lockfile_path: Path, changes_path: Path):
     ok, flagged_entries = check(llmlang_path, lockfile_path)
     if not ok and not flagged_entries:

@@ -1,36 +1,31 @@
 {
   "lockfile_schema_version": 2,
-  "ruleset_version": "2026-08-15",
+  "ruleset_version": "2026-08-20",
   "policies": {},
   "entries": {
     "legacy_app.notes.NotesStore.add_note": {
       "file": "legacy_app/notes.py",
-      "text": "accepts the note's text\nadds a note and returns a randomly generated 8-character lowercase ID",
-      "text_hash": "ae9b8d1d9479c28628d1559ded59834879c7bce0ef3f1fa256d68892229f29eb",
+      "text": "+ adds a note and returns a randomly generated ID\naccepts the note's text\nadds a note and returns a randomly generated 8-character lowercase ID",
+      "text_hash": "992ec82123d9eda3756e8c42c53caa2fe63481253f62bbfe57507db43feba01c",
       "code_hash": "abd1ea6701a3bb1f0b13a60e66b4a179d527025914362abff7a095db47532e74"
     },
     "legacy_app.notes.NotesStore.list_notes": {
       "file": "legacy_app/notes.py",
-      "text": "lists all notes\nreturns all notes",
-      "text_hash": "a0a5407bbf5b4b1b028cac3e25f51a77ee06963d9fcb91092914d08ebcb75d4f",
+      "text": "+ lists all notes\nlists all notes\nreturns all notes",
+      "text_hash": "91421a4fe480dff6131f7dfa8dfb9fa16d43d2a70cceb76999d1bf7e2214d861",
       "code_hash": "52d37c9e18d5571ec479655f284aacd61385c58e8b674ce3df11392ae95607c3"
     },
     "legacy_app.notes.NotesStore._notes": {
       "file": "legacy_app/notes.py",
-      "text": "stores notes keyed by their ID",
-      "text_hash": "4a5d609c72b030ef5a9b3bc80138978b7b6f9f23a6c71191b13634a5d2658b05",
+      "text": "+ stores notes keyed by their ID\nstores notes keyed by their ID",
+      "text_hash": "7b3a179ef5f4ebebacc603c33f206668127f36a1a1163d00144eb64a4c2eb79a",
       "code_hash": "196f9524f23f487d7bb82510610b96809cb5f686274da97acc931f17ed39c5fc"
     },
     "legacy_app.notes.NotesValidator.is_valid": {
       "file": "legacy_app/notes.py",
-      "text": "accepts note text\nchecks that note text contains at least one non-whitespace character\nreturns whether the text is valid",
-      "text_hash": "e703f6bf79b8bd5d7224c83463ed415ed1051e8801041f02c5ece8c5f52847f4",
-      "code_hash": "fb10024f11ef92f7bfb4edbe103ac0489634c655cc3f54e89380441b9f06c2e1",
-      "last_change": {
-        "disposition": "completeness fix only - bullet now states the exact rule (rejects whitespace-only text, not just empty text); code already did this, no code change needed",
-        "for_spec_hash": "e703f6bf79b8bd5d7224c83463ed415ed1051e8801041f02c5ece8c5f52847f4",
-        "for_code_hash": "fb10024f11ef92f7bfb4edbe103ac0489634c655cc3f54e89380441b9f06c2e1"
-      }
+      "text": "+ checks that note text is non-empty\naccepts note text\nchecks that note text contains at least one non-whitespace character\nreturns whether the text is valid",
+      "text_hash": "15fd3a5c645fcb8103ab44c61f7a097a359d71d93d65ae89a7501766edc1b4db",
+      "code_hash": "fb10024f11ef92f7bfb4edbe103ac0489634c655cc3f54e89380441b9f06c2e1"
     }
   },
   "class_bullets": {

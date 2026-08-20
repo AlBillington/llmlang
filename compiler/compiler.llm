@@ -1,37 +1,38 @@
 Compiler:
 	Lockfile.py:
-		LockEntry:
+		LockEntry (stores, per named entry, its file, text hash, and code hash):
 			- stores, per named entry, its file, text hash, and code hash
 			- may also store a last-change disposition, bound to the entry's spec hash (its own text combined with every currently applicable policy's text) and code hash it was recorded against
 
-		LOCKFILE_SCHEMA_VERSION:
+		LOCKFILE_SCHEMA_VERSION (the lockfile's own schema version, bumped whenever its shape changes):
 			- the lockfile's own schema version, bumped whenever its shape changes
 
-		RULESET_VERSION:
+		RULESET_VERSION (the ruleset version every entry in a lockfile is built under together):
 			- the ruleset version every entry in a lockfile is built under together
 
 	Parser.py:
-		parse function:
+		parse (parses a tab-indented llmlang file into a tree of folders, files, classes, and entries):
 			- accepts a file path
 			- parses a tab-indented llmlang file into a tree of folders, files, classes, and named entries
-			- a header's real name is always its first word; any words after it up to the colon are a freetext hint, discarded once the name is extracted
+			- a named entry header must include a parenthesized summary after the identifier and before the colon
+			- a header's real name is always its first word; any words after a folder, file, or class name up to the colon are a freetext hint, discarded once the name is extracted
 			- returns the parsed tree
 
 	Extractor.py:
-		extract_by_handle function:
-			- accepts a file path and a handle key
+		extract_by_handle (extracts the code implementing an entry by locating its comment handle and taking everything up to the next handle):
+			- accepts a file path and canonical entry name
 			- extracts the code implementing an entry by locating its comment handle and taking everything up to the next handle
 			- returns the extracted code, or nothing if the handle isn't found
 
 	LockfileBuilder.py:
-		build function:
+		build (builds a lockfile by using Parser to read llmlang, Extractor to locate each entry's code, and Lockfile to record a text and code hash per entry):
 			- accepts an llmlang file path and a lockfile output path
 			- builds a lockfile by using Parser to read llmlang, Extractor to locate each entry's code, and Lockfile to record a text and code hash per entry
 			- has no notion of dispositions or a change manifest at all; never reads or writes anything but the lockfile itself
 			- should reproduce the same hashes when run again against an unchanged codebase
 			- returns the built lock data
 
-		finalize function:
+		finalize (guards an incremental rebuild against silently skipping a flagged entry, reading and updating a change manifest bound to the exact spec and code hashes it describes):
 			- accepts an llmlang file path, a lockfile output path, and a change manifest file path
 			- uses Checker to find every named entry currently flagged against the existing lockfile, and refuses to write anything unless the change manifest covers every one of them with a non-empty disposition
 			- accepts a fresh disposition in the manifest as a plain string, and stamps it with the entry's current spec hash and code hash
@@ -42,7 +43,7 @@ Compiler:
 			- returns the built lock data
 
 	LockfileChecker.py:
-		check function:
+		check (checks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as SPEC_DIVERGED, CODE_DIVERGED, or unchanged, alongside its file and comment handle):
 			- accepts an llmlang file path and a lockfile path
 			- checks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as SPEC_DIVERGED, CODE_DIVERGED, or unchanged, alongside its file and comment handle
 			- should report an entry as SPEC_DIVERGED when its own llmlang text changed, it's brand new, or an upstream policy covering it changed

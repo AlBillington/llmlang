@@ -7,15 +7,15 @@ Status: the concrete syntax and writing conventions for llmlang source files (`.
 - **Folder** — a header with no file extension (`Backend:`). Contains more folders or files. Purely organizational.
 - **File** — a header with a file extension (`UrlShortener.py:`). The physical location a Component's code lives in, resolved directly from the folder chain above it plus its own name — no separate discovery step or manifest, ever.
 - **Class** — a header, inside a file, whose own children are further headers (not bullets). A grouping, needed only when one file holds more than one such grouping (multiple classes sharing a file, or a flat module that happens to need one).
-- **Named entry** — a header, inside a file or class, whose own children are `- ` bullets. The thing that gets a comment handle and maps to exactly one method or property. *Shape-inferred*, not keyword-driven: whichever kind of children a header has decides what it is.
+- **Named entry** — a header, inside a file or class, whose own children are `- ` bullets. The thing that gets a comment handle and maps to exactly one method or property. A named entry header is written `identifier (one-line summary):`; the identifier supplies the final segment of the entry's canonical name, and the summary is the exact source comment text before the canonical-name `[llm:...]` handle, subject only to language comment syntax. *Shape-inferred*, not keyword-driven: whichever kind of children a header has decides what it is.
 - **Bullet** — one plain-English sentence, `- ` prefixed. Any number of bullets under one named entry all describe that entry together — no one-bullet-per-entry limit. A bare bullet sitting directly on a file or class (not under any entry) is a class/file-level bullet — see §4.
 - **Reference** — a plain-English mention of another entry or Component's exact name inside a bullet (`uses CredentialHasher for password verification`). Not special syntax.
-- **Hint** — optional freetext after a header's name, before its colon (`Printer.js class:`, `parse function:`). A header's real name is always its first word; a hint is everything after it. Not enforced, not tracked, not hashed, not a fixed vocabulary — the parser discards it the moment the name's extracted. It exists purely for whoever's reading the raw file, human or compiler, as a clarifying note — a hint states something explicitly that was already true, it never changes what a header is.
+- **Hint** — optional freetext after a folder/file/class header's name, before its colon (`Printer.js class:`). A header's real name is always its first word; a hint is everything after it. Not enforced, not tracked, not hashed, not a fixed vocabulary — the parser discards it the moment the name's extracted. It exists purely for whoever's reading the raw file, human or compiler, as a clarifying note — a hint states something explicitly that was already true, it never changes what a header is. Named entries use the required parenthesized summary form instead of hints.
 
   Shape-inference (§1's Class/Named entry split) already resolves *tree* shape correctly on its own, but it can't distinguish one case that comes up constantly: a File whose direct entries are one implicit class's methods (the common single-class-per-file case, no separate Class node needed) produces the exact same tree shape as a File whose direct entries are a flat module of unrelated standalone functions. The hint convention exists specifically to close that one gap:
   - A **File** header gets a `class` hint when its direct entries are one implicit class's methods/fields with no separate Class node — e.g. `Printer.js class:`, `CodeGenerator.py class:`. It gets no hint when its direct entries are a flat module of standalone functions with no implied class.
   - A genuine nested **Class** node (used only when a file holds more than one class) also gets a `class` hint, for the same at-a-glance legibility, even though shape-inference already resolves it correctly on its own — e.g. `NotesStore class:` inside a `notes.py:` that also holds `NotesValidator class:`.
-  - A **named entry** gets a `function` hint only when it's a genuinely standalone function — sitting directly under a File that has no implied single class (a true flat-function module) — e.g. `parse function:`, `formatCurrency function:`. An entry that's a method, whether under an implicit single-class File or an explicit Class node, gets no hint; its home already says what it is.
+  - A **named entry** gets a parenthesized one-line summary instead of a hint — e.g. `parse (parses a tab-indented llmlang file into a tree):`, `formatCurrency (formats cents as a currency string):`.
   - A state/data-shape entry (mutable state's fields, e.g. `gameState`, `_code_to_url`) gets no hint either way — it's neither a class nor a function.
 
   Applied consistently once a file's own shape (implicit class, flat functions, or a mix) is judged — not added ad hoc where clarity seemed to matter.
@@ -31,7 +31,7 @@ A file or entry with no behavior at all — a static lookup table, a seed/config
 - `@policy:` is the *only* reserved word, valid at root, folder, file, or class scope. Everything else is shape-inferred (§1).
 - A header with a `.` in its name is a file (extension = everything after the last `.`); folders may contain folders or files, nothing else.
 - Class vs. named entry is decided by what shows up first among a header's *header* children, not its first child overall — a class may legitimately open with a class-level bullet before its first named entry.
-- A header's name is its first word; anything after it up to the colon is an optional Hint (§1), discarded once the name's extracted.
+- A header's name is its first word. A parenthesized suffix on a named entry is the required summary; other freetext after a folder/file/class name is an optional Hint (§1), discarded once the name's extracted.
 
 ## 3. Structure grammar (informal)
 
@@ -40,7 +40,7 @@ llmlang  := (Policy | Folder | File)*
 Folder   := Name Hint? ":" NEWLINE (Policy | Folder | File)*
 File     := Name "." Ext Hint? ":" NEWLINE (Policy | Bullet | Class | Entry)*
 Class    := Name Hint? ":" NEWLINE (Policy | Bullet | Entry)*
-Entry    := Name Hint? ":" NEWLINE Bullet+
+Entry    := Name " (" Summary ")" ":" NEWLINE Bullet+
 Policy   := "@policy:" NEWLINE Bullet+
 Bullet   := "- " Sentence NEWLINE
 ```
@@ -84,7 +84,7 @@ Backend:
 		- failures are handled gracefully and never crash the app
 
 	UrlShortener.py class:
-		create_short_code:
+		create_short_code (creates a unique short code for a given long URL):
 			- accepts a long URL
 			- creates a unique short code for a given long URL
 			- uses CodeGenerator to generate the code
@@ -92,33 +92,33 @@ Backend:
 			- should return the same code when called twice with the same URL
 			- returns the short code
 
-		get_url:
+		get_url (looks up the original URL for a given short code):
 			- accepts a short code
 			- looks up the original URL for a given short code
 			- should return not found for an unknown short code
 			- returns the original URL
 
-		_code_to_url:
+		_code_to_url (stores a mapping of short code to original URL):
 			- stores a mapping of short code to original URL
 
 		- should return the original URL for a code that was previously created
 
 	CodeGenerator.py class:
-		generate:
+		generate (generates a random 6-character alphanumeric code):
 			- generates a random 6-character alphanumeric code
 			- returns the generated code
 
 Frontend:
 	ShortenerUI.html:
-		form:
+		form (shows a text input for a long URL and a submit button):
 			- shows a text input for a long URL and a submit button
 
-		shortenUrl function:
+		shortenUrl (uses UrlShortener to create a short code when submitted):
 			- accepts the long URL
 			- uses UrlShortener to create a short code when submitted
 			- returns the short code
 
-		renderShortUrl function:
+		renderShortUrl (displays the resulting short URL as a clickable link):
 			- accepts the short code
 			- displays the resulting short URL as a clickable link to the original URL
 ```

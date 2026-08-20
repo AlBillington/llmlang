@@ -38,7 +38,7 @@ def _combined(bullets: list) -> str:
     return "\n".join(bullets)
 
 
-# checks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as SPEC_DIVERGED, CODE_DIVERGED, or unchanged, alongside its file and comment handle [llm:check]
+# checks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as SPEC_DIVERGED, CODE_DIVERGED, or unchanged, alongside its file and comment handle [llm:Compiler.LockfileChecker.check]
 def check(llmlang_path: Path, lockfile_path: Path) -> tuple:
     if not lockfile_path.exists():
         print("No lockfile found.")

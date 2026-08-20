@@ -6,6 +6,6 @@ CODE_ALPHABET = string.ascii_letters + string.digits
 
 
 class CodeGenerator:
-    # generates a random 6-character alphanumeric code [llm:generate]
+    # generates a random 6-character alphanumeric code [llm:Backend.CodeGenerator.generate]
     def generate(self) -> str:
         return "".join(random.choices(CODE_ALPHABET, k=CODE_LENGTH))

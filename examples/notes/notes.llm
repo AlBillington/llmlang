@@ -3,19 +3,19 @@ legacy_app:
 		NotesStore class:
 			- should include a note that was added, when listing all notes
 
-			add_note:
+			add_note (adds a note and returns a randomly generated ID):
 				- accepts the note's text
 				- adds a note and returns a randomly generated 8-character lowercase ID
 
-			list_notes:
+			list_notes (lists all notes):
 				- lists all notes
 				- returns all notes
 
-			_notes:
+			_notes (stores notes keyed by their ID):
 				- stores notes keyed by their ID
 
 		NotesValidator class:
-			is_valid:
+			is_valid (checks that note text is non-empty):
 				- accepts note text
 				- checks that note text contains at least one non-whitespace character
 				- returns whether the text is valid
