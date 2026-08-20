@@ -20,6 +20,32 @@ import re
 from pathlib import Path
 
 
+_SOURCE_COMMENT_SUFFIXES = {
+    ".c",
+    ".cc",
+    ".cpp",
+    ".cs",
+    ".go",
+    ".h",
+    ".hpp",
+    ".java",
+    ".js",
+    ".jsx",
+    ".kt",
+    ".php",
+    ".py",
+    ".rb",
+    ".rs",
+    ".scala",
+    ".sh",
+    ".swift",
+    ".ts",
+    ".tsx",
+    ".yaml",
+    ".yml",
+}
+
+
 def _all_handles(text: str):
     handles = []
     for match in re.finditer(r"\[llm:([a-zA-Z0-9_.]+)\]", text):
@@ -51,18 +77,38 @@ def _clean_comment_text(text: str) -> str:
     return cleaned.rstrip("-").strip()
 
 
+# chooses where llm-test comments are scanned [llm:Compiler.Extractor.test_comment_roots]
+def test_comment_roots(llmlang_path: Path):
+    roots = [llmlang_path.parent]
+    for parent in (llmlang_path.parent, *llmlang_path.parents):
+        if not (parent / ".git").exists():
+            continue
+        tests_root = parent / "tests"
+        if tests_root.exists() and tests_root not in roots:
+            roots.append(tests_root)
+        break
+    return roots
+
+
 # collects llm-test comments by canonical node name [llm:Compiler.Extractor.test_comments_by_node]
-def test_comments_by_node(root_path: Path):
+def test_comments_by_node(root_paths):
     comments = {}
-    for path in root_path.rglob("*"):
-        if not path.is_file() or any(part in {".git", "__pycache__"} for part in path.parts):
-            continue
-        try:
-            text = path.read_text()
-        except (UnicodeDecodeError, OSError):
-            continue
-        for line in text.splitlines():
-            for match in re.finditer(r"\[llm-test:([a-zA-Z0-9_.]+)\]", line):
-                comment_text = _clean_comment_text(line[: match.start()])
-                comments.setdefault(match.group(1), set()).add(comment_text)
+    if isinstance(root_paths, Path):
+        root_paths = [root_paths]
+    for root_path in root_paths:
+        for path in root_path.rglob("*"):
+            if (
+                not path.is_file()
+                or path.suffix not in _SOURCE_COMMENT_SUFFIXES
+                or any(part in {".git", "__pycache__"} for part in path.parts)
+            ):
+                continue
+            try:
+                text = path.read_text()
+            except (UnicodeDecodeError, OSError):
+                continue
+            for line in text.splitlines():
+                for match in re.finditer(r"\[llm-test:([a-zA-Z0-9_.]+)\]", line):
+                    comment_text = _clean_comment_text(line[: match.start()])
+                    comments.setdefault(match.group(1), set()).add(comment_text)
     return comments

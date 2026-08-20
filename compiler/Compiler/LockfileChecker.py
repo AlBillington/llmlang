@@ -25,7 +25,7 @@ import hashlib
 import json
 from pathlib import Path
 
-from Compiler.Extractor import extract_by_handle, test_comments_by_node
+from Compiler.Extractor import extract_by_handle, test_comment_roots, test_comments_by_node
 from Compiler.Lockfile import LOCKFILE_SCHEMA_VERSION, RULESET_VERSION
 from Compiler.Parser import (
     parse,
@@ -65,7 +65,7 @@ def check(llmlang_path: Path, lockfile_path: Path) -> tuple:
     ok = True
     changed_policy_scopes = []
     flagged_entries = set()
-    test_comments = test_comments_by_node(llmlang_path.parent)
+    test_comments = test_comments_by_node(test_comment_roots(llmlang_path))
 
     for canonical_name, test_text in walk_tests(root):
         if test_text not in test_comments.get(canonical_name, set()):

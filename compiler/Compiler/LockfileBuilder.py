@@ -14,7 +14,7 @@ import hashlib
 import json
 from pathlib import Path
 
-from Compiler.Extractor import extract_by_handle, test_comments_by_node
+from Compiler.Extractor import extract_by_handle, test_comment_roots, test_comments_by_node
 from Compiler.Lockfile import LOCKFILE_SCHEMA_VERSION, RULESET_VERSION
 from Compiler.LockfileChecker import check
 from Compiler.Parser import (
@@ -75,7 +75,7 @@ def _policies_and_class_bullets(root) -> tuple:
 
 
 def _missing_test_comments(llmlang_path: Path, root) -> list:
-    comments = test_comments_by_node(llmlang_path.parent)
+    comments = test_comments_by_node(test_comment_roots(llmlang_path))
     missing = []
     for canonical_name, test_text in walk_tests(root):
         if test_text not in comments.get(canonical_name, set()):

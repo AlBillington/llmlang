@@ -25,9 +25,13 @@ Compiler:
 			- extracts the code implementing an entry by locating its comment handle and taking everything up to the next handle
 			- returns the extracted code, or nothing if the handle isn't found
 
+		test_comment_roots (chooses where llm-test comments are scanned):
+			- accepts an llmlang file path
+			- returns the llmlang file directory and the repository tests directory when a repository root is found
+
 		test_comments_by_node (collects llm-test comments by canonical node name):
-			- accepts a root path
-			- scans text-readable files under the root path for llm-test handles
+			- accepts one or more root paths
+			- scans source-like text files under the root paths for llm-test handles
 			- records the comment text before each llm-test handle by canonical node name
 			- returns a mapping of canonical node name to linked test comment texts
 

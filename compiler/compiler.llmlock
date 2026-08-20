@@ -33,11 +33,17 @@
       "text_hash": "6480e177208d9ef97f68098f2c5b7ce36c6e1aedc1f936649b14728f990960eb",
       "code_hash": "8680e0a442d622457dbb1ff52fd963d56d42258862ff335e8b1f4e03ec44d707"
     },
+    "Compiler.Extractor.test_comment_roots": {
+      "file": "Compiler/Extractor.py",
+      "text": "+ chooses where llm-test comments are scanned\naccepts an llmlang file path\nreturns the llmlang file directory and the repository tests directory when a repository root is found",
+      "text_hash": "555eff9210bda9dbfdca0093fd62ad021685bc5bb139635b3e2759a17dbd05d1",
+      "code_hash": "37caed6e4b98f9413c5b12fc5d6d67dc99cdaa38934b6c27d17496592de07572"
+    },
     "Compiler.Extractor.test_comments_by_node": {
       "file": "Compiler/Extractor.py",
-      "text": "+ collects llm-test comments by canonical node name\naccepts a root path\nscans text-readable files under the root path for llm-test handles\nrecords the comment text before each llm-test handle by canonical node name\nreturns a mapping of canonical node name to linked test comment texts",
-      "text_hash": "b6019e80baef346c0bb9d86d0392b67d3cba5d0863aae47d685b5d477cca1483",
-      "code_hash": "4df24905212c0b5b4d9a1312986cbf1a661caa78cff692199dd84e36444ea48b"
+      "text": "+ collects llm-test comments by canonical node name\naccepts one or more root paths\nscans source-like text files under the root paths for llm-test handles\nrecords the comment text before each llm-test handle by canonical node name\nreturns a mapping of canonical node name to linked test comment texts",
+      "text_hash": "3527699971d0aeb85be3f48e75c88de0efda17ff767d7ef590b4b53917755960",
+      "code_hash": "ab7026a07c962b9a15a6c50330b018ec56a1366ead898236c75da75db9d0b4d4"
     },
     "Compiler.LockfileBuilder.build": {
       "file": "Compiler/LockfileBuilder.py",
@@ -55,7 +61,7 @@
       "file": "Compiler/LockfileChecker.py",
       "text": "+ checks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as SPEC_DIVERGED, CODE_DIVERGED, or unchanged, alongside its file and comment handle\naccepts an llmlang file path and a lockfile path\nchecks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as SPEC_DIVERGED, CODE_DIVERGED, or unchanged, alongside its file and comment handle\nreports SPEC_DIVERGED when any test bullet lacks a matching llm-test comment with the same text and canonical node name\nshould report an entry as SPEC_DIVERGED when its own llmlang text changed, it's brand new, or an upstream policy covering it changed\nshould report an entry as CODE_DIVERGED when its handle is missing from the code or its code changed unexpectedly\nshould report an unmodified codebase as fully clean\nreturns whether everything checked out clean, and the set of named-entry tracking keys currently flagged for any reason",
       "text_hash": "4e77cd952ec9b20b1068b677ff9f0ebc1098104531c4bc6cdd3e97b966bc10e2",
-      "code_hash": "514cf72d9b59ff0e764ccbe58ed2b1fd4512af1dac877bc41815f1e8e1f4a012"
+      "code_hash": "0664a1511f8df62c5a2f91cb22e95b3a21a25f0b8b6b447bb779fbca624acfaf"
     }
   },
   "class_bullets": {}
