@@ -15,7 +15,7 @@ class SequentialCodeGenerator(CodeGenerator):
 
 
 class UrlShortenerTests(unittest.TestCase):
-    # should return the same code when called twice with the same URL
+    # should return the same code when called twice with the same URL [llm-test:Backend.UrlShortener.create_short_code]
     def test_shortening_same_url_twice_returns_same_code(self):
         shortener = UrlShortener(CodeGenerator())
         url = "https://example.com/a"
@@ -23,19 +23,19 @@ class UrlShortenerTests(unittest.TestCase):
         code2 = shortener.create_short_code(url)
         self.assertEqual(code1, code2)
 
-    # should return not found for an unknown short code
+    # should return not found for an unknown short code [llm-test:Backend.UrlShortener.get_url]
     def test_unknown_code_returns_not_found(self):
         shortener = UrlShortener(CodeGenerator())
         self.assertIsNone(shortener.get_url("nope00"))
 
-    # should return the original URL for a code that was previously created
+    # should return the original URL for a code that was previously created [llm-test:Backend.UrlShortener]
     def test_shortened_code_resolves_to_original_url(self):
         shortener = UrlShortener(CodeGenerator())
         url = "https://example.com/b"
         code = shortener.create_short_code(url)
         self.assertEqual(shortener.get_url(code), url)
 
-    # generated codes must be unique per URL
+    # should generate unique codes per URL [llm-test:Backend.UrlShortener.create_short_code]
     def test_collision_falls_back_to_a_new_code(self):
         generator = SequentialCodeGenerator(["aaaaaa", "aaaaaa", "bbbbbb"])
         shortener = UrlShortener(generator)

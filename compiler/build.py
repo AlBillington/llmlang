@@ -33,7 +33,11 @@ def main():
     lockfile_path = llmlang_path.parent / (llmlang_path.stem + ".llmlock")
 
     if "--check" in sys.argv:
-        ok, _ = check(llmlang_path, lockfile_path)
+        try:
+            ok, _ = check(llmlang_path, lockfile_path)
+        except ValueError as e:
+            print(e)
+            sys.exit(1)
         sys.exit(0 if ok else 1)
 
     if "--finalize" in sys.argv:
@@ -46,7 +50,11 @@ def main():
         print(f"Wrote {lockfile_path}")
         return
 
-    build(llmlang_path, lockfile_path)
+    try:
+        build(llmlang_path, lockfile_path)
+    except ValueError as e:
+        print(e)
+        sys.exit(1)
     print(f"Wrote {lockfile_path}")
 
 

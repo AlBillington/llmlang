@@ -14,4 +14,4 @@ class LockEntry(TypedDict, total=False):
 LOCKFILE_SCHEMA_VERSION = 2
 
 # the ruleset version every entry in a lockfile is built under together [llm:Compiler.Lockfile.RULESET_VERSION]
-RULESET_VERSION = "2026-08-20"
+RULESET_VERSION = "2026-08-20-test-trace"

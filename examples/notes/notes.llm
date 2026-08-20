@@ -1,7 +1,7 @@
 legacy_app:
 	notes.py:
 		NotesStore class:
-			- should include a note that was added, when listing all notes
+			~ should include a note that was added, when listing all notes
 
 			add_note (adds a note and returns a randomly generated ID):
 				- accepts the note's text
@@ -18,4 +18,6 @@ legacy_app:
 			is_valid (checks that note text is non-empty):
 				- accepts note text
 				- checks that note text contains at least one non-whitespace character
+				~ should reject empty and whitespace-only note text
+				~ should accept non-empty note text
 				- returns whether the text is valid

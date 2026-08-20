@@ -28,7 +28,7 @@ The compiler does not need to be deterministic. What has to stay bounded is *con
 
 **Structural gate**: every named entry's code must be locatable via its comment handle (§4.1) — no invented, untraceable public surface. Near-identical logic across two entries with no Reference between them signals the spec under-specified something; fix llmlang, not just the code ([the format spec](llmlang-format.md) §5). This is a human/AI review discipline, not an automated check.
 
-**Behavioral gate**: generated code must pass whatever tests were compiled from "should" bullets ([the format spec](llmlang-format.md) §4).
+**Behavioral gate**: generated code must pass whatever tests are represented by `~` bullets and linked test comments ([the format spec](llmlang-format.md) §4).
 
 Method/function *bodies* are the only thing with zero llmlang trace — the intended scope of full compiler discretion.
 
@@ -36,7 +36,7 @@ Method/function *bodies* are the only thing with zero llmlang trace — the inte
 
 A compile-time decision not specified in llmlang (timeout handling, caching strategy) is not left to silent judgment: if it would produce something needing its own named entry to stay traceable, the compiler must propose that entry to llmlang and get sign-off before finalizing code. This is the same mechanism as two other cases:
 
-- **Bug fixes** — a report becomes a proposed "should" bullet, not a direct patch. The fix and the spec change land together, reviewed together — no hotfix path that bypasses spec review.
+- **Bug fixes** — a report becomes a proposed behavior bullet plus, when covered by a test, a `~` bullet and linked test comment, not a direct patch. The fix and the spec change land together, reviewed together — no hotfix path that bypasses spec review.
 - **Deduplication** — noticing two entries should share logic is a proposed llmlang restructure (extract a shared entry, add a Reference), not a silent code refactor.
 
 **One rule, three triggers**: whenever compile hits a gap between what llmlang says and what the code needs to do, the compiler proposes an addition and waits. This is what makes llmlang bidirectional — the AI is a co-author of the spec, not just a consumer of it.
@@ -90,7 +90,7 @@ Two version fields, both lockfile-only:
 ### 4.3 Cascades — three, composing through each other
 
 1. **Policy → entries**: a changed `@policy:` flags every entry within its scope `SPEC_DIVERGED`, even if the entry's own hashes still match.
-2. **Entries → class-level "should" bullets**: a cross-entry bullet is flagged whenever any entry it depends on was flagged, for any reason ([the format spec](llmlang-format.md) §4).
+2. **Entries → class/file-level bullets**: a cross-entry bullet is flagged whenever any entry it depends on was flagged, for any reason ([the format spec](llmlang-format.md) §1).
 3. **Any code item → its sibling entries generally**: verified to chain correctly — a policy change was shown to cascade through entries and *then* through to a class-level bullet depending on those entries, in one live test.
 
 A hash mismatch is not a verdict, it's a prompt: "go look at what changed in this region." A false positive costs one quick review, not a wrong result — this is why the deterministic (non-heuristic), fairly coarse handle-region rule in §4.1 is acceptable rather than a problem to solve more precisely.

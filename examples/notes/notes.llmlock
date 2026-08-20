@@ -1,6 +1,6 @@
 {
   "lockfile_schema_version": 2,
-  "ruleset_version": "2026-08-20",
+  "ruleset_version": "2026-08-20-test-trace",
   "policies": {},
   "entries": {
     "legacy_app.notes.NotesStore.add_note": {
@@ -23,15 +23,15 @@
     },
     "legacy_app.notes.NotesValidator.is_valid": {
       "file": "legacy_app/notes.py",
-      "text": "+ checks that note text is non-empty\naccepts note text\nchecks that note text contains at least one non-whitespace character\nreturns whether the text is valid",
-      "text_hash": "15fd3a5c645fcb8103ab44c61f7a097a359d71d93d65ae89a7501766edc1b4db",
+      "text": "+ checks that note text is non-empty\naccepts note text\nchecks that note text contains at least one non-whitespace character\nreturns whether the text is valid\n~ should reject empty and whitespace-only note text\n~ should accept non-empty note text",
+      "text_hash": "6d4e4499e705fa5f38e9d32579bfebf34fb07d66613f23d9fe1554a91e1818c5",
       "code_hash": "fb10024f11ef92f7bfb4edbe103ac0489634c655cc3f54e89380441b9f06c2e1"
     }
   },
   "class_bullets": {
     "legacy_app.notes.NotesStore": {
-      "text": "should include a note that was added, when listing all notes",
-      "text_hash": "068f08ecbb2700403a3bcb2516ed87d95a6effd511ea41ec4f3fa9f26e80bfd8",
+      "text": "~ should include a note that was added, when listing all notes",
+      "text_hash": "964a350383ddad17b27ba1f202745dff3bc196a6f757760566ba34a41e855dfb",
       "depends_on": [
         "legacy_app.notes.NotesStore.add_note",
         "legacy_app.notes.NotesStore.list_notes",

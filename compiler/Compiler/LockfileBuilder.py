@@ -14,10 +14,17 @@ import hashlib
 import json
 from pathlib import Path
 
-from Compiler.Extractor import extract_by_handle
+from Compiler.Extractor import extract_by_handle, test_comments_by_node
 from Compiler.Lockfile import LOCKFILE_SCHEMA_VERSION, RULESET_VERSION
 from Compiler.LockfileChecker import check
-from Compiler.Parser import applicable_policy_text, parse, walk_class_bullet_groups, walk_entries, walk_policies
+from Compiler.Parser import (
+    applicable_policy_text,
+    parse,
+    walk_class_bullet_groups,
+    walk_entries,
+    walk_tests,
+    walk_policies,
+)
 
 
 def _sha256(text: str) -> str:
@@ -67,9 +74,28 @@ def _policies_and_class_bullets(root) -> tuple:
     return policies, class_bullets
 
 
+def _missing_test_comments(llmlang_path: Path, root) -> list:
+    comments = test_comments_by_node(llmlang_path.parent)
+    missing = []
+    for canonical_name, test_text in walk_tests(root):
+        if test_text not in comments.get(canonical_name, set()):
+            missing.append((canonical_name, test_text))
+    return missing
+
+
+def _assert_test_comments_linked(llmlang_path: Path, root) -> None:
+    missing = _missing_test_comments(llmlang_path, root)
+    if missing:
+        details = "\n".join(
+            f"- {canonical_name}: {test_text}" for canonical_name, test_text in missing
+        )
+        raise ValueError("missing llm-test comments for test bullets:\n" + details)
+
+
 # builds a lockfile by using Parser to read llmlang, Extractor to locate each entry's code, and Lockfile to record a text and code hash per entry [llm:Compiler.LockfileBuilder.build]
 def build(llmlang_path: Path, lockfile_path: Path):
     root = parse(llmlang_path)
+    _assert_test_comments_linked(llmlang_path, root)
     hashed = _hash_all_entries(llmlang_path, root)
     policies, class_bullets = _policies_and_class_bullets(root)
 
@@ -99,6 +125,7 @@ def finalize(llmlang_path: Path, lockfile_path: Path, changes_path: Path):
     changes = json.loads(changes_path.read_text()) if changes_path.exists() else {}
 
     root = parse(llmlang_path)
+    _assert_test_comments_linked(llmlang_path, root)
     hashed = _hash_all_entries(llmlang_path, root)
     policies, class_bullets = _policies_and_class_bullets(root)
 

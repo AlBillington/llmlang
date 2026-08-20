@@ -19,9 +19,10 @@ Everything else is shape-inferred, not keyword-driven:
     that span more than one entry, since it has no single entry's code
     to attach to.
   - A named entry's bullets, in any number, all describe that one
-    entry together - no one-bullet-per-entry limit. "should ..."
-    phrased bullets are read by the compiler as tests to build; that's
-    a pure prose convention, invisible to this parser.
+    entry together - no one-bullet-per-entry limit.
+  - "~ " lines are test bullets. They can live on a named entry, file,
+    or class node, and each one must map to a source test comment with
+    the same text and the node's canonical name in an llm-test handle.
 """
 from pathlib import Path
 
@@ -34,14 +35,17 @@ def _new_node(name, ext=None, summary=None):
         "summary": summary,
         "policy": [],
         "bullets": [],
+        "tests": [],
         "children": {},
     }
 
 
 def _finalize(node, path_desc):
     if node["kind"] is None:
-        if not node["bullets"]:
-            raise ValueError(f"{path_desc} has no content (needs at least one bullet or nested entry)")
+        if not node["bullets"] and not node["tests"]:
+            raise ValueError(
+                f"{path_desc} has no content (needs at least one bullet, test, or nested entry)"
+            )
         node["kind"] = "entry"
     if node["kind"] == "entry" and not node["summary"]:
         raise ValueError(f"{path_desc} is missing a parenthesized summary")
@@ -75,18 +79,25 @@ def parse(path):
 
         _, parent = stack[-1]
 
-        if content.startswith("- "):
+        if content.startswith("- ") or content.startswith("~ "):
             if isinstance(parent, list):
+                assert content.startswith("- "), f"a test bullet isn't valid here: {content!r}"
                 parent.append(content[2:])
             else:
                 # kind stays undetermined until we know whether a header
                 # child ever shows up (see below) - a bullet alone doesn't
                 # prove this node is an entry, since a class can open with
                 # a class-level bullet before its first named entry.
-                assert isinstance(parent, dict) and parent["kind"] in (None, "entry", "class", "file"), (
-                    f"a bullet isn't valid here: {content!r}"
-                )
-                parent["bullets"].append(content[2:])
+                assert isinstance(parent, dict) and parent["kind"] in (
+                    None,
+                    "entry",
+                    "class",
+                    "file",
+                ), f"a bullet isn't valid here: {content!r}"
+                if content.startswith("~ "):
+                    parent["tests"].append(content[2:])
+                else:
+                    parent["bullets"].append(content[2:])
             stack.append((depth, None))
             continue
 
@@ -168,7 +179,36 @@ def walk_entries(node, folder_parts=(), file_rel=None, class_name=None):
         elif kind == "entry":
             local_key = f"{class_name}.{name}" if class_name else name
             tracking_key = f"{_file_label(file_rel)}.{local_key}"
-            yield file_rel, tracking_key, tracking_key, [f"+ {child['summary']}"] + child["bullets"]
+            yield (
+                file_rel,
+                tracking_key,
+                tracking_key,
+                [f"+ {child['summary']}"] + child["bullets"] + [f"~ {t}" for t in child["tests"]],
+            )
+
+
+def walk_tests(node, folder_parts=(), file_rel=None, class_name=None):
+    """Yield (canonical_node_name, test_text) for every test bullet."""
+    for name, child in node["children"].items():
+        kind = child["kind"]
+        if kind == "folder":
+            yield from walk_tests(child, folder_parts + (name,), None, None)
+        elif kind == "file":
+            rel = "/".join(folder_parts + (f"{name}.{child['ext']}",))
+            canonical_name = _file_label(rel)
+            for test in child["tests"]:
+                yield canonical_name, test
+            yield from walk_tests(child, folder_parts, rel, None)
+        elif kind == "class":
+            canonical_name = f"{_file_label(file_rel)}.{name}"
+            for test in child["tests"]:
+                yield canonical_name, test
+            yield from walk_tests(child, folder_parts, file_rel, name)
+        elif kind == "entry":
+            local_key = f"{class_name}.{name}" if class_name else name
+            canonical_name = f"{_file_label(file_rel)}.{local_key}"
+            for test in child["tests"]:
+                yield canonical_name, test
 
 
 def walk_class_bullet_groups(node, folder_parts=(), file_rel=None, class_name=None):
@@ -181,13 +221,21 @@ def walk_class_bullet_groups(node, folder_parts=(), file_rel=None, class_name=No
             yield from walk_class_bullet_groups(child, folder_parts + (name,), None, None)
         elif kind == "file":
             rel = "/".join(folder_parts + (f"{name}.{child['ext']}",))
-            if child["bullets"]:
-                yield _file_label(rel), _entry_keys_beneath(child, rel, None), child["bullets"]
+            if child["bullets"] or child["tests"]:
+                yield (
+                    _file_label(rel),
+                    _entry_keys_beneath(child, rel, None),
+                    child["bullets"] + [f"~ {t}" for t in child["tests"]],
+                )
             yield from walk_class_bullet_groups(child, folder_parts, rel, None)
         elif kind == "class":
-            if child["bullets"]:
+            if child["bullets"] or child["tests"]:
                 tracking_key = f"{_file_label(file_rel)}.{name}"
-                yield tracking_key, _entry_keys_beneath(child, file_rel, name), child["bullets"]
+                yield (
+                    tracking_key,
+                    _entry_keys_beneath(child, file_rel, name),
+                    child["bullets"] + [f"~ {t}" for t in child["tests"]],
+                )
             yield from walk_class_bullet_groups(child, folder_parts, file_rel, name)
 
 

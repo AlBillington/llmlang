@@ -15,6 +15,7 @@ Compiler:
 			- accepts a file path
 			- parses a tab-indented llmlang file into a tree of folders, files, classes, and named entries
 			- a named entry header must include a parenthesized summary after the identifier and before the colon
+			- a test bullet can live under a named entry, file, or class node
 			- a header's real name is always its first word; any words after a folder, file, or class name up to the colon are a freetext hint, discarded once the name is extracted
 			- returns the parsed tree
 
@@ -24,10 +25,17 @@ Compiler:
 			- extracts the code implementing an entry by locating its comment handle and taking everything up to the next handle
 			- returns the extracted code, or nothing if the handle isn't found
 
+		test_comments_by_node (collects llm-test comments by canonical node name):
+			- accepts a root path
+			- scans text-readable files under the root path for llm-test handles
+			- records the comment text before each llm-test handle by canonical node name
+			- returns a mapping of canonical node name to linked test comment texts
+
 	LockfileBuilder.py:
 		build (builds a lockfile by using Parser to read llmlang, Extractor to locate each entry's code, and Lockfile to record a text and code hash per entry):
 			- accepts an llmlang file path and a lockfile output path
 			- builds a lockfile by using Parser to read llmlang, Extractor to locate each entry's code, and Lockfile to record a text and code hash per entry
+			- refuses to write the lockfile when any test bullet lacks a matching llm-test comment with the same text and canonical node name
 			- has no notion of dispositions or a change manifest at all; never reads or writes anything but the lockfile itself
 			- should reproduce the same hashes when run again against an unchanged codebase
 			- returns the built lock data
@@ -46,6 +54,7 @@ Compiler:
 		check (checks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as SPEC_DIVERGED, CODE_DIVERGED, or unchanged, alongside its file and comment handle):
 			- accepts an llmlang file path and a lockfile path
 			- checks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as SPEC_DIVERGED, CODE_DIVERGED, or unchanged, alongside its file and comment handle
+			- reports SPEC_DIVERGED when any test bullet lacks a matching llm-test comment with the same text and canonical node name
 			- should report an entry as SPEC_DIVERGED when its own llmlang text changed, it's brand new, or an upstream policy covering it changed
 			- should report an entry as CODE_DIVERGED when its handle is missing from the code or its code changed unexpectedly
 			- should report an unmodified codebase as fully clean

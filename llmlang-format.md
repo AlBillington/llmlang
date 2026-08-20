@@ -7,8 +7,9 @@ Status: the concrete syntax and writing conventions for llmlang source files (`.
 - **Folder** — a header with no file extension (`Backend:`). Contains more folders or files. Purely organizational.
 - **File** — a header with a file extension (`UrlShortener.py:`). The physical location a Component's code lives in, resolved directly from the folder chain above it plus its own name — no separate discovery step or manifest, ever.
 - **Class** — a header, inside a file, whose own children are further headers (not bullets). A grouping, needed only when one file holds more than one such grouping (multiple classes sharing a file, or a flat module that happens to need one).
-- **Named entry** — a header, inside a file or class, whose own children are `- ` bullets. The thing that gets a comment handle and maps to exactly one method or property. A named entry header is written `identifier (one-line summary):`; the identifier supplies the final segment of the entry's canonical name, and the summary is the exact source comment text before the canonical-name `[llm:...]` handle, subject only to language comment syntax. *Shape-inferred*, not keyword-driven: whichever kind of children a header has decides what it is.
-- **Bullet** — one plain-English sentence, `- ` prefixed. Any number of bullets under one named entry all describe that entry together — no one-bullet-per-entry limit. A bare bullet sitting directly on a file or class (not under any entry) is a class/file-level bullet — see §4.
+- **Named entry** — a header, inside a file or class, whose own children are `- ` behavior bullets or `~ ` test bullets. The thing that gets a comment handle and maps to exactly one method or property. A named entry header is written `identifier (one-line summary):`; the identifier supplies the final segment of the entry's canonical name, and the summary is the exact source comment text before the canonical-name `[llm:...]` handle, subject only to language comment syntax. *Shape-inferred*, not keyword-driven: whichever kind of children a header has decides what it is.
+- **Behavior bullet** — one plain-English sentence, `- ` prefixed. Any number of behavior bullets under one named entry all describe that entry together — no one-bullet-per-entry limit. A bare behavior bullet sitting directly on a file or class (not under any entry) is a class/file-level bullet.
+- **Test bullet** — one plain-English sentence, `~ ` prefixed, nested under a named entry, file, or class. The text is the exact source test comment text before `[llm-test:<canonical-node>]`; see §4.
 - **Reference** — a plain-English mention of another entry or Component's exact name inside a bullet (`uses CredentialHasher for password verification`). Not special syntax.
 - **Hint** — optional freetext after a folder/file/class header's name, before its colon (`Printer.js class:`). A header's real name is always its first word; a hint is everything after it. Not enforced, not tracked, not hashed, not a fixed vocabulary — the parser discards it the moment the name's extracted. It exists purely for whoever's reading the raw file, human or compiler, as a clarifying note — a hint states something explicitly that was already true, it never changes what a header is. Named entries use the required parenthesized summary form instead of hints.
 
@@ -27,7 +28,7 @@ A file or entry with no behavior at all — a static lookup table, a seed/config
 ## 2. Formatting rules
 
 - Indentation is exactly one tab per nesting level. No spaces.
-- Every line is a header (ends in `:`), a bullet (`- ` prefixed), or `@policy:`.
+- Every line is a header (ends in `:`), a behavior bullet (`- ` prefixed), a test bullet (`~ ` prefixed), or `@policy:`.
 - `@policy:` is the *only* reserved word, valid at root, folder, file, or class scope. Everything else is shape-inferred (§1).
 - A header with a `.` in its name is a file (extension = everything after the last `.`); folders may contain folders or files, nothing else.
 - Class vs. named entry is decided by what shows up first among a header's *header* children, not its first child overall — a class may legitimately open with a class-level bullet before its first named entry.
@@ -40,21 +41,29 @@ llmlang  := (Policy | Folder | File)*
 Folder   := Name Hint? ":" NEWLINE (Policy | Folder | File)*
 File     := Name "." Ext Hint? ":" NEWLINE (Policy | Bullet | Class | Entry)*
 Class    := Name Hint? ":" NEWLINE (Policy | Bullet | Entry)*
-Entry    := Name " (" Summary ")" ":" NEWLINE Bullet+
+Entry    := Name " (" Summary ")" ":" NEWLINE (Bullet | Test)+
 Policy   := "@policy:" NEWLINE Bullet+
 Bullet   := "- " Sentence NEWLINE
+Test     := "~ " Sentence NEWLINE
 ```
 
-## 4. "should" bullets — tests, without a reserved category
+## 4. Test Bullets
 
-There is no `tests:` keyword. A bullet phrased `"should ..."` is read by the compiler as a test to build — a pure prose convention, invisible to the parser, which treats it exactly like any other bullet.
+A `~ ` bullet records behavior that is covered by an existing test. Put it under the nearest llmlang node whose behavior the test asserts: an entry for one entry's behavior, or a file/class node for cross-entry behavior. By convention, test text is phrased as `should ...`, but this is not a parser rule and not a test identity key. The `~` text is not a generated test name and does not create a separate canonical test identity; it is the human-readable test comment text.
 
-- Nested under the entry it tests (the common case): folds into that entry's own hash for free, zero extra tracking.
-- A bare bullet on the file/class node itself, for a guarantee that spans *more than one* entry (e.g. a round-trip: create it, then look it up): tracked with its own `text_hash` (no `code_hash` — it has no single entry's code to attach to), and flagged for review whenever *any* entry it transitively depends on changes, for any reason. This is the one deliberate exception to "tests are free" — it exists specifically because folding a cross-entry guarantee into just one of the entries it actually depends on would silently lose invalidation when a *different* entry changes.
+Each `~` bullet must have a matching source/test comment somewhere under the `.llm` file's root:
+
+```python
+# should return nothing for an unknown short code [llm-test:Backend.UrlShortener.get_url]
+def test_get_url_unknown():
+    ...
+```
+
+The comment text before `[llm-test:...]` must exactly match the `~` bullet text, and the handle must be the canonical name of the tested entry, file, or class node. A test that covers multiple entries should usually link to the nearest owning file/class node, not duplicate the same test comment under every participating entry. The lockfile builder and checker fail when a `~` bullet has no matching test comment.
 
 ## 4a. "?" bullets — flagging suspected bugs, without deciding to fix them
 
-A bullet prefixed `- ? ` states something the code genuinely does that looks unintentional — a real behavior, described faithfully ([the concept doc](readme.md) §5's "describe, don't decide" applies here too), just flagged for a human to look at rather than silently corrected or silently left unremarkable. Same treatment as `should`: a pure prose convention, not parsed, not enforced, scannable at a glance the way a paragraph buried mid-bullet isn't.
+A bullet prefixed `- ? ` states something the code genuinely does that looks unintentional — a real behavior, described faithfully ([the concept doc](readme.md) §5's "describe, don't decide" applies here too), just flagged for a human to look at rather than silently corrected or silently left unremarkable.
 
 Non-functional/performance claims follow a hard rule regardless of where they live: only valid if quantified enough to become an actual assertion ("responds within 200ms for lists under 10k"). "Should feel fast" is not valid llmlang.
 
@@ -74,7 +83,7 @@ Bullets must fully specify the *behavior* they describe — exact thresholds, fo
 
 This does not reopen the "no control flow, no algorithms" boundary from [the concept doc](readme.md) §1. The distinction is **declarative vs. procedural**, not **detailed vs. vague**: describe *what must be true* — a rule, a constraint, an outcome — never *the steps to compute it*. "Never adds more mass in one tick than the printer's speed, the filament remaining, or the part's remaining unprinted mass" is a complete, precise rule a compiler can satisfy however it wants (a `min()` call, three sequential clamps, whatever) — it is not pseudocode, and it is not vague either. A bullet that only gestures at the gist ("adds mass at the printer's speed") isn't detailed vs. undetailed so much as *incomplete* — it's silently missing a real constraint.
 
-Completeness and "should" bullets are related but not the same move. When a human and the compiler are actively deciding what's worth guaranteeing — greenfield authoring, or reviewing a proposed addition ([the concept doc](readme.md) §3.2) — pairing a precise rule with a "should" bullet that checks it is the right instinct, since someone is there to approve that it's actually worth asserting as a permanent guarantee. During extraction specifically ([the concept doc](readme.md) §5, and the onboarding methodology it points to), that approval hasn't happened yet: a rule gets written completely as a regular bullet and verified true against the real code, but does not become a "should" bullet unless a test for it already existed in the source. Asserting a new guarantee is a decision, not a description, and extraction only describes.
+Completeness and test bullets are related but not the same move. When a human and the compiler are actively deciding what's worth guaranteeing — greenfield authoring, or reviewing a proposed addition ([the concept doc](readme.md) §3.2) — pairing a precise rule with a `~` bullet and matching test comment is the right instinct, since someone is there to approve that it's actually worth asserting as a permanent guarantee. During extraction specifically ([the concept doc](readme.md) §5, and the onboarding methodology it points to), that approval hasn't happened yet: a rule gets written completely as a regular bullet and verified true against the real code, but does not become a `~` bullet unless a test for it already existed in the source. Asserting a new guarantee is a decision, not a description, and extraction only describes.
 
 ## 7. Worked example
 
@@ -84,24 +93,24 @@ Backend:
 		- failures are handled gracefully and never crash the app
 
 	UrlShortener.py class:
+		~ should return the original URL for a code that was previously created
+
 		create_short_code (creates a unique short code for a given long URL):
 			- accepts a long URL
 			- creates a unique short code for a given long URL
 			- uses CodeGenerator to generate the code
 			- generated codes must be unique per URL
-			- should return the same code when called twice with the same URL
+			~ should return the same code when called twice with the same URL
 			- returns the short code
 
 		get_url (looks up the original URL for a given short code):
 			- accepts a short code
 			- looks up the original URL for a given short code
-			- should return not found for an unknown short code
+			~ should return not found for an unknown short code
 			- returns the original URL
 
 		_code_to_url (stores a mapping of short code to original URL):
 			- stores a mapping of short code to original URL
-
-		- should return the original URL for a code that was previously created
 
 	CodeGenerator.py class:
 		generate (generates a random 6-character alphanumeric code):

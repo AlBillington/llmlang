@@ -41,3 +41,28 @@ def extract_by_handle(file_path: Path, key: str):
         return text[code_start:code_end].strip("\n")
 
     return None
+
+
+def _clean_comment_text(text: str) -> str:
+    cleaned = text.strip()
+    for prefix in ("#", "//", "<!--", "*"):
+        if cleaned.startswith(prefix):
+            cleaned = cleaned[len(prefix) :].strip()
+    return cleaned.rstrip("-").strip()
+
+
+# collects llm-test comments by canonical node name [llm:Compiler.Extractor.test_comments_by_node]
+def test_comments_by_node(root_path: Path):
+    comments = {}
+    for path in root_path.rglob("*"):
+        if not path.is_file() or any(part in {".git", "__pycache__"} for part in path.parts):
+            continue
+        try:
+            text = path.read_text()
+        except (UnicodeDecodeError, OSError):
+            continue
+        for line in text.splitlines():
+            for match in re.finditer(r"\[llm-test:([a-zA-Z0-9_.]+)\]", line):
+                comment_text = _clean_comment_text(line[: match.start()])
+                comments.setdefault(match.group(1), set()).add(comment_text)
+    return comments

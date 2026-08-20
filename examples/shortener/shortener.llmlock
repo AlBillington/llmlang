@@ -1,6 +1,6 @@
 {
   "lockfile_schema_version": 2,
-  "ruleset_version": "2026-08-20",
+  "ruleset_version": "2026-08-20-test-trace",
   "policies": {
     "Backend": {
       "policy[0]": {
@@ -12,14 +12,14 @@
   "entries": {
     "Backend.UrlShortener.create_short_code": {
       "file": "Backend/UrlShortener.py",
-      "text": "+ creates a unique short code for a given long URL, using CodeGenerator to generate the code\naccepts a long URL\ncreates a unique short code for a given long URL\nuses CodeGenerator to generate the code\ngenerated codes must be unique per URL\nshould return the same code when called twice with the same URL\nreturns the short code",
-      "text_hash": "d31b79c1ec1fcd61884ba6e3284c3ec5b8d18ed63eb9b06100099cdbcc2a800a",
+      "text": "+ creates a unique short code for a given long URL, using CodeGenerator to generate the code\naccepts a long URL\ncreates a unique short code for a given long URL\nuses CodeGenerator to generate the code\ngenerated codes must be unique per URL\nreturns the short code\n~ should return the same code when called twice with the same URL\n~ should generate unique codes per URL",
+      "text_hash": "2e72914c1a66e422b0f686efd13b032d8f1ed88c917ac277dbc5409726211c5f",
       "code_hash": "eb4e6e3d930cb74fe2a2ccf9484376f17ab9be935c5a5b68d8e89dd70af984f6"
     },
     "Backend.UrlShortener.get_url": {
       "file": "Backend/UrlShortener.py",
-      "text": "+ looks up the original URL for a given short code\naccepts a short code\nlooks up the original URL for a given short code\nshould return not found for an unknown short code\nreturns the original URL",
-      "text_hash": "f7501b902034f889f0b62b97567a7982df461d7ef02d7efe26e18f98736aced4",
+      "text": "+ looks up the original URL for a given short code\naccepts a short code\nlooks up the original URL for a given short code\nreturns the original URL\n~ should return not found for an unknown short code",
+      "text_hash": "f6babee59b6fac478121285cf05e8421d133418468118affef3babb717d6435b",
       "code_hash": "19aaf6589cd34a91b7f124a00b64cae2bf604e1c32209194831f01208699d5f2"
     },
     "Backend.UrlShortener._code_to_url": {
@@ -55,8 +55,8 @@
   },
   "class_bullets": {
     "Backend.UrlShortener": {
-      "text": "should return the original URL for a code that was previously created",
-      "text_hash": "ca2083b90ddc8cb096d98becf7e31b39e13f9f2bd6655ab2c0c0427fc65dccc9",
+      "text": "~ should return the original URL for a code that was previously created",
+      "text_hash": "88e5fb22151dcb51a42c5c7b8c5cd1a9c01cff1d82dfdd03c8fd92b4032fd740",
       "depends_on": [
         "Backend.UrlShortener.create_short_code",
         "Backend.UrlShortener.get_url",
