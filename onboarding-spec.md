@@ -4,9 +4,9 @@ Status: this is a procedure for an LLM to follow, not a script. There is no auto
 
 ## Part A — Extracting llmlang from a codebase that has none
 
-1. **Survey, don't redesign.** Identify the real folder structure and file boundaries as they already exist. Folders become `Folder:` nodes, files become `File.ext:` nodes. Do not propose renaming or reorganizing anything at this stage — see step 8.
+1. **Survey, don't redesign.** Identify the real folder structure and file boundaries as they already exist, following the direct layout mapping rule in the format spec §8. Do not propose renaming or reorganizing anything at this stage — see step 8.
 
-2. **Find each file's natural groupings.** One class (or a flat module of functions with no class at all) is the common case — its methods become named entries directly under the file, no `Class:` layer needed. A file holding multiple classes gets one `Class:` node per class, each containing its own named entries.
+2. **Find each file's natural groupings.** Reflect only groupings that exist in the source structure, per the format spec §8. One class (or a flat module of functions with no class at all) is the common case — its methods become named entries directly under the file, no `Class:` layer needed. A file holding multiple classes gets one `Class:` node per class, each containing its own named entries.
 
 3. **Write bullets faithfully, not aspirationally.** Describe what the code actually does today, not what it should do. If something is genuinely unclear from reading it, say so rather than guess — an inaccurate bullet is worse than an absent one, since it becomes a false claim the round-trip check in step 9 can't catch (the check verifies handles resolve and claims that were made hold up; it can't verify a bullet nobody wrote). If what's unclear looks like an actual bug rather than just an ambiguity, flag it with a `- ? ` bullet (format spec §4a) instead of burying the concern in prose — describe what the code does, flag it, don't fix it or decide it's fine.
 
