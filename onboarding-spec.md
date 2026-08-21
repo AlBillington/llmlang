@@ -14,6 +14,10 @@ Status: this is a procedure for an LLM to follow, not a script. There is no auto
 
 3a-shape. **Use the format spec's shape conventions when a bullet needs structure.** Decisions, repeats, and data-shape bullets follow format spec §4c and §4d; do not invent a local notation during onboarding.
 
+3a-case. **Distinguish if/then logic from case-type logic.** Use `checks whether ...` with nested `if yes` / `if no` bullets when a condition is evaluated. When code routes by a discrete request type, mode, status, enum, or state inside an already-described flow, use one nested `for X case:` branch per case, per format spec §4c. Use `chooses ... by ...` only when selecting a strategy, value, destination, or outcome is meaningful behavior on its own. Do not repeat the same condition prefix across sibling bullets.
+
+3a-split. **Split lists of side effects into separate bullets.** If one bullet is joined by `and` because it describes multiple writes, calls, state changes, or branches, move the shared condition/loop into a parent bullet and split the actions into sibling bullets underneath, per format spec §4c.
+
 3a-calls. **Name called entries when a bullet describes delegation.** If an entry's behavior is implemented by calling another local entry, name that entry in the bullet using the Reference convention (format spec §1 and §4e). This matters most for orchestration entries such as `main`, cron handlers, controllers, and batch processors: write `generates the item report using get_output_for_ticket`, not `generates the item report`, when the called entry is part of the meaningful flow.
 
 3a-external. **Name external service calls with reconstructable detail.** If code calls an external HTTP endpoint, gRPC method, SDK method, database, queue, or logging sink, write the bullet with `via <service>.<method>` or `via <service> HTTP <method> <path>` per format spec §4e. Include request and response facts only when they determine behavior. Do not copy ordinary details from external API schemas or transport handling into llmlang; include error or idempotency behavior only when it changes this code's domain behavior. Do not settle for `fetches`, `deletes`, or `writes` when the implementation depends on a specific external operation.
@@ -41,6 +45,8 @@ Status: this is a procedure for an LLM to follow, not a script. There is no auto
 - Existing tests are represented with `~` bullets and matching `llm-test` source comments; no new `~` bullets were invented for untested behavior.
 - Data structures and meaningful mutable state are represented with `data` entries using the format spec §4d data-shape style; pure literal constants remain omitted.
 - Decisions and repeats use nested bullets per format spec §4c instead of flat prose that hides branches or loops.
+- Type, mode, status, enum, and state routing use explicit `for X case:` labels or `chooses ... by ...` according to format spec §4c, instead of repeated condition prefixes.
+- Bullets do not pack multiple independent side effects into one `and`-joined list; shared conditions or loops are parent bullets with separate action bullets underneath.
 - Orchestration entries name the local entries they call when delegation is part of the meaningful flow, per format spec §4e.
 - External calls name the service, method or endpoint, and behavior-driving request/response facts without copying ordinary API schema or transport details, per format spec §4e.
 - Bullets are complete enough to reconstruct behavior, including thresholds, fallback outcomes, and error handling that the code actually implements.

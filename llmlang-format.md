@@ -92,7 +92,25 @@ When a behavior needs visible branching, make the parent bullet only the thing b
 	- if no, keeps the current eligible assignee
 ```
 
-For a multi-way choice, use `chooses ... by ...` and put each outcome underneath. Keep result detail out of the parent so the branch axis remains obvious.
+Use `if yes` / `if no` for if/then logic: a condition is evaluated and the nested bullets describe the outcomes of that condition.
+
+For a multi-way choice where selecting an option is meaningful behavior, use `chooses ... by ...` and put each outcome underneath. Keep result detail out of the parent so the branch axis remains obvious.
+
+For case-style grouping inside an already-described flow, put one nested branch per case without adding a separate `chooses` bullet. Use `for X case:` labels so the branch context is explicit even without a separate choice parent:
+
+```
+- repeats result handling for each ticket
+	- for Delete/Erase case:
+		- writes the deletion report
+		- marks successful deletion complete
+	- for Disconnect case:
+		- writes the disconnect report
+		- marks ineligible tickets for review
+	- for otherwise case:
+		- marks the ticket not eligible
+```
+
+Use `for X case:` for case-type logic: the code is routing within a known flow by a discrete type, mode, state, status, or enum value. Use `chooses` when the code is selecting a strategy, value, destination, or outcome that should be visible as its own behavior.
 
 For loops, prefer `repeats`. The parent bullet states what is repeated and the boundary (`for each ...`, `until ...`, or `at most ...`); nested bullets state the repeated body:
 
@@ -101,6 +119,8 @@ For loops, prefer `repeats`. The parent bullet states what is repeated and the b
 	- filters agents to the ticket's eligible segment
 	- chooses the eligible agent with the lowest total load
 ```
+
+Do not make a bullet into a list of separate side effects joined by `and`. If multiple actions share the same condition or loop, put the condition or loop in the parent bullet and split the actions into sibling bullets underneath. A bullet may still use `and` when the combined phrase is one concept, but separate writes, calls, state changes, or branches should be separate bullets.
 
 ## 4d. Data entries
 
