@@ -129,7 +129,7 @@ CustomerProfile data (stores customer profile data):
 		- number (5): value is the open ticket count for that team
 ```
 
-## 4e. Cross-entry calls and orchestration entries
+## 4e. Cross-entry calls, external calls, and orchestration entries
 
 When an entry coordinates other entries, describe the observable orchestration by naming the concrete entries it uses. A bullet should not hide a call behind only its downstream effect. This is especially important for `main`, cron handlers, controllers, batch processors, and other top-level flow entries where the main behavior is delegation.
 
@@ -154,6 +154,22 @@ main (processes data subject deletion requests):
 ```
 
 This is still not a request for procedural pseudocode. Do not list private implementation steps merely because they are adjacent in source. Name another entry when that entry is part of the architecture-level contract: the current entry delegates meaningful behavior to it, a reader would need the dependency to reconstruct or review the flow, or omitting the name would make the call graph invisible.
+
+External API calls follow the same reconstructability rule. A bullet that makes an external HTTP, gRPC, SDK, database, queue, or logging call should name the external service and operation with enough detail for the compiler to recreate the same integration. Prefer `via` for external calls:
+
+```
+- removes the profile via ProfileManager.RemoveProfile with profile_id and hard_delete
+	- treats gRPC NOT_FOUND as already removed
+	- raises on any other gRPC error
+
+- calls Cognito via HTTP DELETE /plaid/flow_users/{id}
+	- signs with generate_cognito_headers
+	- accepts HTTP 200 and 204 as successful
+	- treats HTTP 404 as already deleted
+	- raises on any other HTTP status
+```
+
+Use request and response field names when they determine behavior: `with profile_id and hard_delete`, `reads connected_items.item.id`, `reads response id`, `writes ticket.custom_fields`, or `uses item_id and deletion_reason`. Put accepted statuses, retry/idempotency behavior, and error handling as nested bullets under the external call when they are specific to that call. Do not hide an external side effect behind a vague local effect like `deletes the user`, `fetches profile items`, or `writes logs` when the code actually depends on a specific service method or endpoint.
 
 ## 5. Single-sourcing discipline
 
