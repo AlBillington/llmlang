@@ -16,7 +16,7 @@ Status: this is a procedure for an LLM to follow, not a script. There is no auto
 
 3a-calls. **Name called entries when a bullet describes delegation.** If an entry's behavior is implemented by calling another local entry, name that entry in the bullet using the Reference convention (format spec §1 and §4e). This matters most for orchestration entries such as `main`, cron handlers, controllers, and batch processors: write `generates the item report using get_output_for_ticket`, not `generates the item report`, when the called entry is part of the meaningful flow.
 
-3a-external. **Name external service calls with reconstructable detail.** If code calls an external HTTP endpoint, gRPC method, SDK method, database, queue, or logging sink, write the bullet with `via <service>.<method>` or `via <service> HTTP <method> <path>` per format spec §4e. Include request and response field names when they determine behavior, and put accepted status codes, special error handling, idempotency behavior, and raised errors as nested bullets under that external call. Do not settle for `fetches`, `deletes`, or `writes` when the implementation depends on a specific external operation.
+3a-external. **Name external service calls with reconstructable detail.** If code calls an external HTTP endpoint, gRPC method, SDK method, database, queue, or logging sink, write the bullet with `via <service>.<method>` or `via <service> HTTP <method> <path>` per format spec §4e. Include request and response facts only when they determine behavior. Do not copy ordinary details from external API schemas or transport handling into llmlang; include error or idempotency behavior only when it changes this code's domain behavior. Do not settle for `fetches`, `deletes`, or `writes` when the implementation depends on a specific external operation.
 
 3a. **Write complete bullets, not a summary of the gist**, per the completeness principle (format spec §6) — state the exact rule/threshold/formula, not a gesture at it. A precise regular bullet still needs proving true, same as any other claim (step 10) — but that's a throwaway verification script, not a `~` bullet added to the spec; see step 7 for why those are different things.
 
@@ -42,7 +42,7 @@ Status: this is a procedure for an LLM to follow, not a script. There is no auto
 - Data structures and meaningful mutable state are represented with `data` entries using the format spec §4d data-shape style; pure literal constants remain omitted.
 - Decisions and repeats use nested bullets per format spec §4c instead of flat prose that hides branches or loops.
 - Orchestration entries name the local entries they call when delegation is part of the meaningful flow, per format spec §4e.
-- External calls name the service, method or endpoint, relevant request/response fields, and call-specific status/error behavior, per format spec §4e.
+- External calls name the service, method or endpoint, and behavior-driving request/response facts without copying ordinary API schema or transport details, per format spec §4e.
 - Bullets are complete enough to reconstruct behavior, including thresholds, fallback outcomes, and error handling that the code actually implements.
 
 11. **Present as a draft, not a fait accompli.** The extracted llmlang, the annotated source, and a passing round-trip check go to the human together, reviewed exactly like any other llmlang change — never silently trusted as the new source of truth just because extraction succeeded mechanically.

@@ -159,17 +159,12 @@ External API calls follow the same reconstructability rule. A bullet that makes 
 
 ```
 - removes the profile via ProfileManager.RemoveProfile with profile_id and hard_delete
-	- treats gRPC NOT_FOUND as already removed
-	- raises on any other gRPC error
 
 - calls Cognito via HTTP DELETE /plaid/flow_users/{id}
 	- signs with generate_cognito_headers
-	- accepts HTTP 200 and 204 as successful
-	- treats HTTP 404 as already deleted
-	- raises on any other HTTP status
 ```
 
-Use request and response field names when they determine behavior: `with profile_id and hard_delete`, `reads connected_items.item.id`, `reads response id`, `writes ticket.custom_fields`, or `uses item_id and deletion_reason`. Put accepted statuses, retry/idempotency behavior, and error handling as nested bullets under the external call when they are specific to that call. Do not hide an external side effect behind a vague local effect like `deletes the user`, `fetches profile items`, or `writes logs` when the code actually depends on a specific service method or endpoint.
+Use request and response field names when they determine behavior: `with profile_id and hard_delete`, `reads connected item IDs`, `reads the flow user ID`, `writes ticket custom fields`, or `uses item_id and deletion_reason`. Do not transcribe details that belong in the external API definition, such as generated protobuf field paths or ordinary transport status handling. Include error or idempotency behavior only when it changes this code's domain behavior, such as counting already-deleted items separately or continuing a multi-ticket run after a recoverable lookup failure. Do not hide an external side effect behind a vague local effect like `deletes the user`, `fetches profile items`, or `writes logs` when the code actually depends on a specific service method or endpoint.
 
 ## 5. Single-sourcing discipline
 
