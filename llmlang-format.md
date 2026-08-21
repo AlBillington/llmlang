@@ -87,9 +87,9 @@ Never state the return value twice. If a regular behavioral bullet already says 
 When a behavior needs visible branching, make the parent bullet only the thing being checked or chosen; put outcomes on nested bullets. For a yes/no branch, use `checks whether ...` and nest `if yes` / `if no` outcomes:
 
 ```
-- checks whether the ticket has a stored original assignee
-	- if yes, uses that original assignee
-	- if no, keeps the current eligible assignee
+- checks whether the task has a stored original owner
+	- if yes, uses that original owner
+	- if no, keeps the current eligible owner
 ```
 
 Use `if yes` / `if no` for if/then logic: a condition is evaluated and the nested bullets describe the outcomes of that condition.
@@ -99,15 +99,15 @@ For a multi-way choice where selecting an option is meaningful behavior, use `ch
 For case-style grouping inside an already-described flow, put one nested branch per case without adding a separate `chooses` bullet. Use `for X case:` labels so the branch context is explicit even without a separate choice parent:
 
 ```
-- repeats result handling for each ticket
-	- for Delete/Erase case:
-		- writes the deletion report
-		- marks successful deletion complete
-	- for Disconnect case:
-		- writes the disconnect report
-		- marks ineligible tickets for review
+- repeats result handling for each record
+	- for create case:
+		- writes the created-record report
+		- marks successful creation complete
+	- for update case:
+		- writes the updated-record report
+		- marks validation failures for review
 	- for otherwise case:
-		- marks the ticket not eligible
+		- marks the record not eligible
 ```
 
 Use `for X case:` for case-type logic: the code is routing within a known flow by a discrete type, mode, state, status, or enum value. Use `chooses` when the code is selecting a strategy, value, destination, or outcome that should be visible as its own behavior.
@@ -115,8 +115,8 @@ Use `for X case:` for case-type logic: the code is routing within a known flow b
 For loops, prefer `repeats`. The parent bullet states what is repeated and the boundary (`for each ...`, `until ...`, or `at most ...`); nested bullets state the repeated body:
 
 ```
-- repeats assignment selection for each ticket in due-time order
-	- filters agents to the ticket's eligible segment
+- repeats assignment selection for each task in due-time order
+	- filters agents to the task's eligible segment
 	- chooses the eligible agent with the lowest total load
 ```
 
@@ -156,21 +156,21 @@ When an entry coordinates other entries, describe the observable orchestration b
 Good:
 
 ```
-main (processes data subject deletion requests):
-	- creates a production Automator using create_production
-	- fetches tickets using fetch_tickets_to_process
-	- gathers ticket data using get_data_for_tickets
-	- writes reports and deletion state using process_and_write_results
+main (processes nightly imports):
+	- creates an import job using create_import_job
+	- fetches records using fetch_pending_records
+	- transforms records using transform_records
+	- writes import results using write_import_results
 ```
 
 Too vague:
 
 ```
-main (processes data subject deletion requests):
-	- creates an automator
-	- fetches tickets
-	- gathers data
-	- writes reports and deletion state
+main (processes nightly imports):
+	- creates an import job
+	- fetches records
+	- transforms records
+	- writes import results
 ```
 
 This is still not a request for procedural pseudocode. Do not list private implementation steps merely because they are adjacent in source. Name another entry when that entry is part of the architecture-level contract: the current entry delegates meaningful behavior to it, a reader would need the dependency to reconstruct or review the flow, or omitting the name would make the call graph invisible.
@@ -178,13 +178,13 @@ This is still not a request for procedural pseudocode. Do not list private imple
 External API calls follow the same reconstructability rule. A bullet that makes an external HTTP, gRPC, SDK, database, queue, or logging call should name the external service and operation with enough detail for the compiler to recreate the same integration. Prefer `via` for external calls:
 
 ```
-- removes the profile via ProfileManager.RemoveProfile with profile_id and hard_delete
+- removes the cached record via CacheStore.Delete with record_id
 
-- calls Cognito via HTTP DELETE /plaid/flow_users/{id}
-	- signs with generate_cognito_headers
+- calls Partner API via HTTP GET /records/{id}
+	- signs with build_partner_api_headers
 ```
 
-Use request and response field names when they determine behavior: `with profile_id and hard_delete`, `reads connected item IDs`, `reads the flow user ID`, `writes ticket custom fields`, or `uses item_id and deletion_reason`. Do not transcribe details that belong in the external API definition, such as generated protobuf field paths or ordinary transport status handling. Include error or idempotency behavior only when it changes this code's domain behavior, such as counting already-deleted items separately or continuing a multi-ticket run after a recoverable lookup failure. Do not hide an external side effect behind a vague local effect like `deletes the user`, `fetches profile items`, or `writes logs` when the code actually depends on a specific service method or endpoint.
+Use request and response field names when they determine behavior: `with record_id`, `reads changed record IDs`, `reads the partner record ID`, `writes import status fields`, or `uses record_id and import_reason`. Do not transcribe details that belong in the external API definition, such as generated schema field paths or ordinary transport status handling. Include error or idempotency behavior only when it changes this code's domain behavior, such as counting already-processed records separately or continuing a multi-record run after a recoverable lookup failure. Do not hide an external side effect behind a vague local effect like `deletes the record`, `fetches related records`, or `writes logs` when the code actually depends on a specific service method or endpoint.
 
 ## 5. Single-sourcing discipline
 

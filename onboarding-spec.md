@@ -18,7 +18,7 @@ Status: this is a procedure for an LLM to follow, not a script. There is no auto
 
 3a-split. **Split lists of side effects into separate bullets.** If one bullet is joined by `and` because it describes multiple writes, calls, state changes, or branches, move the shared condition/loop into a parent bullet and split the actions into sibling bullets underneath, per format spec §4c.
 
-3a-calls. **Name called entries when a bullet describes delegation.** If an entry's behavior is implemented by calling another local entry, name that entry in the bullet using the Reference convention (format spec §1 and §4e). This matters most for orchestration entries such as `main`, cron handlers, controllers, and batch processors: write `generates the item report using get_output_for_ticket`, not `generates the item report`, when the called entry is part of the meaningful flow.
+3a-calls. **Name called entries when a bullet describes delegation.** If an entry's behavior is implemented by calling another local entry, name that entry in the bullet using the Reference convention (format spec §1 and §4e). This matters most for orchestration entries such as `main`, cron handlers, controllers, and batch processors: write `generates the item report using buildReportRows`, not `generates the item report`, when the called entry is part of the meaningful flow.
 
 3a-external. **Name external service calls with reconstructable detail.** If code calls an external HTTP endpoint, gRPC method, SDK method, database, queue, or logging sink, write the bullet with `via <service>.<method>` or `via <service> HTTP <method> <path>` per format spec §4e. Include request and response facts only when they determine behavior. Do not copy ordinary details from external API schemas or transport handling into llmlang; include error or idempotency behavior only when it changes this code's domain behavior. Do not settle for `fetches`, `deletes`, or `writes` when the implementation depends on a specific external operation.
 
@@ -64,6 +64,30 @@ Status: this is a procedure for an LLM to follow, not a script. There is no auto
 4. **Rebuild and re-check before calling it done.** After resolving anything above, run `llmlang build <file>.llm` to record the new state, then `llmlang check <file>.llm` again to confirm clean.
 
 4a. **Name the entry, don't just describe its effect, whenever a bullet crosses into another entry.** "Redraws every print bay's appearance" is true but hides that it works by calling `updatePrintBays` - without the name, the dependency graph between entries stops being readable at a glance, which was the entire point of the `uses X` convention. This is easy to lose specifically during *later* editing passes (tightening for completeness, stripping should-bullets) that focus on one bullet at a time and don't re-check whether a name got edited out along the way - rerun the Part A step 10a checklist after sync edits, not only during first extraction.
+
+## Part C — Drafting flow files manually
+
+Status: this is a manual checklist for drafting the second, non-canonical flow artifact described in [flow-format.md](flow-format.md). There is no parser, lockfile, or verifier for flow files yet. The canonical `.llm` file still owns code structure and behavior; a flow file is only a readable execution map for an externally meaningful entry point.
+
+1. **Start from an externally meaningful entry point.** A flow begins at a job `main`, exposed API/RPC handler, queue consumer, CLI command, or other trigger boundary. Do not create one flow per helper function.
+
+2. **Walk the code, not memory.** Read the entry point and every reached function before drafting the flow. Do not summarize from the `.llm` file alone, because the flow file's value is that it shows the actual call path.
+
+3. **Use flow-format arrows for every call.** Every call in the covered flow must be represented using the internal-call or external-call arrow syntax from [flow-format.md](flow-format.md).
+
+4. **Never omit calls.** If the call exists in the covered flow, it gets an arrow. Do not intentionally omit noisy helpers, obvious wrappers, logging calls, validation calls, or external calls. If the flow becomes too noisy, narrow the flow scope or improve the real code abstraction; do not make the flow artifact a curated subset.
+
+5. **Use dash bullets only for local behavior.** A `- ` bullet describes behavior happening in the current function scope, including glue logic and flow control. It must not hide an internal or external call. If the behavior is performed by a call, rewrite it as an arrow.
+
+6. **Put call explanations under the call.** A `-> call ...` line names the call target only. Put the reason or effect as nested `- ` bullets below it, not inline after the function name.
+
+7. **Show returns only when they clarify data flow.** A return line is optional and uses `<- return conceptual result` at the same indentation as the matching call. Return text should describe information conceptually, not local variable names.
+
+8. **Keep arrows reserved for calls.** Do not use `->` as "then", "results in", "maps to", or any other prose arrow. Flow-control bullets use normal nested dash bullets from [flow-format.md](flow-format.md).
+
+9. **Preserve flow indentation.** Indent under a `-> call ...` line only to explain what happens inside that called entry. Indent under a `- ` control bullet only for the control body's behavior. Follow [flow-format.md](flow-format.md) for return indentation and colon usage.
+
+10. **Review for hidden calls before sharing.** After drafting, re-read the covered source and ask for every call expression: "Where is this arrow in the flow?" Also scan every dash bullet and ask: "Does this sentence describe a call by effect instead of naming it with an arrow?" Fix any mismatch before presenting the flow.
 
 ## Lessons from a real run (3dprinter-tycoon/Printer.js)
 

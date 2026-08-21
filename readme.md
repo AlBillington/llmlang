@@ -1,6 +1,6 @@
 # llmlang: Concept & Design (v0.2)
 
-Status: initial release. Three example projects verified end-to-end: `shortener.llm` (greenfield), `compiler.llm` (self-hosted, the compiler's own tooling described in its own language), `notes.llm` (onboarded legacy code). See §8 for known limitations. For the concrete syntax and writing conventions, see the [format spec](llmlang-format.md).
+Status: initial release. Three example projects verified end-to-end: `shortener.llm` (greenfield), `compiler.llm` (self-hosted, the compiler's own tooling described in its own language), `notes.llm` (onboarded legacy code). See §8 for known limitations. For the concrete syntax and writing conventions, see the [format spec](llmlang-format.md). For the separate execution-map artifact, see the [flow format spec](flow-format.md).
 
 ## Quick start
 
