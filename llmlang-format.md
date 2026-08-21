@@ -11,7 +11,7 @@ Status: the concrete syntax and writing conventions for llmlang source files (`.
 - **Data entry** — a source-handled entry, inside a file or class, written `identifier data (one-line summary):`. It maps to a concrete named data shape or state field in source with the same `[llm:<canonical-name>]` handle rule as a named entry. Its bullets describe the contained data shape, not behavior; see §4d.
 - **Behavior bullet** — one plain-English sentence, `- ` prefixed. Any number of behavior bullets under one named entry all describe that entry together — no one-bullet-per-entry limit. A bare behavior bullet sitting directly on a file or class (not under any entry) is a class/file-level bullet. A behavior bullet may have nested `- ` bullets under it when the nested lines are part of that same behavior statement, most often for decisions and repeats (§4c); nested bullets are not separate entries.
 - **Test bullet** — one plain-English sentence, `~ ` prefixed, nested under a named entry, file, or class. The text is the exact source test comment text before `[llm-test:<canonical-node>]`; see §4.
-- **Reference** — a plain-English mention of another entry or Component's exact name inside a bullet (`uses CredentialHasher for password verification`). Not special syntax.
+- **Reference** — a plain-English mention of another entry or Component's exact name inside a bullet (`uses CredentialHasher for password verification`). Not special syntax. When a behavior depends on another local entry being called, the bullet must name that entry instead of only describing the effect (`generates the report using buildReportRows`, not `generates the report`).
 - **Hint** — optional freetext after a folder/file/class header's name, before its colon (`Printer.js class:`). A header's real name is always its first word; a hint is everything after it. Not enforced, not tracked, not hashed, not a fixed vocabulary — the parser discards it the moment the name's extracted. It exists purely for whoever's reading the raw file, human or compiler, as a clarifying note — a hint states something explicitly that was already true, it never changes what a header is. Named entries and data entries use the required parenthesized summary form instead of hints.
 
   Shape-inference (§1's Class/Named entry split) already resolves *tree* shape correctly on its own, but it can't distinguish one case that comes up constantly: a File whose direct entries are one implicit class's methods (the common single-class-per-file case, no separate Class node needed) produces the exact same tree shape as a File whose direct entries are a flat module of unrelated standalone functions. The hint convention exists specifically to close that one gap:
@@ -128,6 +128,32 @@ CustomerProfile data (stores customer profile data):
 		- text ("support-team-a"): lookup key is the support team slug
 		- number (5): value is the open ticket count for that team
 ```
+
+## 4e. Cross-entry calls and orchestration entries
+
+When an entry coordinates other entries, describe the observable orchestration by naming the concrete entries it uses. A bullet should not hide a call behind only its downstream effect. This is especially important for `main`, cron handlers, controllers, batch processors, and other top-level flow entries where the main behavior is delegation.
+
+Good:
+
+```
+main (processes data subject deletion requests):
+	- creates a production Automator using create_production
+	- fetches tickets using fetch_tickets_to_process
+	- gathers ticket data using get_data_for_tickets
+	- writes reports and deletion state using process_and_write_results
+```
+
+Too vague:
+
+```
+main (processes data subject deletion requests):
+	- creates an automator
+	- fetches tickets
+	- gathers data
+	- writes reports and deletion state
+```
+
+This is still not a request for procedural pseudocode. Do not list private implementation steps merely because they are adjacent in source. Name another entry when that entry is part of the architecture-level contract: the current entry delegates meaningful behavior to it, a reader would need the dependency to reconstruct or review the flow, or omitting the name would make the call graph invisible.
 
 ## 5. Single-sourcing discipline
 

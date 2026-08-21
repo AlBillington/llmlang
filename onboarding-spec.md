@@ -14,6 +14,8 @@ Status: this is a procedure for an LLM to follow, not a script. There is no auto
 
 3a-shape. **Use the format spec's shape conventions when a bullet needs structure.** Decisions, repeats, and data-shape bullets follow format spec §4c and §4d; do not invent a local notation during onboarding.
 
+3a-calls. **Name called entries when a bullet describes delegation.** If an entry's behavior is implemented by calling another local entry, name that entry in the bullet using the Reference convention (format spec §1 and §4e). This matters most for orchestration entries such as `main`, cron handlers, controllers, and batch processors: write `generates the item report using get_output_for_ticket`, not `generates the item report`, when the called entry is part of the meaningful flow.
+
 3a. **Write complete bullets, not a summary of the gist**, per the completeness principle (format spec §6) — state the exact rule/threshold/formula, not a gesture at it. A precise regular bullet still needs proving true, same as any other claim (step 10) — but that's a throwaway verification script, not a `~` bullet added to the spec; see step 7 for why those are different things.
 
 4. **Name entries to match the real identifier.** Per the naming convention: an entry's name should be the actual method/function name in the code, not a paraphrase — `add_note`, not `AddsANoteAndReturnsAnId`. Add the required named-entry summary using the format spec §1 form. Apply the freetext hint defaults for folder/file/class headers as each header is written, not as a cleanup pass afterward — including the easy-to-miss case: a File whose direct entries are one implicit class's methods (the common single-class-per-file case, no separate Class node) gets the `class` hint on the *File* header itself, not just on genuine nested Class nodes.
@@ -30,6 +32,16 @@ Status: this is a procedure for an LLM to follow, not a script. There is no auto
 
 10. **Round-trip verify before presenting anything.** Run `llmlang build <file>.llm` then `llmlang check <file>.llm` against the newly annotated code — every entry and test bullet must check clean, no `SPEC_DIVERGED` or `CODE_DIVERGED`. If a pre-existing test suite exists, it must still pass unchanged (only comments were added, no behavior touched — a failure here means something in the extraction was wrong, not the original code). If no test suite exists, write a throwaway script asserting each regular behavioral claim against the real code and confirm every one holds — never present an unverified claim as if it were checked.
 
+10a. **Run the human checklist the compiler cannot enforce.** A clean lockfile check is necessary but not sufficient. Before presenting an extraction PR, re-read the `.llm` file against the current format spec and confirm:
+
+- File, class, named-entry, and data-entry shapes match the real source structure; no invented groupings were added for readability.
+- File/class hints are present where the format spec expects them.
+- Existing tests are represented with `~` bullets and matching `llm-test` source comments; no new `~` bullets were invented for untested behavior.
+- Data structures and meaningful mutable state are represented with `data` entries using the format spec §4d data-shape style; pure literal constants remain omitted.
+- Decisions and repeats use nested bullets per format spec §4c instead of flat prose that hides branches or loops.
+- Orchestration entries name the local entries they call when delegation is part of the meaningful flow, per format spec §4e.
+- Bullets are complete enough to reconstruct behavior, including thresholds, fallback outcomes, and error handling that the code actually implements.
+
 11. **Present as a draft, not a fait accompli.** The extracted llmlang, the annotated source, and a passing round-trip check go to the human together, reviewed exactly like any other llmlang change — never silently trusted as the new source of truth just because extraction succeeded mechanically.
 
 ## Part B — Syncing when llmlang and code already exist and diverged
@@ -42,7 +54,7 @@ Status: this is a procedure for an LLM to follow, not a script. There is no auto
 
 4. **Rebuild and re-check before calling it done.** After resolving anything above, run `llmlang build <file>.llm` to record the new state, then `llmlang check <file>.llm` again to confirm clean.
 
-3b. **Name the entry, don't just describe its effect, whenever a bullet crosses into another entry.** "Redraws every print bay's appearance" is true but hides that it works by calling `updatePrintBays` - without the name, the dependency graph between entries stops being readable at a glance, which was the entire point of the `uses X` convention. This is easy to lose specifically during *later* editing passes (tightening for completeness, stripping should-bullets) that focus on one bullet at a time and don't re-check whether a name got edited out along the way - it's worth a dedicated re-read of the whole file for this specifically, not just trusting each edit was self-contained.
+4a. **Name the entry, don't just describe its effect, whenever a bullet crosses into another entry.** "Redraws every print bay's appearance" is true but hides that it works by calling `updatePrintBays` - without the name, the dependency graph between entries stops being readable at a glance, which was the entire point of the `uses X` convention. This is easy to lose specifically during *later* editing passes (tightening for completeness, stripping should-bullets) that focus on one bullet at a time and don't re-check whether a name got edited out along the way - rerun the Part A step 10a checklist after sync edits, not only during first extraction.
 
 ## Lessons from a real run (3dprinter-tycoon/Printer.js)
 
