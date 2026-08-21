@@ -37,6 +37,8 @@ A file or entry with no behavior at all — a static lookup table, a seed/config
 - A data entry uses `data` immediately after its identifier and before its parenthesized summary. It is valid only inside a file or class.
 - A regular `- ` bullet may be nested under another regular `- ` bullet. The nested bullet belongs to the same nearest entry, file/class bullet group, or policy item as its parent.
 - A `~ ` test bullet may not be nested under another bullet.
+- Keep `~ ` test bullets directly attached to the bullets they cover: do not put a blank line between an entry's behavior bullets and its test bullets.
+- When an entry ends with `~ ` test bullets, put one blank line before the next header so the next entry is visually separated from the test block.
 
 ## 3. Structure grammar (informal)
 
