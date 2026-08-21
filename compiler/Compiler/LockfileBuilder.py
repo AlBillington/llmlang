@@ -91,7 +91,6 @@ def _test_trace_record(comment) -> dict:
         "text": comment.text,
         "path": comment.path,
         "code_hash": comment.code_hash,
-        "code_excerpt": comment.code,
     }
 
 

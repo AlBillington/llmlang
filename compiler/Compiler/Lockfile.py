@@ -15,11 +15,10 @@ class TestTrace(TypedDict, total=False):
     text: str
     path: str
     code_hash: str
-    code_excerpt: str
 
 
 # the lockfile's own schema version, bumped whenever its shape changes [llm:Compiler.Lockfile.LOCKFILE_SCHEMA_VERSION]
-LOCKFILE_SCHEMA_VERSION = 3
+LOCKFILE_SCHEMA_VERSION = 4
 
 # the ruleset version every entry in a lockfile is built under together [llm:Compiler.Lockfile.RULESET_VERSION]
-RULESET_VERSION = "2026-08-20-data-entry-handles"
+RULESET_VERSION = "2026-08-20-hash-only-test-traces"

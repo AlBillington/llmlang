@@ -5,7 +5,7 @@ Compiler:
 			- may also store a last-change disposition, bound to the entry's spec hash (its own text combined with every currently applicable policy's text) and code hash it was recorded against
 
 		TestTrace (stores, per linked test comment, the explanation text and backing code hash):
-			- stores, per linked test comment, the explanation text, relative path, backing code hash, and code excerpt
+			- stores, per linked test comment, the explanation text, relative path, and backing code hash
 
 		LOCKFILE_SCHEMA_VERSION (the lockfile's own schema version, bumped whenever its shape changes):
 			- the lockfile's own schema version, bumped whenever its shape changes
@@ -52,7 +52,7 @@ Compiler:
 		build (builds a lockfile by using Parser to read llmlang, Extractor to locate each entry's code, and Lockfile to record a text and code hash per entry):
 			- accepts an llmlang file path and a lockfile output path
 			- builds a lockfile by using Parser to read llmlang, Extractor to locate each source-handled entry's code, and Lockfile to record a text and code hash per entry
-			- writes test trace records with the llm-test explanation text, relative path, backing code hash, and code excerpt
+			- writes test trace records with the llm-test explanation text, relative path, and backing code hash
 			- refuses to write the lockfile when any test bullet lacks a matching llm-test comment or any llm-test comment lacks a matching test bullet
 			- has no notion of dispositions or a change manifest at all; never reads or writes anything but the lockfile itself
 			- should reproduce the same hashes when run again against an unchanged codebase

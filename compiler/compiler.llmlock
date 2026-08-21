@@ -1,6 +1,6 @@
 {
-  "lockfile_schema_version": 3,
-  "ruleset_version": "2026-08-20-data-entry-handles",
+  "lockfile_schema_version": 4,
+  "ruleset_version": "2026-08-20-hash-only-test-traces",
   "policies": {},
   "entries": {
     "Compiler.Lockfile.LockEntry": {
@@ -11,21 +11,21 @@
     },
     "Compiler.Lockfile.TestTrace": {
       "file": "Compiler/Lockfile.py",
-      "text": "+ stores, per linked test comment, the explanation text and backing code hash\nstores, per linked test comment, the explanation text, relative path, backing code hash, and code excerpt",
-      "text_hash": "6e96d16afbd969d0ddaebb8011ee4ff487e5716e47dc6ea7783b9a7ee7a9dfb2",
-      "code_hash": "85be124c32c7efe21180f592cd154659320fd8bf773c14223d488fba74755fc1"
+      "text": "+ stores, per linked test comment, the explanation text and backing code hash\nstores, per linked test comment, the explanation text, relative path, and backing code hash",
+      "text_hash": "92fb8019738001b932631290f55fe676729bd0d531afb6b9378dfe8b1734c9ef",
+      "code_hash": "961e574a9b1fbee824052d736946cb5d177abc30aa34738939e54849e7b561a1"
     },
     "Compiler.Lockfile.LOCKFILE_SCHEMA_VERSION": {
       "file": "Compiler/Lockfile.py",
       "text": "+ the lockfile's own schema version, bumped whenever its shape changes\nthe lockfile's own schema version, bumped whenever its shape changes",
       "text_hash": "b9f92471aa22fd03ab91f3b557549276034892eb0e1f302621a907dde3363810",
-      "code_hash": "2c02709ca8ba1f9952a942f22b208c7a6bd547971ca2e15aadaf3d0ce7ada082"
+      "code_hash": "918015434ad243050a8c37f7929b48ac039f85876a1633ba3610892c7968de9e"
     },
     "Compiler.Lockfile.RULESET_VERSION": {
       "file": "Compiler/Lockfile.py",
       "text": "+ the ruleset version every entry in a lockfile is built under together\nthe ruleset version every entry in a lockfile is built under together",
       "text_hash": "e601f7998dd91fd4a4749025f2de0e57027e38c9c95c0c412f4fb5df430aacda",
-      "code_hash": "7ce98f5d733d791460d551d639f8f68c6c4caecb04490890da29b85f2a9e5da0"
+      "code_hash": "182f4dde1b9a581f7b5ee0d04005f21f3805881600f2b560110f6da69995099e"
     },
     "Compiler.Parser.parse": {
       "file": "Compiler/Parser.py",
@@ -65,8 +65,8 @@
     },
     "Compiler.LockfileBuilder.build": {
       "file": "Compiler/LockfileBuilder.py",
-      "text": "+ builds a lockfile by using Parser to read llmlang, Extractor to locate each entry's code, and Lockfile to record a text and code hash per entry\naccepts an llmlang file path and a lockfile output path\nbuilds a lockfile by using Parser to read llmlang, Extractor to locate each source-handled entry's code, and Lockfile to record a text and code hash per entry\nwrites test trace records with the llm-test explanation text, relative path, backing code hash, and code excerpt\nrefuses to write the lockfile when any test bullet lacks a matching llm-test comment or any llm-test comment lacks a matching test bullet\nhas no notion of dispositions or a change manifest at all; never reads or writes anything but the lockfile itself\nshould reproduce the same hashes when run again against an unchanged codebase\nreturns the built lock data",
-      "text_hash": "384ab3cc4d4b7dee6d7933dfc52886de7a6077390d5dbd91e739e7641fdd0f0c",
+      "text": "+ builds a lockfile by using Parser to read llmlang, Extractor to locate each entry's code, and Lockfile to record a text and code hash per entry\naccepts an llmlang file path and a lockfile output path\nbuilds a lockfile by using Parser to read llmlang, Extractor to locate each source-handled entry's code, and Lockfile to record a text and code hash per entry\nwrites test trace records with the llm-test explanation text, relative path, and backing code hash\nrefuses to write the lockfile when any test bullet lacks a matching llm-test comment or any llm-test comment lacks a matching test bullet\nhas no notion of dispositions or a change manifest at all; never reads or writes anything but the lockfile itself\nshould reproduce the same hashes when run again against an unchanged codebase\nreturns the built lock data",
+      "text_hash": "e1461a1fa6d2acf40cb3894662ebca547b9e78f72a94931b6f8a180ca4b952f8",
       "code_hash": "f131470a27d5506492b00c2138a66bdf8655330d7583c3ead662ef96bd6d4140"
     },
     "Compiler.LockfileBuilder.finalize": {
