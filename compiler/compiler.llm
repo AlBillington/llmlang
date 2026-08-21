@@ -13,6 +13,14 @@ llmlang:
 			- file: text ("legacy_app/notes.py") or nothing: the file the failure is about, when known
 			- line: number (12) or nothing: the line within that file, when known
 
+		FlowRef data (stores, per flow reference, the connected llmlang entry hash, code hash, and flow-block hash):
+			- text: sibling flow file path
+			- text: canonical llmlang entry referenced by the flow
+			- [text]: call names used for that entry in the flow file
+			- text: hash of the current llmlang entry text and applicable policies
+			- text: hash of the current backing code
+			- text: hash of the flow call block text for this entry
+
 		LOCKFILE_SCHEMA_VERSION (the lockfile's own schema version, bumped whenever its shape changes):
 			- the lockfile's own schema version, bumped whenever its shape changes
 
@@ -61,11 +69,22 @@ llmlang:
 			- records each llm-test comment's canonical node, exact explanation text, relative path, source line, and backing test code
 			- returns a mapping of canonical node name to linked test comment records
 
+	flow.py:
+		flow_refs (returns hash records for internal function references in the sibling flow file):
+			- accepts an llmlang file path and current entry hash records
+			- reads the sibling `.llmflow` file when one exists
+			- resolves internal `call` targets to known llmlang entries by exact name or unique suffix match
+			- treats `call ... via ...` targets as external calls that are not locked to source handles
+			- rejects unresolved non-external call targets
+			- combines every call block for the same internal entry into one flow reference hash
+			- returns flow reference records keyed by flow file and canonical llmlang entry
+
 	lockfile_builder.py:
 		build (builds a lockfile by using Parser to read llmlang, Extractor to locate each entry's code, and Lockfile to record a text and code hash per entry):
 			- accepts an llmlang file path and a lockfile output path
 			- builds a lockfile by using Parser to read llmlang, Extractor to locate each source-handled entry's code, and Lockfile to record a text and code hash per entry
 			- writes test trace records with the llm-test explanation text, relative path, and backing code hash
+			- writes flow reference records for internal calls in the sibling flow file
 			- refuses to write the lockfile when any test bullet lacks a matching llm-test comment or any llm-test comment lacks a matching test bullet
 			- has no notion of dispositions or a change manifest at all; never reads or writes anything but the lockfile itself
 			- should reproduce the same hashes when run again against an unchanged codebase
@@ -73,10 +92,12 @@ llmlang:
 
 		finalize (guards an incremental rebuild against silently skipping a flagged entry, reading and updating a change manifest bound to the exact spec and code hashes it describes):
 			- accepts an llmlang file path, a lockfile output path, and a change manifest file path
-			- uses Checker to find every named entry currently flagged against the existing lockfile, and refuses to write anything unless the change manifest covers every one of them with a non-empty disposition
+			- uses Checker to find every named entry and flow reference currently flagged against the existing lockfile, and refuses to write anything unless the change manifest covers every one of them with a non-empty disposition
 			- accepts a fresh disposition in the manifest as a plain string, and stamps it with the entry's current spec hash and code hash
+			- stamps fresh flow dispositions with the referenced entry's current spec hash, current code hash, and current flow reference hash
 			- a spec hash combines the entry's own text with every policy currently covering it, so a disposition goes stale whether the entry's own text changed or an applicable policy did
-			- for a manifest entry that's already stamped, keeps it only if both hashes still match the entry's current state; otherwise drops it as stale, along with any entry whose key no longer exists in the llmlang tree at all
+			- for a manifest entry that's already stamped, keeps it only if all recorded hashes still match the entry or flow reference's current state; otherwise drops it as stale, along with any entry whose key no longer exists
+			- accepts a fresh one-time disposition for a removed flow reference, then prunes it from the lock and changes file
 			- builds every hash and disposition fresh from the current llmlang text, current code, current policies, and current manifest only; never carries anything forward from the lockfile's own prior content
 			- writes both the new lockfile and the updated (stamped and pruned) manifest file, but never alters a disposition's own text
 			- returns the built lock data
@@ -98,12 +119,13 @@ llmlang:
 			- reports TEST_LINK_MISSING when any test bullet lacks a matching llm-test comment with the same text and canonical node name
 			- reports TEST_TRACE_STALE when any llm-test comment lacks a matching test bullet with the same text and canonical node name
 			- reports TEST_CODE_DIVERGED when a linked test's backing code hash differs from the lockfile
+			- reports FLOW_DIVERGED when an internal flow reference is new, removed, or stale against the referenced llmlang entry, backing code, or flow block text
 			- should report an entry as SPEC_DIVERGED when its own llmlang text changed, it's brand new, or an upstream policy covering it changed
 			- should report an entry as CODE_DIVERGED when its handle is missing from the code or its code changed unexpectedly
 			- should report an unmodified codebase as fully clean
 			- never prints anything itself; every finding is returned as a Finding record in a list, so a caller can present every failure from a run together instead of relying on interleaved prints, or render them as structured data instead of text
 			- each finding names a file and line where known: entry-level findings point at the entry's header line in the llmlang file, code-level findings point at the handle's own comment line in the source file
-			- returns whether everything checked out clean, the set of named-entry tracking keys currently flagged for any reason, and the list of findings
+			- returns whether everything checked out clean, the set of named-entry and flow-reference tracking keys currently flagged for any reason, and the list of findings
 
 	cli.py:
 		find_pyproject (finds the nearest pyproject.toml by walking up from a starting directory):

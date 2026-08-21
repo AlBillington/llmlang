@@ -1,6 +1,6 @@
 {
-  "lockfile_schema_version": 4,
-  "ruleset_version": "2026-08-20-hash-only-test-traces",
+  "lockfile_schema_version": 5,
+  "ruleset_version": "2026-08-21-flow-ref-triples",
   "policies": {
     "Backend": {
       "policy[0]": {
@@ -126,5 +126,6 @@
         "code_hash": "cdc50c218e90e55d0b2067966446a517729aa91ae3acd700d11e6b3b46af9a1d"
       }
     ]
-  }
+  },
+  "flow_refs": {}
 }

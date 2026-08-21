@@ -1,6 +1,6 @@
 # llmlang Flow — Format Spec (draft)
 
-Status: draft syntax for a second, non-canonical flow artifact. Flow files are readable execution maps for externally meaningful entry points. They do not replace `.llm`, do not define code ownership, and do not participate in the lockfile yet.
+Status: draft syntax for a second, non-canonical `.llmflow` artifact. Flow files are readable execution maps for externally meaningful entry points. They do not replace `.llm` or define code ownership. When a sibling `.llmflow` file exists, the lockfile tracks each internal function reference against the referenced llmlang entry hash, backing code hash, and flow block hash.
 
 For canonical `.llm` syntax and behavior specs, see [llmlang-format.md](llmlang-format.md). For the manual drafting checklist, see [onboarding-spec.md](onboarding-spec.md) Part C.
 
@@ -25,36 +25,36 @@ Use one entry point per externally triggered path, such as a job `main`, exposed
 
 ### Internal Calls
 
-Internal function or method calls use `-> call` followed by the canonical `.llm` entry name:
+Internal function or method calls use `→ call` followed by the canonical `.llm` entry name:
 
 ```text
--> call ImportJob.fetch_pending_records
+→ call ImportJob.fetch_pending_records
 	- builds the pending-record query
-<- return records ready to import
+← return records ready to import
 ```
 
 The call line names the target only. Put the reason, effect, or important local context in nested dash bullets below the call.
 
 ### External Calls
 
-External HTTP, gRPC, SDK, database, queue, logging, or storage boundaries also use `-> call`, with `via` naming the integration boundary:
+External HTTP, gRPC, SDK, database, queue, logging, or storage boundaries also use `→ call`, with `via` naming the integration boundary:
 
 ```text
--> call fetch records via Partner Records API
+→ call fetch records via Partner Records API
 	- finds records updated since the last import
-<- return matching partner records
+← return matching partner records
 ```
 
 Keep the operation conceptual. Include the service, method, endpoint, or boundary only as far as needed to identify what leaves the codebase.
 
 ### Returns
 
-Returns use `<- return` at the same indentation level as the matching call:
+Returns use `← return` at the same indentation level as the matching call:
 
 ```text
--> call UserService.find_user
+→ call UserService.find_user
 	- looks up the user for the submitted identifier
-<- return matching user, or no user
+← return matching user, or no user
 ```
 
 Return lines are optional. Include them when they clarify data flow. Return text should be conceptual, not local variable names.
@@ -81,9 +81,9 @@ Flow control uses normal dash bullets and nested dash bullets. Arrows remain res
 
 - for update case:
 	- writes the changed fields
-	-> call RecordService.update_record
+	→ call RecordService.update_record
 		- applies changes to the existing record
-	<- return write outcome
+	← return write outcome
 ```
 
 Use `if yes` / `if no` for if/then logic. Use `for X case:` for routing by request type, mode, status, enum, or state.
@@ -92,57 +92,67 @@ Use `if yes` / `if no` for if/then logic. Use `for X case:` for routing by reque
 
 Indentation shows the current execution context:
 
-- Lines nested under `-> call ...` explain what happens inside that called entry.
+- Lines nested under `→ call ...` explain what happens inside that called entry.
 - Lines nested under `- ` control bullets explain that control block's body.
-- `<- return ...` appears at the same indentation level as the matching `-> call ...`.
+- `← return ...` appears at the same indentation level as the matching `→ call ...`.
 - Behavior/control bullets with children end with `:`.
 - Call arrows do not need `:` even when they have explanation bullets.
 
 ## 5. Completeness Rules
 
-- Every internal call in the covered flow is represented as `-> call CanonicalEntryName`.
-- Every external boundary call in the covered flow is represented as `-> call operation via ExternalServiceOrEndpoint`.
+- Every internal call in the covered flow is represented as `→ call CanonicalEntryName`.
+- Every external boundary call in the covered flow is represented as `→ call operation via ExternalServiceOrEndpoint`.
 - Calls are never intentionally omitted.
 - Plain dash bullets never summarize work done by an omitted call.
 - If the flow becomes too noisy, narrow the flow scope or improve the real code abstraction; do not curate calls out of the flow file.
 
-## 6. Worked Example
+## 6. Lockfile Verification
+
+For every internal function reference in a sibling flow file, the lockfile records a triple:
+
+- the referenced llmlang entry hash, including applicable policies
+- the backing code hash for that entry's source handle
+- the hash of every flow call block for that entry, combined in source order
+
+If any member of the triple changes, `--check` reports `FLOW_DIVERGED`. `--finalize` refuses to refresh the lockfile until the changes file includes a disposition for that flow reference. A fresh flow disposition is stamped against the new triple. A removed flow reference also requires a one-time disposition before it is pruned.
+
+## 7. Worked Example
 
 ```text
 import_job.py:
 
 main: runs the nightly import job
-	-> call ImportJob.create
+	→ call ImportJob.create
 		- creates the import job with configured clients
-		-> call load configuration via Config Store
+		→ call load configuration via Config Store
 			- loads service configuration
-		<- return import configuration
-		-> call open connection via Database
+		← return import configuration
+		→ call open connection via Database
 			- connects to the import database
-		<- return database connection
-	<- return configured import job
+		← return database connection
+	← return configured import job
 
-	-> call ImportJob.fetch_pending_records
+	→ call ImportJob.fetch_pending_records
 		- builds the pending-record query
-		-> call fetch records via Partner Records API
+		→ call fetch records via Partner Records API
 			- finds records updated since the last import
-		<- return partner records
+		← return partner records
 		- filters out records that were already imported
-		-> call ImportJob.parse_record
+		→ call ImportJob.parse_record
 			- parses one partner record into an import record
-		<- return parsed import record
-	<- return import records ready to process
+		← return parsed import record
+	← return import records ready to process
 
-	-> call ImportJob.process_records
+	→ call ImportJob.process_records
 		- repeats processing for each import record:
-			-> call ImportJob.validate_record
+			→ call ImportJob.validate_record
 				- validates required fields
-			<- return validation result
+			← return validation result
 			- checks whether the record is valid:
 				- if no, records a validation failure
 				- if yes, continues processing
-			-> call ImportJob.write_record
+			→ call ImportJob.write_record
 				- writes the valid record
-			<- return write outcome
-	<- return import summary
+			← return write outcome
+	← return import summary
 ```

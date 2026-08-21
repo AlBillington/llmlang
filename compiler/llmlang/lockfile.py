@@ -18,6 +18,16 @@ class TestTrace(TypedDict, total=False):
     code_hash: str
 
 
+# stores, per flow reference, the connected llmlang entry hash, code hash, and flow-block hash [llm:llmlang.lockfile.FlowRef]
+class FlowRef(TypedDict, total=False):
+    flow: str
+    entry: str
+    call_names: list[str]
+    entry_spec_hash: str
+    code_hash: str
+    flow_ref_hash: str
+
+
 # stores one check/coverage failure as structured data, not just display text [llm:llmlang.lockfile.Finding]
 @dataclass
 class Finding:
@@ -28,7 +38,7 @@ class Finding:
 
 
 # the lockfile's own schema version, bumped whenever its shape changes [llm:llmlang.lockfile.LOCKFILE_SCHEMA_VERSION]
-LOCKFILE_SCHEMA_VERSION = 4
+LOCKFILE_SCHEMA_VERSION = 5
 
 # the ruleset version every entry in a lockfile is built under together [llm:llmlang.lockfile.RULESET_VERSION]
-RULESET_VERSION = "2026-08-20-hash-only-test-traces"
+RULESET_VERSION = "2026-08-21-flow-ref-triples"

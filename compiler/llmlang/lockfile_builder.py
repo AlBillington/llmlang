@@ -20,6 +20,7 @@ from llmlang.extractor import (
     test_comment_roots,
     test_comments_by_node,
 )
+from llmlang.flow import flow_refs
 from llmlang.lockfile import LOCKFILE_SCHEMA_VERSION, RULESET_VERSION
 from llmlang.lockfile_checker import check
 from llmlang.parser import (
@@ -27,8 +28,8 @@ from llmlang.parser import (
     parse,
     walk_class_bullet_groups,
     walk_entries,
-    walk_tests,
     walk_policies,
+    walk_tests,
 )
 
 
@@ -63,6 +64,20 @@ def _hash_all_entries(llmlang_path: Path, root) -> dict:
         spec_hash = _sha256("\n".join([text] + policy_texts))
         result[tracking_key] = (file_rel, text, _sha256(text), _sha256(code), spec_hash)
     return result
+
+
+# private helper of build()/finalize(), not independent architecture [llm-exempt]
+def _entry_records_from_hashes(hashed: dict) -> dict:
+    return {
+        key: {
+            "file": file_rel,
+            "text": text,
+            "text_hash": text_hash,
+            "code_hash": code_hash,
+            "spec_hash": spec_hash,
+        }
+        for key, (file_rel, text, text_hash, code_hash, spec_hash) in hashed.items()
+    }
 
 
 # private helper of build()/finalize(), not independent architecture [llm-exempt]
@@ -147,6 +162,7 @@ def build(llmlang_path: Path, lockfile_path: Path):
     root = parse(llmlang_path)
     test_traces = _test_traces(llmlang_path, root)
     hashed = _hash_all_entries(llmlang_path, root)
+    entry_records = _entry_records_from_hashes(hashed)
     policies, class_bullets = _policies_and_class_bullets(root)
 
     lock = {
@@ -155,10 +171,11 @@ def build(llmlang_path: Path, lockfile_path: Path):
         "policies": policies,
         "entries": {
             key: {"file": file_rel, "text": text, "text_hash": text_hash, "code_hash": code_hash}
-            for key, (file_rel, text, text_hash, code_hash, spec_hash) in hashed.items()
+            for key, (file_rel, text, text_hash, code_hash, _spec_hash) in hashed.items()
         },
         "class_bullets": class_bullets,
         "test_traces": test_traces,
+        "flow_refs": flow_refs(llmlang_path, entry_records),
     }
     lockfile_path.write_text(json.dumps(lock, indent=2), encoding="utf-8")
     return lock
@@ -184,26 +201,55 @@ def finalize(llmlang_path: Path, lockfile_path: Path, changes_path: Path):
     root = parse(llmlang_path)
     test_traces = _test_traces(llmlang_path, root)
     hashed = _hash_all_entries(llmlang_path, root)
+    entry_records = _entry_records_from_hashes(hashed)
+    current_flow_refs = flow_refs(llmlang_path, entry_records)
     policies, class_bullets = _policies_and_class_bullets(root)
 
     new_changes = {}
     resolved = {}
     for key, value in changes.items():
-        if key not in hashed:
-            continue  # orphaned - this entry no longer exists in the llmlang tree
-        _, _, _, code_hash, spec_hash = hashed[key]
-        if isinstance(value, dict):
-            if value.get("for_spec_hash") == spec_hash and value.get("for_code_hash") == code_hash:
-                # still describes exactly the current state - keep it
-                new_changes[key] = value
-                resolved[key] = value
-            # else: stale - the entry or an applicable policy moved on since this was recorded, drop it
-        elif isinstance(value, str) and value:
-            # fresh submission - stamp it against the current state
-            stamped = {"disposition": value, "for_spec_hash": spec_hash, "for_code_hash": code_hash}
-            new_changes[key] = stamped
-            resolved[key] = stamped
-        # else: empty or malformed value, drop it
+        if key in hashed:
+            _, _, _, code_hash, spec_hash = hashed[key]
+            if isinstance(value, dict):
+                if value.get("for_spec_hash") == spec_hash and value.get("for_code_hash") == code_hash:
+                    # still describes exactly the current state - keep it
+                    new_changes[key] = value
+                    resolved[key] = value
+                # else: stale - the entry or an applicable policy moved on since this was recorded, drop it
+            elif isinstance(value, str) and value:
+                # fresh submission - stamp it against the current state
+                stamped = {"disposition": value, "for_spec_hash": spec_hash, "for_code_hash": code_hash}
+                new_changes[key] = stamped
+                resolved[key] = stamped
+            # else: empty or malformed value, drop it
+            continue
+
+        if key in current_flow_refs:
+            current = current_flow_refs[key]
+            if isinstance(value, dict):
+                if (
+                    value.get("for_entry_spec_hash") == current["entry_spec_hash"]
+                    and value.get("for_code_hash") == current["code_hash"]
+                    and value.get("for_flow_ref_hash") == current["flow_ref_hash"]
+                ):
+                    new_changes[key] = value
+                    resolved[key] = value
+            elif isinstance(value, str) and value:
+                stamped = {
+                    "disposition": value,
+                    "for_entry_spec_hash": current["entry_spec_hash"],
+                    "for_code_hash": current["code_hash"],
+                    "for_flow_ref_hash": current["flow_ref_hash"],
+                }
+                new_changes[key] = stamped
+                resolved[key] = stamped
+            continue
+        if key.startswith("flow:") and isinstance(value, str) and value:
+            # A locked flow reference can be intentionally removed. Require
+            # a one-time disposition, then prune it from both lock and changes.
+            resolved[key] = value
+            continue
+        # orphaned - this entry or flow reference no longer exists
 
     missing = flagged_entries - resolved.keys()
     if missing:
@@ -218,12 +264,18 @@ def finalize(llmlang_path: Path, lockfile_path: Path, changes_path: Path):
         "entries": {},
         "class_bullets": class_bullets,
         "test_traces": test_traces,
+        "flow_refs": {},
     }
-    for key, (file_rel, text, text_hash, code_hash, spec_hash) in hashed.items():
+    for key, (file_rel, text, text_hash, code_hash, _spec_hash) in hashed.items():
         entry_record = {"file": file_rel, "text": text, "text_hash": text_hash, "code_hash": code_hash}
         if key in resolved:
             entry_record["last_change"] = resolved[key]
         lock["entries"][key] = entry_record
+    for key, record in current_flow_refs.items():
+        flow_record = dict(record)
+        if key in resolved:
+            flow_record["last_change"] = resolved[key]
+        lock["flow_refs"][key] = flow_record
 
     lockfile_path.write_text(json.dumps(lock, indent=2), encoding="utf-8")
     changes_path.write_text(json.dumps(new_changes, indent=2), encoding="utf-8")

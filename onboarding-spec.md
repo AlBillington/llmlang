@@ -67,7 +67,7 @@ Status: this is a procedure for an LLM to follow, not a script. There is no auto
 
 ## Part C — Drafting flow files manually
 
-Status: this is a manual checklist for drafting the second, non-canonical flow artifact described in [flow-format.md](flow-format.md). There is no parser, lockfile, or verifier for flow files yet. The canonical `.llm` file still owns code structure and behavior; a flow file is only a readable execution map for an externally meaningful entry point.
+Status: this is a manual checklist for drafting the second, non-canonical `.llmflow` artifact described in [flow-format.md](flow-format.md). The canonical `.llm` file still owns code structure and behavior; a flow file is a readable execution map for an externally meaningful entry point, with internal function references tracked by the lockfile.
 
 1. **Start from an externally meaningful entry point.** A flow begins at a job `main`, exposed API/RPC handler, queue consumer, CLI command, or other trigger boundary. Do not create one flow per helper function.
 
@@ -79,15 +79,17 @@ Status: this is a manual checklist for drafting the second, non-canonical flow a
 
 5. **Use dash bullets only for local behavior.** A `- ` bullet describes behavior happening in the current function scope, including glue logic and flow control. It must not hide an internal or external call. If the behavior is performed by a call, rewrite it as an arrow.
 
-6. **Put call explanations under the call.** A `-> call ...` line names the call target only. Put the reason or effect as nested `- ` bullets below it, not inline after the function name.
+6. **Put call explanations under the call.** A `→ call ...` line names the call target only. Put the reason or effect as nested `- ` bullets below it, not inline after the function name.
 
-7. **Show returns only when they clarify data flow.** A return line is optional and uses `<- return conceptual result` at the same indentation as the matching call. Return text should describe information conceptually, not local variable names.
+7. **Show returns only when they clarify data flow.** A return line is optional and uses `← return conceptual result` at the same indentation as the matching call. Return text should describe information conceptually, not local variable names.
 
 8. **Keep arrows reserved for calls.** Do not use `->` as "then", "results in", "maps to", or any other prose arrow. Flow-control bullets use normal nested dash bullets from [flow-format.md](flow-format.md).
 
-9. **Preserve flow indentation.** Indent under a `-> call ...` line only to explain what happens inside that called entry. Indent under a `- ` control bullet only for the control body's behavior. Follow [flow-format.md](flow-format.md) for return indentation and colon usage.
+9. **Preserve flow indentation.** Indent under a `→ call ...` line only to explain what happens inside that called entry. Indent under a `- ` control bullet only for the control body's behavior. Follow [flow-format.md](flow-format.md) for return indentation and colon usage.
 
 10. **Review for hidden calls before sharing.** After drafting, re-read the covered source and ask for every call expression: "Where is this arrow in the flow?" Also scan every dash bullet and ask: "Does this sentence describe a call by effect instead of naming it with an arrow?" Fix any mismatch before presenting the flow.
+
+11. **Run lock verification.** Run `build.py <file>.llm --check` after adding or editing a sibling `.llmflow` file. If any referenced entry hash, backing code hash, or flow block hash changes, add a disposition to `<stem>.llmchanges.json` explaining the reviewed relationship before running `--finalize`.
 
 ## Lessons from a real run (3dprinter-tycoon/Printer.js)
 
