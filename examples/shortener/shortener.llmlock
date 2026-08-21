@@ -1,6 +1,6 @@
 {
   "lockfile_schema_version": 3,
-  "ruleset_version": "2026-08-20-test-code-trace",
+  "ruleset_version": "2026-08-20-data-entry-handles",
   "policies": {
     "Backend": {
       "policy[0]": {
@@ -24,8 +24,8 @@
     },
     "Backend.UrlShortener._code_to_url": {
       "file": "Backend/UrlShortener.py",
-      "text": "+ stores a mapping of short code to original URL\nstores a mapping of short code to original URL",
-      "text_hash": "105bc0f1a42973d0b62abb29c4e87c7c594c355eb8c90fc374588bdab38492f7",
+      "text": "+ stores a mapping of short code to original URL\nmapping:\n\t- text: lookup key is the short code\n\t- text: value is the original URL",
+      "text_hash": "ee3307892dae146c429a4a3a20369f131b2ae62c2004fc0f3c055988f3e94af3",
       "code_hash": "c686aaad70c0f9d353d5ba081bbbef76b87533d67023d16e12b7f3ea81167bec"
     },
     "Backend.CodeGenerator.generate": {

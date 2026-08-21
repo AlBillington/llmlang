@@ -1,6 +1,6 @@
 {
   "lockfile_schema_version": 3,
-  "ruleset_version": "2026-08-20-test-code-trace",
+  "ruleset_version": "2026-08-20-data-entry-handles",
   "policies": {},
   "entries": {
     "legacy_app.notes.NotesStore.add_note": {
@@ -17,8 +17,8 @@
     },
     "legacy_app.notes.NotesStore._notes": {
       "file": "legacy_app/notes.py",
-      "text": "+ stores notes keyed by their ID\nstores notes keyed by their ID",
-      "text_hash": "7b3a179ef5f4ebebacc603c33f206668127f36a1a1163d00144eb64a4c2eb79a",
+      "text": "+ stores notes keyed by their ID\nmapping:\n\t- text: lookup key is the note ID\n\t- text: value is the note text",
+      "text_hash": "eecb7c6829e83b7970370a0a2e086d41ec9190b8a2ad17a17e21614c6f337e40",
       "code_hash": "196f9524f23f487d7bb82510610b96809cb5f686274da97acc931f17ed39c5fc"
     },
     "legacy_app.notes.NotesValidator.is_valid": {

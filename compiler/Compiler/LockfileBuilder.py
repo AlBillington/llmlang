@@ -1,4 +1,4 @@
-"""Builds a lockfile: hashes every named entry's combined bullets and
+"""Builds a lockfile: hashes every source-handled entry's combined bullets and
 located code, every class/file-level bullet group's combined bullets,
 and every policy's text. Class-level bullet groups and policies have no
 code location of their own, so they're tracked with text_hash only.
@@ -42,7 +42,7 @@ def _combined(bullets: list) -> str:
 
 def _hash_all_entries(llmlang_path: Path, root) -> dict:
     """tracking_key -> (file_rel, text, text_hash, code_hash, spec_hash) for
-    every named entry, computed fresh from the current llmlang text, current
+    every source-handled entry, computed fresh from the current llmlang text, current
     code, and every policy currently covering it - never from any prior
     lockfile. spec_hash folds the entry's own text together with every
     applicable policy's text, so it moves if either one does; when nothing

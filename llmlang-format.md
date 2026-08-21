@@ -8,16 +8,17 @@ Status: the concrete syntax and writing conventions for llmlang source files (`.
 - **File** — a header with a file extension (`UrlShortener.py:`). The physical location a Component's code lives in, resolved directly from the folder chain above it plus its own name — no separate discovery step or manifest, ever.
 - **Class** — a header, inside a file, whose own children are further headers (not bullets). A grouping, needed only when one file holds more than one such grouping (multiple classes sharing a file, or a flat module that happens to need one).
 - **Named entry** — a header, inside a file or class, whose own children are `- ` behavior bullets or `~ ` test bullets. The thing that gets a comment handle and maps to exactly one method or property. A named entry header is written `identifier (one-line summary):`; the identifier supplies the final segment of the entry's canonical name, and the summary is the exact source comment text before the canonical-name `[llm:...]` handle, subject only to language comment syntax. *Shape-inferred*, not keyword-driven: whichever kind of children a header has decides what it is.
-- **Behavior bullet** — one plain-English sentence, `- ` prefixed. Any number of behavior bullets under one named entry all describe that entry together — no one-bullet-per-entry limit. A bare behavior bullet sitting directly on a file or class (not under any entry) is a class/file-level bullet.
+- **Data entry** — a source-handled entry, inside a file or class, written `identifier data (one-line summary):`. It maps to a concrete named data shape or state field in source with the same `[llm:<canonical-name>]` handle rule as a named entry. Its bullets describe the contained data shape, not behavior; see §4d.
+- **Behavior bullet** — one plain-English sentence, `- ` prefixed. Any number of behavior bullets under one named entry all describe that entry together — no one-bullet-per-entry limit. A bare behavior bullet sitting directly on a file or class (not under any entry) is a class/file-level bullet. A behavior bullet may have nested `- ` bullets under it when the nested lines are part of that same behavior statement, most often for decisions and repeats (§4c); nested bullets are not separate entries.
 - **Test bullet** — one plain-English sentence, `~ ` prefixed, nested under a named entry, file, or class. The text is the exact source test comment text before `[llm-test:<canonical-node>]`; see §4.
 - **Reference** — a plain-English mention of another entry or Component's exact name inside a bullet (`uses CredentialHasher for password verification`). Not special syntax.
-- **Hint** — optional freetext after a folder/file/class header's name, before its colon (`Printer.js class:`). A header's real name is always its first word; a hint is everything after it. Not enforced, not tracked, not hashed, not a fixed vocabulary — the parser discards it the moment the name's extracted. It exists purely for whoever's reading the raw file, human or compiler, as a clarifying note — a hint states something explicitly that was already true, it never changes what a header is. Named entries use the required parenthesized summary form instead of hints.
+- **Hint** — optional freetext after a folder/file/class header's name, before its colon (`Printer.js class:`). A header's real name is always its first word; a hint is everything after it. Not enforced, not tracked, not hashed, not a fixed vocabulary — the parser discards it the moment the name's extracted. It exists purely for whoever's reading the raw file, human or compiler, as a clarifying note — a hint states something explicitly that was already true, it never changes what a header is. Named entries and data entries use the required parenthesized summary form instead of hints.
 
   Shape-inference (§1's Class/Named entry split) already resolves *tree* shape correctly on its own, but it can't distinguish one case that comes up constantly: a File whose direct entries are one implicit class's methods (the common single-class-per-file case, no separate Class node needed) produces the exact same tree shape as a File whose direct entries are a flat module of unrelated standalone functions. The hint convention exists specifically to close that one gap:
   - A **File** header gets a `class` hint when its direct entries are one implicit class's methods/fields with no separate Class node — e.g. `Printer.js class:`, `CodeGenerator.py class:`. It gets no hint when its direct entries are a flat module of standalone functions with no implied class.
   - A genuine nested **Class** node (used only when a file holds more than one class) also gets a `class` hint, for the same at-a-glance legibility, even though shape-inference already resolves it correctly on its own — e.g. `NotesStore class:` inside a `notes.py:` that also holds `NotesValidator class:`.
   - A **named entry** gets a parenthesized one-line summary instead of a hint — e.g. `parse (parses a tab-indented llmlang file into a tree):`, `formatCurrency (formats cents as a currency string):`.
-  - A state/data-shape entry (mutable state's fields, e.g. `gameState`, `_code_to_url`) gets no hint either way — it's neither a class nor a function.
+  - A **data entry** gets the `data` marker plus a parenthesized one-line summary — e.g. `gameState data (stores current game state):`, `_code_to_url data (stores a mapping of short code to original URL):`.
 
   Applied consistently once a file's own shape (implicit class, flat functions, or a mix) is judged — not added ad hoc where clarity seemed to matter.
 
@@ -32,18 +33,22 @@ A file or entry with no behavior at all — a static lookup table, a seed/config
 - `@policy:` is the *only* reserved word, valid at root, folder, file, or class scope. Everything else is shape-inferred (§1).
 - A header with a `.` in its name is a file (extension = everything after the last `.`); folders may contain folders or files, nothing else.
 - Class vs. named entry is decided by what shows up first among a header's *header* children, not its first child overall — a class may legitimately open with a class-level bullet before its first named entry.
-- A header's name is its first word. A parenthesized suffix on a named entry is the required summary; other freetext after a folder/file/class name is an optional Hint (§1), discarded once the name's extracted.
+- A header's name is its first word. A parenthesized suffix on a named entry or data entry is the required summary; other freetext after a folder/file/class name is an optional Hint (§1), discarded once the name's extracted.
+- A data entry uses `data` immediately after its identifier and before its parenthesized summary. It is valid only inside a file or class.
+- A regular `- ` bullet may be nested under another regular `- ` bullet. The nested bullet belongs to the same nearest entry, file/class bullet group, or policy item as its parent.
+- A `~ ` test bullet may not be nested under another bullet.
 
 ## 3. Structure grammar (informal)
 
 ```
 llmlang  := (Policy | Folder | File)*
 Folder   := Name Hint? ":" NEWLINE (Policy | Folder | File)*
-File     := Name "." Ext Hint? ":" NEWLINE (Policy | Bullet | Class | Entry)*
-Class    := Name Hint? ":" NEWLINE (Policy | Bullet | Entry)*
+File     := Name "." Ext Hint? ":" NEWLINE (Policy | Bullet | Class | Entry | DataEntry)*
+Class    := Name Hint? ":" NEWLINE (Policy | Bullet | Entry | DataEntry)*
 Entry    := Name " (" Summary ")" ":" NEWLINE (Bullet | Test)+
+DataEntry := Name " data (" Summary ")" ":" NEWLINE Bullet+
 Policy   := "@policy:" NEWLINE Bullet+
-Bullet   := "- " Sentence NEWLINE
+Bullet   := "- " Sentence NEWLINE Bullet*
 Test     := "~ " Sentence NEWLINE
 ```
 
@@ -74,6 +79,55 @@ Non-functional/performance claims follow a hard rule regardless of where they li
 Where there's something to say, two separate single-purpose bullets frame the entry: an "accepts X" bullet as the *first* bullet, and a "returns Y" bullet as the *last* — the behavioral bullets sit between them. Either half is omitted when there's nothing to say — a function with no parameters gets no accepts bullet, a function with no return value gets no returns bullet, and a void no-arg function gets neither. Constructors are a special case: what they're constructed *from* matters and gets an accepts bullet ("accepts a name, size, width, and value"), but what they return is definitionally the new instance, which carries no information worth stating — a constructor never gets a returns bullet.
 
 Never state the return value twice. If a regular behavioral bullet already says what's returned — most often because it already starts with "returns" itself ("returns whether the roll's original size is zero or less") — that bullet already *is* the closing returns bullet; it does not get a second, more generic "returns Y" bullet stacked next to it restating the same fact in vaguer words. Only add a standalone returns bullet when no existing bullet already states the return value explicitly. This makes the returns half of the convention closer to "make sure the return value is stated exactly once, and that whichever bullet does it sits last" than "always append a bullet."
+
+## 4c. Decisions and repeats
+
+When a behavior needs visible branching, make the parent bullet only the thing being checked or chosen; put outcomes on nested bullets. For a yes/no branch, use `checks whether ...` and nest `if yes` / `if no` outcomes:
+
+```
+- checks whether the ticket has a stored original assignee
+	- if yes, uses that original assignee
+	- if no, keeps the current eligible assignee
+```
+
+For a multi-way choice, use `chooses ... by ...` and put each outcome underneath. Keep result detail out of the parent so the branch axis remains obvious.
+
+For loops, prefer `repeats`. The parent bullet states what is repeated and the boundary (`for each ...`, `until ...`, or `at most ...`); nested bullets state the repeated body:
+
+```
+- repeats assignment selection for each ticket in due-time order
+	- filters agents to the ticket's eligible segment
+	- chooses the eligible agent with the lowest total load
+```
+
+## 4d. Data entries
+
+A data entry is written `Name data (one-line summary):` and requires a matching source handle immediately before the concrete data definition, field, type, or schema it describes:
+
+```python
+# stores a mapping of short code to original URL [llm:Backend.UrlShortener._code_to_url]
+self._code_to_url = {}
+```
+
+Data bullets describe contained data shape. `stores` is implied by the data-entry kind, so the bullets should be concise type-first descriptions rather than behavior sentences. Use English type annotations before a colon: `text`, `number`, `boolean`, `date`, `timestamp`, or the exact named domain/data type when one exists. Use `[type]` for a list that is simple enough to stay on one line.
+
+Nested bullets imply an anonymous contained object. Use `mapping:` only when the shape is an arbitrary-key lookup; put the key and value shapes on nested bullets rather than writing `dict` or inlining a compound structure.
+
+```
+CustomerProfile data (stores customer profile data):
+	- text: customer display name
+	- number: billing tier rank
+	- boolean: whether the customer can submit premium tickets
+	- timestamp: when the customer was created
+	- [text]: alternate email addresses
+	- Plan: active billing plan
+	- notification preferences:
+		- boolean: whether email updates are enabled
+		- [text]: muted topic names
+	- mapping:
+		- text: lookup key is the support team slug
+		- number: value is the open ticket count for that team
+```
 
 ## 5. Single-sourcing discipline
 
@@ -111,8 +165,10 @@ Backend:
 			~ should return not found for an unknown short code
 			- returns the original URL
 
-		_code_to_url (stores a mapping of short code to original URL):
-			- stores a mapping of short code to original URL
+		_code_to_url data (stores a mapping of short code to original URL):
+			- mapping:
+				- text: lookup key is the short code
+				- text: value is the original URL
 
 	CodeGenerator.py class:
 		generate (generates a random 6-character alphanumeric code):

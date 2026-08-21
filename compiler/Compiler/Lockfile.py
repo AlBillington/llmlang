@@ -2,7 +2,7 @@
 from typing import TypedDict
 
 
-# stores, per named entry, its file, text hash, and code hash [llm:Compiler.Lockfile.LockEntry]
+# stores, per source-handled entry, its file, text hash, and code hash [llm:Compiler.Lockfile.LockEntry]
 class LockEntry(TypedDict, total=False):
     file: str
     text: str
@@ -22,4 +22,4 @@ class TestTrace(TypedDict, total=False):
 LOCKFILE_SCHEMA_VERSION = 3
 
 # the ruleset version every entry in a lockfile is built under together [llm:Compiler.Lockfile.RULESET_VERSION]
-RULESET_VERSION = "2026-08-20-test-code-trace"
+RULESET_VERSION = "2026-08-20-data-entry-handles"

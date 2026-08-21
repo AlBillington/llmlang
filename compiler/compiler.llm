@@ -1,7 +1,7 @@
 Compiler:
 	Lockfile.py:
-		LockEntry (stores, per named entry, its file, text hash, and code hash):
-			- stores, per named entry, its file, text hash, and code hash
+		LockEntry (stores, per source-handled entry, its file, text hash, and code hash):
+			- stores, per source-handled entry, its file, text hash, and code hash
 			- may also store a last-change disposition, bound to the entry's spec hash (its own text combined with every currently applicable policy's text) and code hash it was recorded against
 
 		TestTrace (stores, per linked test comment, the explanation text and backing code hash):
@@ -16,8 +16,10 @@ Compiler:
 	Parser.py:
 		parse (parses a tab-indented llmlang file into a tree of folders, files, classes, and entries):
 			- accepts a file path
-			- parses a tab-indented llmlang file into a tree of folders, files, classes, and named entries
-			- a named entry header must include a parenthesized summary after the identifier and before the colon
+			- parses a tab-indented llmlang file into a tree of folders, files, classes, named entries, and data entries
+			- a source-handled entry header must include a parenthesized summary after the identifier and before the colon
+			- a data entry header must include the data marker after the identifier and before the parenthesized summary
+			- a nested regular bullet belongs to the same nearest entry, file or class bullet group, or policy item as its parent
 			- a test bullet can live under a named entry, file, or class node
 			- a header's real name is always its first word; any words after a folder, file, or class name up to the colon are a freetext hint, discarded once the name is extracted
 			- returns the parsed tree
@@ -49,7 +51,7 @@ Compiler:
 	LockfileBuilder.py:
 		build (builds a lockfile by using Parser to read llmlang, Extractor to locate each entry's code, and Lockfile to record a text and code hash per entry):
 			- accepts an llmlang file path and a lockfile output path
-			- builds a lockfile by using Parser to read llmlang, Extractor to locate each entry's code, and Lockfile to record a text and code hash per entry
+			- builds a lockfile by using Parser to read llmlang, Extractor to locate each source-handled entry's code, and Lockfile to record a text and code hash per entry
 			- writes test trace records with the llm-test explanation text, relative path, backing code hash, and code excerpt
 			- refuses to write the lockfile when any test bullet lacks a matching llm-test comment or any llm-test comment lacks a matching test bullet
 			- has no notion of dispositions or a change manifest at all; never reads or writes anything but the lockfile itself

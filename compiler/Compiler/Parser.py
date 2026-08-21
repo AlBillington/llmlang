@@ -10,19 +10,22 @@ Everything else is shape-inferred, not keyword-driven:
     or files; nothing else.
   - Inside a file: a header whose own children are further headers is
     a class (a grouping, used when one file holds more than one). A
-    header whose own children are "- " bullets is a named entry - the
-    thing that gets a handle and maps to one method/property. A file
-    can contain entries directly (no class layer) for the non-OOP case
-    of a flat module of functions.
+    header whose own children are "- " bullets is a source-handled
+    entry - the thing that gets a handle and maps to one method,
+    property, or data shape. A file can contain entries directly (no
+    class layer) for the non-OOP case of a flat module of functions.
   - A bare "- " bullet sitting directly under a file or class (not
     under any entry) is a class/file-level bullet - for guarantees
     that span more than one entry, since it has no single entry's code
     to attach to.
-  - A named entry's bullets, in any number, all describe that one
-    entry together - no one-bullet-per-entry limit.
+  - A source-handled entry's bullets, in any number, all describe that
+    one entry together - no one-bullet-per-entry limit.
   - "~ " lines are test bullets. They can live on a named entry, file,
     or class node, and each one must map to a source test comment with
     the same text and the node's canonical name in an llm-test handle.
+  - A header written "Name data (summary):" under a file or class is a
+    data entry. It has bullets describing contained data shape and uses
+    the same source-handle and lockfile path as named entries.
 """
 from pathlib import Path
 
@@ -47,8 +50,10 @@ def _finalize(node, path_desc):
                 f"{path_desc} has no content (needs at least one bullet, test, or nested entry)"
             )
         node["kind"] = "entry"
-    if node["kind"] == "entry" and not node["summary"]:
+    if node["kind"] in ("entry", "data") and not node["summary"]:
         raise ValueError(f"{path_desc} is missing a parenthesized summary")
+    if node["kind"] == "data" and node["tests"]:
+        raise ValueError(f"{path_desc} is a data entry and cannot have test bullets")
     for name, child in node["children"].items():
         _finalize(child, f"{path_desc}.{name}")
 
@@ -56,11 +61,21 @@ def _finalize(node, path_desc):
 def _parse_header(content):
     header = content[:-1]
     summary = None
+    marker = None
     if header.endswith(")") and " (" in header:
         header, summary = header.rsplit(" (", 1)
         summary = summary[:-1].strip()
-    name = header.split(None, 1)[0]
-    return name, summary
+    parts = header.split(None, 1)
+    name = parts[0]
+    if len(parts) > 1 and parts[1].strip() == "data":
+        marker = "data"
+    return name, summary, marker
+
+
+def _bullet_text(content: str, relative_depth: int) -> str:
+    if relative_depth <= 0:
+        return content[2:]
+    return "\t" * relative_depth + "- " + content[2:]
 
 
 # parses a tab-indented llmlang file into a tree of folders, files, classes, and entries [llm:Compiler.Parser.parse]
@@ -83,6 +98,13 @@ def parse(path):
             if isinstance(parent, list):
                 assert content.startswith("- "), f"a test bullet isn't valid here: {content!r}"
                 parent.append(content[2:])
+                stack.append((depth, {"kind": "bullet", "target": parent, "base_depth": depth}))
+            elif isinstance(parent, dict) and parent.get("kind") == "bullet":
+                assert content.startswith("- "), f"a test bullet isn't valid here: {content!r}"
+                relative_depth = depth - parent["base_depth"]
+                assert relative_depth > 0, f"a nested bullet must be indented: {content!r}"
+                parent["target"].append(_bullet_text(content, relative_depth))
+                stack.append((depth, parent))
             else:
                 # kind stays undetermined until we know whether a header
                 # child ever shows up (see below) - a bullet alone doesn't
@@ -93,12 +115,24 @@ def parse(path):
                     "entry",
                     "class",
                     "file",
+                    "data",
                 ), f"a bullet isn't valid here: {content!r}"
                 if content.startswith("~ "):
+                    assert parent["kind"] != "data", f"a test bullet isn't valid in data: {content!r}"
                     parent["tests"].append(content[2:])
+                    stack.append((depth, None))
                 else:
                     parent["bullets"].append(content[2:])
-            stack.append((depth, None))
+                    stack.append(
+                        (
+                            depth,
+                            {
+                                "kind": "bullet",
+                                "target": parent["bullets"],
+                                "base_depth": depth,
+                            },
+                        )
+                    )
             continue
 
         if content == "@policy:":
@@ -109,7 +143,7 @@ def parse(path):
             continue
 
         assert content.endswith(":"), f"expected a header: {content!r}"
-        name, summary = _parse_header(content)
+        name, summary, marker = _parse_header(content)
         assert isinstance(parent, dict), f"unexpected nesting under a bullet or policy item: {content!r}"
 
         if parent["kind"] is None:
@@ -118,6 +152,8 @@ def parse(path):
             parent["kind"] = "class"
 
         if parent["kind"] == "folder":
+            if marker is not None:
+                raise ValueError(f"unexpected data marker outside a file or class: {content!r}")
             if "." in name:
                 base, ext = name.rsplit(".", 1)
                 node = _new_node(base, ext, summary)
@@ -129,6 +165,8 @@ def parse(path):
             stack.append((depth, node))
         elif parent["kind"] in ("file", "class"):
             node = _new_node(name, summary=summary)
+            if marker == "data":
+                node["kind"] = "data"
             parent["children"][name] = node
             stack.append((depth, node))
         else:
@@ -157,7 +195,7 @@ def _entry_keys_beneath(node, file_rel, class_name):
     file_label = _file_label(file_rel)
     keys = []
     for name, child in node["children"].items():
-        if child["kind"] == "entry":
+        if child["kind"] in ("entry", "data"):
             local_key = f"{class_name}.{name}" if class_name else name
             keys.append(f"{file_label}.{local_key}")
         elif child["kind"] == "class":
@@ -166,7 +204,7 @@ def _entry_keys_beneath(node, file_rel, class_name):
 
 
 def walk_entries(node, folder_parts=(), file_rel=None, class_name=None):
-    """Yield (file_rel, handle_key, tracking_key, bullets) for every named entry."""
+    """Yield (file_rel, handle_key, tracking_key, bullets) for every source-handled entry."""
     for name, child in node["children"].items():
         kind = child["kind"]
         if kind == "folder":
@@ -176,7 +214,7 @@ def walk_entries(node, folder_parts=(), file_rel=None, class_name=None):
             yield from walk_entries(child, folder_parts, rel, None)
         elif kind == "class":
             yield from walk_entries(child, folder_parts, file_rel, name)
-        elif kind == "entry":
+        elif kind in ("entry", "data"):
             local_key = f"{class_name}.{name}" if class_name else name
             tracking_key = f"{_file_label(file_rel)}.{local_key}"
             yield (

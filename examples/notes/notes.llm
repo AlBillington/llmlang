@@ -11,8 +11,10 @@ legacy_app:
 				- lists all notes
 				- returns all notes
 
-			_notes (stores notes keyed by their ID):
-				- stores notes keyed by their ID
+			_notes data (stores notes keyed by their ID):
+				- mapping:
+					- text: lookup key is the note ID
+					- text: value is the note text
 
 		NotesValidator class:
 			is_valid (checks that note text is non-empty):

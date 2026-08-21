@@ -1,12 +1,12 @@
 {
   "lockfile_schema_version": 3,
-  "ruleset_version": "2026-08-20-test-code-trace",
+  "ruleset_version": "2026-08-20-data-entry-handles",
   "policies": {},
   "entries": {
     "Compiler.Lockfile.LockEntry": {
       "file": "Compiler/Lockfile.py",
-      "text": "+ stores, per named entry, its file, text hash, and code hash\nstores, per named entry, its file, text hash, and code hash\nmay also store a last-change disposition, bound to the entry's spec hash (its own text combined with every currently applicable policy's text) and code hash it was recorded against",
-      "text_hash": "2d5a4539123d3106851c43beef2872e7c12ae3176127a2015bd869fbd915d1b5",
+      "text": "+ stores, per source-handled entry, its file, text hash, and code hash\nstores, per source-handled entry, its file, text hash, and code hash\nmay also store a last-change disposition, bound to the entry's spec hash (its own text combined with every currently applicable policy's text) and code hash it was recorded against",
+      "text_hash": "95f5b971fdc8b3d65888be804121d90e9437ec153f98bd013a71c009d5ce5c38",
       "code_hash": "30f675d30ed4fd587c8d2cfe4c619f1824d8e8c92560d769aeb4c68d534b0103"
     },
     "Compiler.Lockfile.TestTrace": {
@@ -25,13 +25,13 @@
       "file": "Compiler/Lockfile.py",
       "text": "+ the ruleset version every entry in a lockfile is built under together\nthe ruleset version every entry in a lockfile is built under together",
       "text_hash": "e601f7998dd91fd4a4749025f2de0e57027e38c9c95c0c412f4fb5df430aacda",
-      "code_hash": "7adefbcfc269fba503a15ac0930aeb2a140a3726df51feb643f089de3c5aa5f1"
+      "code_hash": "7ce98f5d733d791460d551d639f8f68c6c4caecb04490890da29b85f2a9e5da0"
     },
     "Compiler.Parser.parse": {
       "file": "Compiler/Parser.py",
-      "text": "+ parses a tab-indented llmlang file into a tree of folders, files, classes, and entries\naccepts a file path\nparses a tab-indented llmlang file into a tree of folders, files, classes, and named entries\na named entry header must include a parenthesized summary after the identifier and before the colon\na test bullet can live under a named entry, file, or class node\na header's real name is always its first word; any words after a folder, file, or class name up to the colon are a freetext hint, discarded once the name is extracted\nreturns the parsed tree",
-      "text_hash": "0abb06f4b5547b8051bd2c573a0262be3932b2432ad4005c47428b93962a85e3",
-      "code_hash": "b51d170408218c0889945f21385477903af4843f72618aea032d58c79a6edde2"
+      "text": "+ parses a tab-indented llmlang file into a tree of folders, files, classes, and entries\naccepts a file path\nparses a tab-indented llmlang file into a tree of folders, files, classes, named entries, and data entries\na source-handled entry header must include a parenthesized summary after the identifier and before the colon\na data entry header must include the data marker after the identifier and before the parenthesized summary\na nested regular bullet belongs to the same nearest entry, file or class bullet group, or policy item as its parent\na test bullet can live under a named entry, file, or class node\na header's real name is always its first word; any words after a folder, file, or class name up to the colon are a freetext hint, discarded once the name is extracted\nreturns the parsed tree",
+      "text_hash": "943316ee7560be49d349c7ac21453d15245cda9068ee003267058f9f93b59942",
+      "code_hash": "b60f3fb523d71c27c134f738052baf3f35b7607bb53459d683fe08cca9bc32a1"
     },
     "Compiler.Extractor.TestComment": {
       "file": "Compiler/Extractor.py",
@@ -65,8 +65,8 @@
     },
     "Compiler.LockfileBuilder.build": {
       "file": "Compiler/LockfileBuilder.py",
-      "text": "+ builds a lockfile by using Parser to read llmlang, Extractor to locate each entry's code, and Lockfile to record a text and code hash per entry\naccepts an llmlang file path and a lockfile output path\nbuilds a lockfile by using Parser to read llmlang, Extractor to locate each entry's code, and Lockfile to record a text and code hash per entry\nwrites test trace records with the llm-test explanation text, relative path, backing code hash, and code excerpt\nrefuses to write the lockfile when any test bullet lacks a matching llm-test comment or any llm-test comment lacks a matching test bullet\nhas no notion of dispositions or a change manifest at all; never reads or writes anything but the lockfile itself\nshould reproduce the same hashes when run again against an unchanged codebase\nreturns the built lock data",
-      "text_hash": "0bd24b91462f56d4604cdb8d32477cd1818a724365800348cba2479fc645afbb",
+      "text": "+ builds a lockfile by using Parser to read llmlang, Extractor to locate each entry's code, and Lockfile to record a text and code hash per entry\naccepts an llmlang file path and a lockfile output path\nbuilds a lockfile by using Parser to read llmlang, Extractor to locate each source-handled entry's code, and Lockfile to record a text and code hash per entry\nwrites test trace records with the llm-test explanation text, relative path, backing code hash, and code excerpt\nrefuses to write the lockfile when any test bullet lacks a matching llm-test comment or any llm-test comment lacks a matching test bullet\nhas no notion of dispositions or a change manifest at all; never reads or writes anything but the lockfile itself\nshould reproduce the same hashes when run again against an unchanged codebase\nreturns the built lock data",
+      "text_hash": "384ab3cc4d4b7dee6d7933dfc52886de7a6077390d5dbd91e739e7641fdd0f0c",
       "code_hash": "f131470a27d5506492b00c2138a66bdf8655330d7583c3ead662ef96bd6d4140"
     },
     "Compiler.LockfileBuilder.finalize": {
