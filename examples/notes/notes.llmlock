@@ -5,9 +5,14 @@
   "entries": {
     "legacy_app.notes.NotesStore.add_note": {
       "file": "legacy_app/notes.py",
-      "text": "+ adds a note and returns a randomly generated ID\naccepts the note's text\nadds a note and returns a randomly generated 8-character lowercase ID",
-      "text_hash": "992ec82123d9eda3756e8c42c53caa2fe63481253f62bbfe57507db43feba01c",
-      "code_hash": "abd1ea6701a3bb1f0b13a60e66b4a179d527025914362abff7a095db47532e74"
+      "text": "+ adds a note and returns a randomly generated 8-character lowercase ID\naccepts the note's text\nadds a note and returns a randomly generated 8-character lowercase ID",
+      "text_hash": "d4c058c56c83af684db5a1a47964e674c00832c84721a886ca73aba20de52300",
+      "code_hash": "abd1ea6701a3bb1f0b13a60e66b4a179d527025914362abff7a095db47532e74",
+      "last_change": {
+        "disposition": "corrected the required summary and source comment to match the entry's already-precise bullet - previously omitted the 8-character lowercase detail; no code change needed",
+        "for_spec_hash": "d4c058c56c83af684db5a1a47964e674c00832c84721a886ca73aba20de52300",
+        "for_code_hash": "abd1ea6701a3bb1f0b13a60e66b4a179d527025914362abff7a095db47532e74"
+      }
     },
     "legacy_app.notes.NotesStore.list_notes": {
       "file": "legacy_app/notes.py",
@@ -23,9 +28,14 @@
     },
     "legacy_app.notes.NotesValidator.is_valid": {
       "file": "legacy_app/notes.py",
-      "text": "+ checks that note text is non-empty\naccepts note text\nchecks that note text contains at least one non-whitespace character\nreturns whether the text is valid\n~ should reject empty and whitespace-only note text\n~ should accept non-empty note text",
-      "text_hash": "6d4e4499e705fa5f38e9d32579bfebf34fb07d66613f23d9fe1554a91e1818c5",
-      "code_hash": "fb10024f11ef92f7bfb4edbe103ac0489634c655cc3f54e89380441b9f06c2e1"
+      "text": "+ checks that note text contains at least one non-whitespace character\naccepts note text\nchecks that note text contains at least one non-whitespace character\nreturns whether the text is valid\n~ should reject empty and whitespace-only note text\n~ should accept non-empty note text",
+      "text_hash": "553614595c36304fd43e4bbaaedc6b6a25077ab990277e10cf5bdae6065098d9",
+      "code_hash": "fb10024f11ef92f7bfb4edbe103ac0489634c655cc3f54e89380441b9f06c2e1",
+      "last_change": {
+        "disposition": "corrected the required summary and source comment to match the entry's already-precise bullet - previously said \"non-empty\", which silently regressed a completeness fix (whitespace-only text is non-empty but the code rejects it); no code change needed",
+        "for_spec_hash": "553614595c36304fd43e4bbaaedc6b6a25077ab990277e10cf5bdae6065098d9",
+        "for_code_hash": "fb10024f11ef92f7bfb4edbe103ac0489634c655cc3f54e89380441b9f06c2e1"
+      }
     }
   },
   "class_bullets": {

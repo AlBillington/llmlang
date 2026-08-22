@@ -3,7 +3,7 @@ legacy_app:
 		NotesStore class:
 			~ should include a note that was added, when listing all notes
 
-			add_note (adds a note and returns a randomly generated ID):
+			add_note (adds a note and returns a randomly generated 8-character lowercase ID):
 				- accepts the note's text
 				- adds a note and returns a randomly generated 8-character lowercase ID
 
@@ -17,7 +17,7 @@ legacy_app:
 					- text: value is the note text
 
 		NotesValidator class:
-			is_valid (checks that note text is non-empty):
+			is_valid (checks that note text contains at least one non-whitespace character):
 				- accepts note text
 				- checks that note text contains at least one non-whitespace character
 				~ should reject empty and whitespace-only note text

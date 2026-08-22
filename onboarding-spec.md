@@ -14,7 +14,7 @@ Status: this is a procedure for an LLM to follow, not a script. There is no auto
 
 3a-shape. **Use the format spec's shape conventions when a bullet needs structure.** Decisions, repeats, and data-shape bullets follow format spec §4c and §4d; do not invent a local notation during onboarding.
 
-3a. **Write complete bullets, not a summary of the gist**, per the completeness principle (format spec §6) — state the exact rule/threshold/formula, not a gesture at it. A precise regular bullet still needs proving true, same as any other claim (step 10) — but that's a throwaway verification script, not a "should" bullet added to the spec; see step 7 for why those are different things.
+3a. **Write complete bullets, not a summary of the gist**, per the completeness principle (format spec §6) — state the exact rule/threshold/formula, not a gesture at it. A precise regular bullet still needs proving true, same as any other claim (step 10) — but that's a throwaway verification script, not a `~` bullet added to the spec; see step 7 for why those are different things.
 
 4. **Name entries to match the real identifier.** Per the naming convention: an entry's name should be the actual method/function name in the code, not a paraphrase — `add_note`, not `AddsANoteAndReturnsAnId`. Add the required named-entry summary using the format spec §1 form. Apply the freetext hint defaults for folder/file/class headers as each header is written, not as a cleanup pass afterward — including the easy-to-miss case: a File whose direct entries are one implicit class's methods (the common single-class-per-file case, no separate Class node) gets the `class` hint on the *File* header itself, not just on genuine nested Class nodes.
 

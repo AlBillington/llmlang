@@ -9,7 +9,7 @@ class NotesStore:
         # stores notes keyed by their ID [llm:legacy_app.notes.NotesStore._notes]
         self._notes = {}
 
-    # adds a note and returns a randomly generated ID [llm:legacy_app.notes.NotesStore.add_note]
+    # adds a note and returns a randomly generated 8-character lowercase ID [llm:legacy_app.notes.NotesStore.add_note]
     def add_note(self, text):
         note_id = "".join(random.choices(string.ascii_lowercase, k=8))
         self._notes[note_id] = text
@@ -21,6 +21,6 @@ class NotesStore:
 
 
 class NotesValidator:
-    # checks that note text is non-empty [llm:legacy_app.notes.NotesValidator.is_valid]
+    # checks that note text contains at least one non-whitespace character [llm:legacy_app.notes.NotesValidator.is_valid]
     def is_valid(self, text):
         return bool(text and text.strip())

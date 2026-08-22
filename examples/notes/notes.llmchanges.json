@@ -1,7 +1,12 @@
 {
   "legacy_app.notes.NotesValidator.is_valid": {
-    "disposition": "completeness fix only - bullet now states the exact rule (rejects whitespace-only text, not just empty text); code already did this, no code change needed",
-    "for_spec_hash": "e703f6bf79b8bd5d7224c83463ed415ed1051e8801041f02c5ece8c5f52847f4",
+    "disposition": "corrected the required summary and source comment to match the entry's already-precise bullet - previously said \"non-empty\", which silently regressed a completeness fix (whitespace-only text is non-empty but the code rejects it); no code change needed",
+    "for_spec_hash": "553614595c36304fd43e4bbaaedc6b6a25077ab990277e10cf5bdae6065098d9",
     "for_code_hash": "fb10024f11ef92f7bfb4edbe103ac0489634c655cc3f54e89380441b9f06c2e1"
+  },
+  "legacy_app.notes.NotesStore.add_note": {
+    "disposition": "corrected the required summary and source comment to match the entry's already-precise bullet - previously omitted the 8-character lowercase detail; no code change needed",
+    "for_spec_hash": "d4c058c56c83af684db5a1a47964e674c00832c84721a886ca73aba20de52300",
+    "for_code_hash": "abd1ea6701a3bb1f0b13a60e66b4a179d527025914362abff7a095db47532e74"
   }
 }

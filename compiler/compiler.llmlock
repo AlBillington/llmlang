@@ -43,19 +43,34 @@
       "file": "Compiler/Extractor.py",
       "text": "+ extracts the code implementing an entry by locating its comment handle and taking everything up to the next handle\naccepts a file path and canonical entry name\nextracts the code implementing an entry by locating its comment handle and taking everything up to the next handle\nreturns the extracted code, or nothing if the handle isn't found",
       "text_hash": "6480e177208d9ef97f68098f2c5b7ce36c6e1aedc1f936649b14728f990960eb",
-      "code_hash": "915f7659e61c17603000497c112b05330a13f1db047733593f0c298ae8a399c9"
+      "code_hash": "3a5558831bd376401edb3b6629f04810b5a59fbd395cb3832228f637b5598ac0",
+      "last_change": {
+        "disposition": "unrelated code shift only - a nearby helper (_repo_root) was fixed to resolve paths before walking .parents, absorbed into this entry's coarse handle region; extract_by_handle's own logic is untouched",
+        "for_spec_hash": "6480e177208d9ef97f68098f2c5b7ce36c6e1aedc1f936649b14728f990960eb",
+        "for_code_hash": "3a5558831bd376401edb3b6629f04810b5a59fbd395cb3832228f637b5598ac0"
+      }
     },
     "Compiler.Extractor.test_comment_roots": {
       "file": "Compiler/Extractor.py",
       "text": "+ chooses where llm-test comments are scanned\naccepts an llmlang file path\nreturns the llmlang file directory and the repository tests directory when a repository root is found",
       "text_hash": "555eff9210bda9dbfdca0093fd62ad021685bc5bb139635b3e2759a17dbd05d1",
-      "code_hash": "026031bb54e03bf4180c8e7e6a6037360dec16b0406daf1f27d883714c39a229"
+      "code_hash": "5eaa18621971fd208be628f1d0f528c4e86de66e4f585270458911a86962596d",
+      "last_change": {
+        "disposition": "fixed a real bug: _repo_root was called with an unresolved path, so a relative .llm path invoked from anywhere but the repo root silently failed to find .git and fell back to the wrong base, producing different (wrong) results depending on caller cwd - now resolves the llmlang path up front so results are identical regardless of invocation directory",
+        "for_spec_hash": "555eff9210bda9dbfdca0093fd62ad021685bc5bb139635b3e2759a17dbd05d1",
+        "for_code_hash": "5eaa18621971fd208be628f1d0f528c4e86de66e4f585270458911a86962596d"
+      }
     },
     "Compiler.Extractor.test_comment_base": {
       "file": "Compiler/Extractor.py",
       "text": "+ chooses the stable base path for test trace paths\naccepts an llmlang file path\nreturns the repository root when one is found, otherwise the llmlang file directory",
       "text_hash": "036a14bad4f6f52675b6e1fd6f661121e5f761196c3f673ff68c3f2d1d18d7e1",
-      "code_hash": "bba09ee1b26bdf1a7fa6c95c5496adfc6a2ec8d76a27d5faf2732f0e9571f7c5"
+      "code_hash": "e55ddd8f430ee66339509677e649663449f1899f6ac3ac6a1d512e805a7987ea",
+      "last_change": {
+        "disposition": "same fix as test_comment_roots - resolves the llmlang path before finding the repo root, so the returned base path no longer depends on caller cwd",
+        "for_spec_hash": "036a14bad4f6f52675b6e1fd6f661121e5f761196c3f673ff68c3f2d1d18d7e1",
+        "for_code_hash": "e55ddd8f430ee66339509677e649663449f1899f6ac3ac6a1d512e805a7987ea"
+      }
     },
     "Compiler.Extractor.test_comments_by_node": {
       "file": "Compiler/Extractor.py",
@@ -79,7 +94,7 @@
       "file": "Compiler/LockfileChecker.py",
       "text": "+ checks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as SPEC_DIVERGED, CODE_DIVERGED, or unchanged, alongside its file and comment handle\naccepts an llmlang file path and a lockfile path\nchecks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as SPEC_DIVERGED, CODE_DIVERGED, or unchanged, alongside its file and comment handle\nreports TEST_LINK_MISSING when any test bullet lacks a matching llm-test comment with the same text and canonical node name\nreports TEST_TRACE_STALE when any llm-test comment lacks a matching test bullet with the same text and canonical node name\nreports TEST_CODE_DIVERGED when a linked test's backing code hash differs from the lockfile\nshould report an entry as SPEC_DIVERGED when its own llmlang text changed, it's brand new, or an upstream policy covering it changed\nshould report an entry as CODE_DIVERGED when its handle is missing from the code or its code changed unexpectedly\nshould report an unmodified codebase as fully clean\nreturns whether everything checked out clean, and the set of named-entry tracking keys currently flagged for any reason",
       "text_hash": "eb5ac191cf13c4c6c86eea079b166bc0c4183591b8e9dccded3cb6bf0207f422",
-      "code_hash": "814adfd1234a3cde5da8fbf713b8fc411e4c0d98f0cea8a5f45b227717bd4f65"
+      "code_hash": "1cb68355450e272371773c60762d8685822f2d9a6b0967bf0986a552ce28db6d"
     }
   },
   "class_bullets": {},

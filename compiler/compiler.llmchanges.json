@@ -1,0 +1,17 @@
+{
+  "Compiler.Extractor.extract_by_handle": {
+    "disposition": "unrelated code shift only - a nearby helper (_repo_root) was fixed to resolve paths before walking .parents, absorbed into this entry's coarse handle region; extract_by_handle's own logic is untouched",
+    "for_spec_hash": "6480e177208d9ef97f68098f2c5b7ce36c6e1aedc1f936649b14728f990960eb",
+    "for_code_hash": "3a5558831bd376401edb3b6629f04810b5a59fbd395cb3832228f637b5598ac0"
+  },
+  "Compiler.Extractor.test_comment_roots": {
+    "disposition": "fixed a real bug: _repo_root was called with an unresolved path, so a relative .llm path invoked from anywhere but the repo root silently failed to find .git and fell back to the wrong base, producing different (wrong) results depending on caller cwd - now resolves the llmlang path up front so results are identical regardless of invocation directory",
+    "for_spec_hash": "555eff9210bda9dbfdca0093fd62ad021685bc5bb139635b3e2759a17dbd05d1",
+    "for_code_hash": "5eaa18621971fd208be628f1d0f528c4e86de66e4f585270458911a86962596d"
+  },
+  "Compiler.Extractor.test_comment_base": {
+    "disposition": "same fix as test_comment_roots - resolves the llmlang path before finding the repo root, so the returned base path no longer depends on caller cwd",
+    "for_spec_hash": "036a14bad4f6f52675b6e1fd6f661121e5f761196c3f673ff68c3f2d1d18d7e1",
+    "for_code_hash": "e55ddd8f430ee66339509677e649663449f1899f6ac3ac6a1d512e805a7987ea"
+  }
+}

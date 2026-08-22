@@ -94,6 +94,10 @@ def _clean_comment_text(text: str) -> str:
 
 
 def _repo_root(path: Path):
+    # relative paths (e.g. Path(".")) have no .parents to walk until
+    # resolved - without this, running from anywhere but the repo root
+    # silently fails to find it and falls back to the wrong base
+    path = path.resolve()
     for parent in (path, *path.parents):
         if (parent / ".git").exists():
             return parent
@@ -109,11 +113,14 @@ def _relative_path(path: Path, base_path: Path) -> str:
 
 # chooses where llm-test comments are scanned [llm:Compiler.Extractor.test_comment_roots]
 def test_comment_roots(llmlang_path: Path):
-    roots = [llmlang_path.parent]
-    repo_root = _repo_root(llmlang_path.parent)
+    # resolved up front so this gives the same answer regardless of
+    # whether llmlang_path was relative or absolute, or what the
+    # caller's cwd happened to be
+    llm_dir = llmlang_path.resolve().parent
+    roots = [llm_dir]
+    repo_root = _repo_root(llm_dir)
     if repo_root:
-        parent = repo_root
-        tests_root = parent / "tests"
+        tests_root = repo_root / "tests"
         if tests_root.exists() and tests_root not in roots:
             roots.append(tests_root)
     return roots
@@ -121,7 +128,8 @@ def test_comment_roots(llmlang_path: Path):
 
 # chooses the stable base path for test trace paths [llm:Compiler.Extractor.test_comment_base]
 def test_comment_base(llmlang_path: Path):
-    return _repo_root(llmlang_path.parent) or llmlang_path.parent
+    llm_dir = llmlang_path.resolve().parent
+    return _repo_root(llm_dir) or llm_dir
 
 
 def _python_block_for_line(text: str, line_number: int):
