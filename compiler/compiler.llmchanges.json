@@ -1,17 +1,67 @@
 {
+  "Compiler.Lockfile.LockEntry": {
+    "disposition": "unrelated ripple from the extract_by_handle fix (comment line now included in code_hash) - this entry own code is untouched, only the hash computation changed",
+    "for_spec_hash": "95f5b971fdc8b3d65888be804121d90e9437ec153f98bd013a71c009d5ce5c38",
+    "for_code_hash": "9ff2166bf093d905bb25f195d3a4af3b2ab2999f0041031aa217ef12113f64d5"
+  },
+  "Compiler.Lockfile.TestTrace": {
+    "disposition": "unrelated ripple from the extract_by_handle fix (comment line now included in code_hash) - this entry own code is untouched, only the hash computation changed",
+    "for_spec_hash": "92fb8019738001b932631290f55fe676729bd0d531afb6b9378dfe8b1734c9ef",
+    "for_code_hash": "8340f5d7eaf5a77a6d62efd4dafab783b86efa1d8af08901a180aa9061cb039c"
+  },
+  "Compiler.Lockfile.LOCKFILE_SCHEMA_VERSION": {
+    "disposition": "unrelated ripple from the extract_by_handle fix (comment line now included in code_hash) - this entry own code is untouched, only the hash computation changed",
+    "for_spec_hash": "b9f92471aa22fd03ab91f3b557549276034892eb0e1f302621a907dde3363810",
+    "for_code_hash": "51bdf268cb2c6f8e0b609133432c3093bb3501795486e84feb8cf5580950df62"
+  },
+  "Compiler.Lockfile.RULESET_VERSION": {
+    "disposition": "unrelated ripple from the extract_by_handle fix (comment line now included in code_hash) - this entry own code is untouched, only the hash computation changed",
+    "for_spec_hash": "e601f7998dd91fd4a4749025f2de0e57027e38c9c95c0c412f4fb5df430aacda",
+    "for_code_hash": "0bf8ca86fd4d2b4f942e54b828f2229f5d01f5b6778a1e371a109305cffbdfee"
+  },
+  "Compiler.Parser.parse": {
+    "disposition": "unrelated ripple from the extract_by_handle fix (comment line now included in code_hash) - this entry own code is untouched, only the hash computation changed",
+    "for_spec_hash": "943316ee7560be49d349c7ac21453d15245cda9068ee003267058f9f93b59942",
+    "for_code_hash": "7844ff6e49698411b9c59dd85afd1565d3b91d10cd5c170443eb67b8826113a4"
+  },
+  "Compiler.Extractor.TestComment": {
+    "disposition": "unrelated ripple from the extract_by_handle fix (comment line now included in code_hash) - this entry own code is untouched, only the hash computation changed",
+    "for_spec_hash": "0c93c3b87b1a76d8887c97c673e2c71fce28ece961e443e835ce4c313cd998a5",
+    "for_code_hash": "17c84d4b8b415331c015be7c3d8e5a65f83182e82f170d0f08b251c21776680a"
+  },
   "Compiler.Extractor.extract_by_handle": {
-    "disposition": "unrelated code shift only - a nearby helper (_repo_root) was fixed to resolve paths before walking .parents, absorbed into this entry's coarse handle region; extract_by_handle's own logic is untouched",
-    "for_spec_hash": "6480e177208d9ef97f68098f2c5b7ce36c6e1aedc1f936649b14728f990960eb",
-    "for_code_hash": "3a5558831bd376401edb3b6629f04810b5a59fbd395cb3832228f637b5598ac0"
+    "disposition": "real fix: code_start now begins at the handle comment line itself instead of the line after it, so the summary comment is part of code_hash - closes a real gap where a source comment could drift arbitrarily from its llmlang summary with nothing ever detecting it (verified: editing only a comment, llm file untouched, previously passed --check clean)",
+    "for_spec_hash": "1cdac1e533c1c3d2e1799cafaed45f1a158b3e0046b5cb9738eda4d96313d0df",
+    "for_code_hash": "f843afbfd9b21c21750c9b05ec76986d1a9657e3c109e340234ed5f2bdef0fc6"
   },
   "Compiler.Extractor.test_comment_roots": {
-    "disposition": "fixed a real bug: _repo_root was called with an unresolved path, so a relative .llm path invoked from anywhere but the repo root silently failed to find .git and fell back to the wrong base, producing different (wrong) results depending on caller cwd - now resolves the llmlang path up front so results are identical regardless of invocation directory",
+    "disposition": "unrelated ripple from the extract_by_handle fix (comment line now included in code_hash) - this entry own code is untouched, only the hash computation changed",
     "for_spec_hash": "555eff9210bda9dbfdca0093fd62ad021685bc5bb139635b3e2759a17dbd05d1",
-    "for_code_hash": "5eaa18621971fd208be628f1d0f528c4e86de66e4f585270458911a86962596d"
+    "for_code_hash": "1f2f2b24d0579d384e596cc9358d022369371918a68b98a18659b6ce9a9f4ba8"
   },
   "Compiler.Extractor.test_comment_base": {
-    "disposition": "same fix as test_comment_roots - resolves the llmlang path before finding the repo root, so the returned base path no longer depends on caller cwd",
+    "disposition": "unrelated ripple from the extract_by_handle fix (comment line now included in code_hash) - this entry own code is untouched, only the hash computation changed",
     "for_spec_hash": "036a14bad4f6f52675b6e1fd6f661121e5f761196c3f673ff68c3f2d1d18d7e1",
-    "for_code_hash": "e55ddd8f430ee66339509677e649663449f1899f6ac3ac6a1d512e805a7987ea"
+    "for_code_hash": "7fb022d17640aa92a14e8bdb3e7831dbf3a8aa24dca2b1c4964de7f5ae5677fb"
+  },
+  "Compiler.Extractor.test_comments_by_node": {
+    "disposition": "unrelated ripple from the extract_by_handle fix (comment line now included in code_hash) - this entry own code is untouched, only the hash computation changed",
+    "for_spec_hash": "1c1c838652c93e0fe20728989c381cfda758c15639411ef60a646283f716c368",
+    "for_code_hash": "f25dc0935b7a407849f813bdbb85ddaa24ce3043b832e60018d538ac39df6eb2"
+  },
+  "Compiler.LockfileBuilder.build": {
+    "disposition": "unrelated ripple from the extract_by_handle fix (comment line now included in code_hash) - this entry own code is untouched, only the hash computation changed",
+    "for_spec_hash": "e1461a1fa6d2acf40cb3894662ebca547b9e78f72a94931b6f8a180ca4b952f8",
+    "for_code_hash": "d5401f6deeb684aec289f1f0028a66c78a9cf8cb6a8a87cbbc42999b57f29c39"
+  },
+  "Compiler.LockfileBuilder.finalize": {
+    "disposition": "unrelated ripple from the extract_by_handle fix (comment line now included in code_hash) - this entry own code is untouched, only the hash computation changed",
+    "for_spec_hash": "a2ae9afba0e5e4aeb1babdf4611893990774fd787fa86d8dca3e8718f2689e6f",
+    "for_code_hash": "20e0e74fa8c5793d63a7377e6f70d3bd8563c1b588fad2641f1e5d1f14daa285"
+  },
+  "Compiler.LockfileChecker.check": {
+    "disposition": "unrelated ripple from the extract_by_handle fix (comment line now included in code_hash) - this entry own code is untouched, only the hash computation changed",
+    "for_spec_hash": "eb5ac191cf13c4c6c86eea079b166bc0c4183591b8e9dccded3cb6bf0207f422",
+    "for_code_hash": "74582ef15b9c12cbba08c55934324ab3a3f9702db7519d399dd08f3f2654afa2"
   }
 }

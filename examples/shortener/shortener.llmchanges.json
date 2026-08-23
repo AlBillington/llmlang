@@ -1,0 +1,37 @@
+{
+  "Backend.UrlShortener.create_short_code": {
+    "disposition": "extract_by_handle now includes the handle comment line in code_hash (bug fix, closes a real gap where the source comment could drift from the llmlang summary undetected) - no actual code change",
+    "for_spec_hash": "a61e7c53ce8dc3988e6b6a733ac8d82b144ef968340d2b23b4d36098ca3a3781",
+    "for_code_hash": "3654c44419a515e0d8bdf58413f6ee4c39257d8c82f0dbdfda03a5b2960c98b8"
+  },
+  "Backend.UrlShortener.get_url": {
+    "disposition": "extract_by_handle now includes the handle comment line in code_hash (bug fix, closes a real gap where the source comment could drift from the llmlang summary undetected) - no actual code change",
+    "for_spec_hash": "d6ad17bdfe6d543cdfbfbfa1053e30125193b965a0fc7b1aff3e7efa83a39b5e",
+    "for_code_hash": "674b400bd7767b69f30da237e680d96f77b713c321d4fd01a0c7676618b0cd61"
+  },
+  "Backend.CodeGenerator.generate": {
+    "disposition": "extract_by_handle now includes the handle comment line in code_hash (bug fix, closes a real gap where the source comment could drift from the llmlang summary undetected) - no actual code change",
+    "for_spec_hash": "00619d344561ce68c9b1a71a43252da5af9e32356090fc4950f505ae66c5f42f",
+    "for_code_hash": "6f2f7ff60ef7f18227ed4ab42bb52b0ff1b0002754ecd3d8002ed91411e455c4"
+  },
+  "Frontend.ShortenerUI.form": {
+    "disposition": "extract_by_handle now includes the handle comment line in code_hash (bug fix, closes a real gap where the source comment could drift from the llmlang summary undetected) - no actual code change",
+    "for_spec_hash": "d756a9c36e41c84e65a2ed67b1ac66ce5e417f3f8b12f991c2f4017feb3443f0",
+    "for_code_hash": "311887a5c4ec7b0ce4b05c97196bb20810f4d38b9ede3bdfa56fd21556150cb0"
+  },
+  "Frontend.ShortenerUI.shortenUrl": {
+    "disposition": "extract_by_handle now includes the handle comment line in code_hash (bug fix, closes a real gap where the source comment could drift from the llmlang summary undetected) - no actual code change",
+    "for_spec_hash": "79d0b9e69ee3a278b8274d1c10eb997f213c0f424f6ae9383521e54b06d47da7",
+    "for_code_hash": "c9e31210dc6a622d075c24b5235023940694ae5147461214ae6d098c2bd9e454"
+  },
+  "Frontend.ShortenerUI.renderShortUrl": {
+    "disposition": "extract_by_handle now includes the handle comment line in code_hash (bug fix, closes a real gap where the source comment could drift from the llmlang summary undetected) - no actual code change",
+    "for_spec_hash": "5e421ec381d5f45333bfcd2a169f65ef202f6fa4edbb2fab4321a5504994a136",
+    "for_code_hash": "71183beb6fd9aaabc247a35b6c3448e5fb26ef3c6656f87e422dc9dd2c379c99"
+  },
+  "Backend.UrlShortener._code_to_url": {
+    "disposition": "data bullets updated to the new type (example): description convention - purely a documentation/legibility change, adds concrete example values alongside the existing type annotations, no code change needed",
+    "for_spec_hash": "9c013b8dfe7bd63474ad8ce847c4890b8dc223337606fd355b116478cd8eea8a",
+    "for_code_hash": "1a2fac1bfac6dd207f5f0e3a8571bf8eeba76f5654bed0eca1ab0b2fe7f45ea7"
+  }
+}

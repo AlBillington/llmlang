@@ -7,94 +7,144 @@
       "file": "Compiler/Lockfile.py",
       "text": "+ stores, per source-handled entry, its file, text hash, and code hash\nstores, per source-handled entry, its file, text hash, and code hash\nmay also store a last-change disposition, bound to the entry's spec hash (its own text combined with every currently applicable policy's text) and code hash it was recorded against",
       "text_hash": "95f5b971fdc8b3d65888be804121d90e9437ec153f98bd013a71c009d5ce5c38",
-      "code_hash": "30f675d30ed4fd587c8d2cfe4c619f1824d8e8c92560d769aeb4c68d534b0103"
+      "code_hash": "9ff2166bf093d905bb25f195d3a4af3b2ab2999f0041031aa217ef12113f64d5",
+      "last_change": {
+        "disposition": "unrelated ripple from the extract_by_handle fix (comment line now included in code_hash) - this entry own code is untouched, only the hash computation changed",
+        "for_spec_hash": "95f5b971fdc8b3d65888be804121d90e9437ec153f98bd013a71c009d5ce5c38",
+        "for_code_hash": "9ff2166bf093d905bb25f195d3a4af3b2ab2999f0041031aa217ef12113f64d5"
+      }
     },
     "Compiler.Lockfile.TestTrace": {
       "file": "Compiler/Lockfile.py",
       "text": "+ stores, per linked test comment, the explanation text and backing code hash\nstores, per linked test comment, the explanation text, relative path, and backing code hash",
       "text_hash": "92fb8019738001b932631290f55fe676729bd0d531afb6b9378dfe8b1734c9ef",
-      "code_hash": "961e574a9b1fbee824052d736946cb5d177abc30aa34738939e54849e7b561a1"
+      "code_hash": "8340f5d7eaf5a77a6d62efd4dafab783b86efa1d8af08901a180aa9061cb039c",
+      "last_change": {
+        "disposition": "unrelated ripple from the extract_by_handle fix (comment line now included in code_hash) - this entry own code is untouched, only the hash computation changed",
+        "for_spec_hash": "92fb8019738001b932631290f55fe676729bd0d531afb6b9378dfe8b1734c9ef",
+        "for_code_hash": "8340f5d7eaf5a77a6d62efd4dafab783b86efa1d8af08901a180aa9061cb039c"
+      }
     },
     "Compiler.Lockfile.LOCKFILE_SCHEMA_VERSION": {
       "file": "Compiler/Lockfile.py",
       "text": "+ the lockfile's own schema version, bumped whenever its shape changes\nthe lockfile's own schema version, bumped whenever its shape changes",
       "text_hash": "b9f92471aa22fd03ab91f3b557549276034892eb0e1f302621a907dde3363810",
-      "code_hash": "918015434ad243050a8c37f7929b48ac039f85876a1633ba3610892c7968de9e"
+      "code_hash": "51bdf268cb2c6f8e0b609133432c3093bb3501795486e84feb8cf5580950df62",
+      "last_change": {
+        "disposition": "unrelated ripple from the extract_by_handle fix (comment line now included in code_hash) - this entry own code is untouched, only the hash computation changed",
+        "for_spec_hash": "b9f92471aa22fd03ab91f3b557549276034892eb0e1f302621a907dde3363810",
+        "for_code_hash": "51bdf268cb2c6f8e0b609133432c3093bb3501795486e84feb8cf5580950df62"
+      }
     },
     "Compiler.Lockfile.RULESET_VERSION": {
       "file": "Compiler/Lockfile.py",
       "text": "+ the ruleset version every entry in a lockfile is built under together\nthe ruleset version every entry in a lockfile is built under together",
       "text_hash": "e601f7998dd91fd4a4749025f2de0e57027e38c9c95c0c412f4fb5df430aacda",
-      "code_hash": "182f4dde1b9a581f7b5ee0d04005f21f3805881600f2b560110f6da69995099e"
+      "code_hash": "0bf8ca86fd4d2b4f942e54b828f2229f5d01f5b6778a1e371a109305cffbdfee",
+      "last_change": {
+        "disposition": "unrelated ripple from the extract_by_handle fix (comment line now included in code_hash) - this entry own code is untouched, only the hash computation changed",
+        "for_spec_hash": "e601f7998dd91fd4a4749025f2de0e57027e38c9c95c0c412f4fb5df430aacda",
+        "for_code_hash": "0bf8ca86fd4d2b4f942e54b828f2229f5d01f5b6778a1e371a109305cffbdfee"
+      }
     },
     "Compiler.Parser.parse": {
       "file": "Compiler/Parser.py",
       "text": "+ parses a tab-indented llmlang file into a tree of folders, files, classes, and entries\naccepts a file path\nparses a tab-indented llmlang file into a tree of folders, files, classes, named entries, and data entries\na source-handled entry header must include a parenthesized summary after the identifier and before the colon\na data entry header must include the data marker after the identifier and before the parenthesized summary\na nested regular bullet belongs to the same nearest entry, file or class bullet group, or policy item as its parent\na test bullet can live under a named entry, file, or class node\na header's real name is always its first word; any words after a folder, file, or class name up to the colon are a freetext hint, discarded once the name is extracted\nreturns the parsed tree",
       "text_hash": "943316ee7560be49d349c7ac21453d15245cda9068ee003267058f9f93b59942",
-      "code_hash": "b60f3fb523d71c27c134f738052baf3f35b7607bb53459d683fe08cca9bc32a1"
+      "code_hash": "7844ff6e49698411b9c59dd85afd1565d3b91d10cd5c170443eb67b8826113a4",
+      "last_change": {
+        "disposition": "unrelated ripple from the extract_by_handle fix (comment line now included in code_hash) - this entry own code is untouched, only the hash computation changed",
+        "for_spec_hash": "943316ee7560be49d349c7ac21453d15245cda9068ee003267058f9f93b59942",
+        "for_code_hash": "7844ff6e49698411b9c59dd85afd1565d3b91d10cd5c170443eb67b8826113a4"
+      }
     },
     "Compiler.Extractor.TestComment": {
       "file": "Compiler/Extractor.py",
       "text": "+ stores a linked llm-test comment and the backing code it anchors\nstores a linked llm-test comment's canonical node, explanation text, relative path, and backing code\nexposes a code hash derived from the backing code",
       "text_hash": "0c93c3b87b1a76d8887c97c673e2c71fce28ece961e443e835ce4c313cd998a5",
-      "code_hash": "3e3d87ff71ee8e3f5dde97c5a118ea7b09256280dc73d0d7e4f6e9a566ad972d"
+      "code_hash": "17c84d4b8b415331c015be7c3d8e5a65f83182e82f170d0f08b251c21776680a",
+      "last_change": {
+        "disposition": "unrelated ripple from the extract_by_handle fix (comment line now included in code_hash) - this entry own code is untouched, only the hash computation changed",
+        "for_spec_hash": "0c93c3b87b1a76d8887c97c673e2c71fce28ece961e443e835ce4c313cd998a5",
+        "for_code_hash": "17c84d4b8b415331c015be7c3d8e5a65f83182e82f170d0f08b251c21776680a"
+      }
     },
     "Compiler.Extractor.extract_by_handle": {
       "file": "Compiler/Extractor.py",
-      "text": "+ extracts the code implementing an entry by locating its comment handle and taking everything up to the next handle\naccepts a file path and canonical entry name\nextracts the code implementing an entry by locating its comment handle and taking everything up to the next handle\nreturns the extracted code, or nothing if the handle isn't found",
-      "text_hash": "6480e177208d9ef97f68098f2c5b7ce36c6e1aedc1f936649b14728f990960eb",
-      "code_hash": "3a5558831bd376401edb3b6629f04810b5a59fbd395cb3832228f637b5598ac0",
+      "text": "+ extracts the code implementing an entry by locating its comment handle and taking everything from the handle's own comment line up to the next handle\naccepts a file path and canonical entry name\nextracts the code implementing an entry by locating its comment handle and taking everything from the handle's own comment line up to the next handle\nincluding the comment line itself means the entry's summary comment is part of the resulting hash, so it can't drift from the llmlang summary undetected\nreturns the extracted code, or nothing if the handle isn't found",
+      "text_hash": "1cdac1e533c1c3d2e1799cafaed45f1a158b3e0046b5cb9738eda4d96313d0df",
+      "code_hash": "f843afbfd9b21c21750c9b05ec76986d1a9657e3c109e340234ed5f2bdef0fc6",
       "last_change": {
-        "disposition": "unrelated code shift only - a nearby helper (_repo_root) was fixed to resolve paths before walking .parents, absorbed into this entry's coarse handle region; extract_by_handle's own logic is untouched",
-        "for_spec_hash": "6480e177208d9ef97f68098f2c5b7ce36c6e1aedc1f936649b14728f990960eb",
-        "for_code_hash": "3a5558831bd376401edb3b6629f04810b5a59fbd395cb3832228f637b5598ac0"
+        "disposition": "real fix: code_start now begins at the handle comment line itself instead of the line after it, so the summary comment is part of code_hash - closes a real gap where a source comment could drift arbitrarily from its llmlang summary with nothing ever detecting it (verified: editing only a comment, llm file untouched, previously passed --check clean)",
+        "for_spec_hash": "1cdac1e533c1c3d2e1799cafaed45f1a158b3e0046b5cb9738eda4d96313d0df",
+        "for_code_hash": "f843afbfd9b21c21750c9b05ec76986d1a9657e3c109e340234ed5f2bdef0fc6"
       }
     },
     "Compiler.Extractor.test_comment_roots": {
       "file": "Compiler/Extractor.py",
       "text": "+ chooses where llm-test comments are scanned\naccepts an llmlang file path\nreturns the llmlang file directory and the repository tests directory when a repository root is found",
       "text_hash": "555eff9210bda9dbfdca0093fd62ad021685bc5bb139635b3e2759a17dbd05d1",
-      "code_hash": "5eaa18621971fd208be628f1d0f528c4e86de66e4f585270458911a86962596d",
+      "code_hash": "1f2f2b24d0579d384e596cc9358d022369371918a68b98a18659b6ce9a9f4ba8",
       "last_change": {
-        "disposition": "fixed a real bug: _repo_root was called with an unresolved path, so a relative .llm path invoked from anywhere but the repo root silently failed to find .git and fell back to the wrong base, producing different (wrong) results depending on caller cwd - now resolves the llmlang path up front so results are identical regardless of invocation directory",
+        "disposition": "unrelated ripple from the extract_by_handle fix (comment line now included in code_hash) - this entry own code is untouched, only the hash computation changed",
         "for_spec_hash": "555eff9210bda9dbfdca0093fd62ad021685bc5bb139635b3e2759a17dbd05d1",
-        "for_code_hash": "5eaa18621971fd208be628f1d0f528c4e86de66e4f585270458911a86962596d"
+        "for_code_hash": "1f2f2b24d0579d384e596cc9358d022369371918a68b98a18659b6ce9a9f4ba8"
       }
     },
     "Compiler.Extractor.test_comment_base": {
       "file": "Compiler/Extractor.py",
       "text": "+ chooses the stable base path for test trace paths\naccepts an llmlang file path\nreturns the repository root when one is found, otherwise the llmlang file directory",
       "text_hash": "036a14bad4f6f52675b6e1fd6f661121e5f761196c3f673ff68c3f2d1d18d7e1",
-      "code_hash": "e55ddd8f430ee66339509677e649663449f1899f6ac3ac6a1d512e805a7987ea",
+      "code_hash": "7fb022d17640aa92a14e8bdb3e7831dbf3a8aa24dca2b1c4964de7f5ae5677fb",
       "last_change": {
-        "disposition": "same fix as test_comment_roots - resolves the llmlang path before finding the repo root, so the returned base path no longer depends on caller cwd",
+        "disposition": "unrelated ripple from the extract_by_handle fix (comment line now included in code_hash) - this entry own code is untouched, only the hash computation changed",
         "for_spec_hash": "036a14bad4f6f52675b6e1fd6f661121e5f761196c3f673ff68c3f2d1d18d7e1",
-        "for_code_hash": "e55ddd8f430ee66339509677e649663449f1899f6ac3ac6a1d512e805a7987ea"
+        "for_code_hash": "7fb022d17640aa92a14e8bdb3e7831dbf3a8aa24dca2b1c4964de7f5ae5677fb"
       }
     },
     "Compiler.Extractor.test_comments_by_node": {
       "file": "Compiler/Extractor.py",
       "text": "+ collects llm-test comments by canonical node name\naccepts one or more root paths\nscans source-like text files under the root paths for llm-test handles\nrecords each llm-test comment's canonical node, exact explanation text, relative path, and backing test code\nreturns a mapping of canonical node name to linked test comment records",
       "text_hash": "1c1c838652c93e0fe20728989c381cfda758c15639411ef60a646283f716c368",
-      "code_hash": "888410da175970bfb59610a9fdf14f7053f4723518c86d2d53a80bc1f365acfb"
+      "code_hash": "f25dc0935b7a407849f813bdbb85ddaa24ce3043b832e60018d538ac39df6eb2",
+      "last_change": {
+        "disposition": "unrelated ripple from the extract_by_handle fix (comment line now included in code_hash) - this entry own code is untouched, only the hash computation changed",
+        "for_spec_hash": "1c1c838652c93e0fe20728989c381cfda758c15639411ef60a646283f716c368",
+        "for_code_hash": "f25dc0935b7a407849f813bdbb85ddaa24ce3043b832e60018d538ac39df6eb2"
+      }
     },
     "Compiler.LockfileBuilder.build": {
       "file": "Compiler/LockfileBuilder.py",
       "text": "+ builds a lockfile by using Parser to read llmlang, Extractor to locate each entry's code, and Lockfile to record a text and code hash per entry\naccepts an llmlang file path and a lockfile output path\nbuilds a lockfile by using Parser to read llmlang, Extractor to locate each source-handled entry's code, and Lockfile to record a text and code hash per entry\nwrites test trace records with the llm-test explanation text, relative path, and backing code hash\nrefuses to write the lockfile when any test bullet lacks a matching llm-test comment or any llm-test comment lacks a matching test bullet\nhas no notion of dispositions or a change manifest at all; never reads or writes anything but the lockfile itself\nshould reproduce the same hashes when run again against an unchanged codebase\nreturns the built lock data",
       "text_hash": "e1461a1fa6d2acf40cb3894662ebca547b9e78f72a94931b6f8a180ca4b952f8",
-      "code_hash": "f131470a27d5506492b00c2138a66bdf8655330d7583c3ead662ef96bd6d4140"
+      "code_hash": "d5401f6deeb684aec289f1f0028a66c78a9cf8cb6a8a87cbbc42999b57f29c39",
+      "last_change": {
+        "disposition": "unrelated ripple from the extract_by_handle fix (comment line now included in code_hash) - this entry own code is untouched, only the hash computation changed",
+        "for_spec_hash": "e1461a1fa6d2acf40cb3894662ebca547b9e78f72a94931b6f8a180ca4b952f8",
+        "for_code_hash": "d5401f6deeb684aec289f1f0028a66c78a9cf8cb6a8a87cbbc42999b57f29c39"
+      }
     },
     "Compiler.LockfileBuilder.finalize": {
       "file": "Compiler/LockfileBuilder.py",
       "text": "+ guards an incremental rebuild against silently skipping a flagged entry, reading and updating a change manifest bound to the exact spec and code hashes it describes\naccepts an llmlang file path, a lockfile output path, and a change manifest file path\nuses Checker to find every named entry currently flagged against the existing lockfile, and refuses to write anything unless the change manifest covers every one of them with a non-empty disposition\naccepts a fresh disposition in the manifest as a plain string, and stamps it with the entry's current spec hash and code hash\na spec hash combines the entry's own text with every policy currently covering it, so a disposition goes stale whether the entry's own text changed or an applicable policy did\nfor a manifest entry that's already stamped, keeps it only if both hashes still match the entry's current state; otherwise drops it as stale, along with any entry whose key no longer exists in the llmlang tree at all\nbuilds every hash and disposition fresh from the current llmlang text, current code, current policies, and current manifest only; never carries anything forward from the lockfile's own prior content\nwrites both the new lockfile and the updated (stamped and pruned) manifest file, but never alters a disposition's own text\nreturns the built lock data",
       "text_hash": "a2ae9afba0e5e4aeb1babdf4611893990774fd787fa86d8dca3e8718f2689e6f",
-      "code_hash": "d6048fc229279d141037ab6db24d21cf48c754657eb75ecd0218e1a78ffb1258"
+      "code_hash": "20e0e74fa8c5793d63a7377e6f70d3bd8563c1b588fad2641f1e5d1f14daa285",
+      "last_change": {
+        "disposition": "unrelated ripple from the extract_by_handle fix (comment line now included in code_hash) - this entry own code is untouched, only the hash computation changed",
+        "for_spec_hash": "a2ae9afba0e5e4aeb1babdf4611893990774fd787fa86d8dca3e8718f2689e6f",
+        "for_code_hash": "20e0e74fa8c5793d63a7377e6f70d3bd8563c1b588fad2641f1e5d1f14daa285"
+      }
     },
     "Compiler.LockfileChecker.check": {
       "file": "Compiler/LockfileChecker.py",
       "text": "+ checks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as SPEC_DIVERGED, CODE_DIVERGED, or unchanged, alongside its file and comment handle\naccepts an llmlang file path and a lockfile path\nchecks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as SPEC_DIVERGED, CODE_DIVERGED, or unchanged, alongside its file and comment handle\nreports TEST_LINK_MISSING when any test bullet lacks a matching llm-test comment with the same text and canonical node name\nreports TEST_TRACE_STALE when any llm-test comment lacks a matching test bullet with the same text and canonical node name\nreports TEST_CODE_DIVERGED when a linked test's backing code hash differs from the lockfile\nshould report an entry as SPEC_DIVERGED when its own llmlang text changed, it's brand new, or an upstream policy covering it changed\nshould report an entry as CODE_DIVERGED when its handle is missing from the code or its code changed unexpectedly\nshould report an unmodified codebase as fully clean\nreturns whether everything checked out clean, and the set of named-entry tracking keys currently flagged for any reason",
       "text_hash": "eb5ac191cf13c4c6c86eea079b166bc0c4183591b8e9dccded3cb6bf0207f422",
-      "code_hash": "1cb68355450e272371773c60762d8685822f2d9a6b0967bf0986a552ce28db6d"
+      "code_hash": "74582ef15b9c12cbba08c55934324ab3a3f9702db7519d399dd08f3f2654afa2",
+      "last_change": {
+        "disposition": "unrelated ripple from the extract_by_handle fix (comment line now included in code_hash) - this entry own code is untouched, only the hash computation changed",
+        "for_spec_hash": "eb5ac191cf13c4c6c86eea079b166bc0c4183591b8e9dccded3cb6bf0207f422",
+        "for_code_hash": "74582ef15b9c12cbba08c55934324ab3a3f9702db7519d399dd08f3f2654afa2"
+      }
     }
   },
   "class_bullets": {},

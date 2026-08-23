@@ -1,12 +1,22 @@
 {
-  "legacy_app.notes.NotesValidator.is_valid": {
-    "disposition": "corrected the required summary and source comment to match the entry's already-precise bullet - previously said \"non-empty\", which silently regressed a completeness fix (whitespace-only text is non-empty but the code rejects it); no code change needed",
-    "for_spec_hash": "553614595c36304fd43e4bbaaedc6b6a25077ab990277e10cf5bdae6065098d9",
-    "for_code_hash": "fb10024f11ef92f7bfb4edbe103ac0489634c655cc3f54e89380441b9f06c2e1"
-  },
   "legacy_app.notes.NotesStore.add_note": {
-    "disposition": "corrected the required summary and source comment to match the entry's already-precise bullet - previously omitted the 8-character lowercase detail; no code change needed",
+    "disposition": "extract_by_handle now includes the handle comment line in code_hash (bug fix, closes a real gap where the source comment could drift from the llmlang summary undetected) - no actual code change",
     "for_spec_hash": "d4c058c56c83af684db5a1a47964e674c00832c84721a886ca73aba20de52300",
-    "for_code_hash": "abd1ea6701a3bb1f0b13a60e66b4a179d527025914362abff7a095db47532e74"
+    "for_code_hash": "ae40b8202acc0d7568795361c0db5c7322038b717b0dbd86cdcfb2409df6828b"
+  },
+  "legacy_app.notes.NotesStore.list_notes": {
+    "disposition": "extract_by_handle now includes the handle comment line in code_hash (bug fix, closes a real gap where the source comment could drift from the llmlang summary undetected) - no actual code change",
+    "for_spec_hash": "91421a4fe480dff6131f7dfa8dfb9fa16d43d2a70cceb76999d1bf7e2214d861",
+    "for_code_hash": "7b9974d17f11f02210c7e71bf787cfb1bac44cc3a1ee8f8292aa44263c04fb31"
+  },
+  "legacy_app.notes.NotesValidator.is_valid": {
+    "disposition": "extract_by_handle now includes the handle comment line in code_hash (bug fix, closes a real gap where the source comment could drift from the llmlang summary undetected) - no actual code change",
+    "for_spec_hash": "553614595c36304fd43e4bbaaedc6b6a25077ab990277e10cf5bdae6065098d9",
+    "for_code_hash": "97ce53ddabccf0caa7ca432b1fcfa3d00a92f5b5374a0c976c47a1ce260304b5"
+  },
+  "legacy_app.notes.NotesStore._notes": {
+    "disposition": "data bullets updated to the new type (example): description convention, and covered by the same extract_by_handle code_hash fix as the other entries - purely a documentation/legibility change, no code change needed",
+    "for_spec_hash": "b0b3506ca88a3f8bd256019e9a528f6013755c797a123c1ee41465f814df158c",
+    "for_code_hash": "636873abf3ecc2c87fb6ada72b7c50ca0d7d66fd3a072b3e7b9e74c45c19c4e3"
   }
 }

@@ -111,24 +111,22 @@ A data entry is written `Name data (one-line summary):` and requires a matching 
 self._code_to_url = {}
 ```
 
-Data bullets describe contained data shape. `stores` is implied by the data-entry kind, so the bullets should be concise type-first descriptions rather than behavior sentences. Use English type annotations before a colon: `text`, `number`, `boolean`, `date`, `timestamp`, or the exact named domain/data type when one exists. Use `[type]` for a list that is simple enough to stay on one line.
-
-Nested bullets imply an anonymous contained object. Use `mapping:` only when the shape is an arbitrary-key lookup; put the key and value shapes on nested bullets rather than writing `dict` or inlining a compound structure.
+Data bullets describe contained data shape. `stores` is implied by the data-entry kind, so the bullets should be concise type-first descriptions rather than behavior sentences. Every leaf field bullet takes the fixed form `type (example): description` — a type keyword, a concrete example value in parens, then the description. This form is always the same regardless of how simple or complex the shape is; there is no lighter-weight alternative for a single field and no judgment call about when to use it. The type is one of `text`, `number`, `boolean`, `date`, `timestamp`, `[type]` for a one-line-simple list, or the exact named domain/data type when one exists. The example is what actually pins down precision an abstract type name alone can't — whether `number` means an integer or allows fractional values, whether a string field is genuinely a `timestamp` type in the target language or just text that looks like a date. A grouping header (an anonymous nested object, or `mapping:` for an arbitrary-key lookup) carries no type or example itself, since it isn't a scalar value — only its own nested leaf fields do.
 
 ```
 CustomerProfile data (stores customer profile data):
-	- text: customer display name
-	- number: billing tier rank
-	- boolean: whether the customer can submit premium tickets
-	- timestamp: when the customer was created
-	- [text]: alternate email addresses
-	- Plan: active billing plan
+	- text ("Jane Doe"): customer display name
+	- number (3): billing tier rank
+	- boolean (true): whether the customer can submit premium tickets
+	- timestamp ("2026-01-15T10:30:00Z"): when the customer was created
+	- [text] (["jane@work.com", "jane@personal.com"]): alternate email addresses
+	- Plan ("Pro"): active billing plan
 	- notification preferences:
-		- boolean: whether email updates are enabled
-		- [text]: muted topic names
+		- boolean (true): whether email updates are enabled
+		- [text] (["promotions", "digests"]): muted topic names
 	- mapping:
-		- text: lookup key is the support team slug
-		- number: value is the open ticket count for that team
+		- text ("support-team-a"): lookup key is the support team slug
+		- number (5): value is the open ticket count for that team
 ```
 
 ## 5. Single-sourcing discipline
@@ -169,8 +167,8 @@ Backend:
 
 		_code_to_url data (stores a mapping of short code to original URL):
 			- mapping:
-				- text: lookup key is the short code
-				- text: value is the original URL
+				- text ("aB3xY9"): lookup key is the short code
+				- text ("https://example.com/page"): value is the original URL
 
 	CodeGenerator.py class:
 		generate (generates a random 6-character alphanumeric code):

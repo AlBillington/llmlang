@@ -70,17 +70,21 @@ def _all_handles(text: str):
     return handles
 
 
-# extracts the code implementing an entry by locating its comment handle and taking everything up to the next handle [llm:Compiler.Extractor.extract_by_handle]
+# extracts the code implementing an entry by locating its comment handle and taking everything from the handle's own comment line up to the next handle [llm:Compiler.Extractor.extract_by_handle]
 def extract_by_handle(file_path: Path, key: str):
+    # code_start begins at the handle's own comment line (not after it),
+    # so the summary comment is part of code_hash - otherwise a comment
+    # can drift arbitrarily far from the llmlang summary it's supposed to
+    # match with nothing ever detecting it, since nothing else compares
+    # the two directly
     text = file_path.read_text()
     handles = _all_handles(text)
 
     for i, (handle_key, line_start) in enumerate(handles):
         if handle_key != key:
             continue
-        code_start = text.find("\n", line_start) + 1
         code_end = handles[i + 1][1] if i + 1 < len(handles) else len(text)
-        return text[code_start:code_end].strip("\n")
+        return text[line_start:code_end].strip("\n")
 
     return None
 

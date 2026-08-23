@@ -22,8 +22,8 @@ Backend:
 
 		_code_to_url data (stores a mapping of short code to original URL):
 			- mapping:
-				- text: lookup key is the short code
-				- text: value is the original URL
+				- text ("aB3xY9"): lookup key is the short code
+				- text ("https://example.com/page"): value is the original URL
 
 	CodeGenerator.py class:
 		generate (generates a random 6-character alphanumeric code):

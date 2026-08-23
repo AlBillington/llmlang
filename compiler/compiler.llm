@@ -29,9 +29,10 @@ Compiler:
 			- stores a linked llm-test comment's canonical node, explanation text, relative path, and backing code
 			- exposes a code hash derived from the backing code
 
-		extract_by_handle (extracts the code implementing an entry by locating its comment handle and taking everything up to the next handle):
+		extract_by_handle (extracts the code implementing an entry by locating its comment handle and taking everything from the handle's own comment line up to the next handle):
 			- accepts a file path and canonical entry name
-			- extracts the code implementing an entry by locating its comment handle and taking everything up to the next handle
+			- extracts the code implementing an entry by locating its comment handle and taking everything from the handle's own comment line up to the next handle
+			- including the comment line itself means the entry's summary comment is part of the resulting hash, so it can't drift from the llmlang summary undetected
 			- returns the extracted code, or nothing if the handle isn't found
 
 		test_comment_roots (chooses where llm-test comments are scanned):
