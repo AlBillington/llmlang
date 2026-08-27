@@ -1,7 +1,4 @@
 {
-  "exempt": {
-    "Backend/UrlShortener.py::UrlShortener.__init__": "accepts and stores code_generator (the dependency is already documented at its point of use - create_short_code's bullet states it uses CodeGenerator), initializes _code_to_url (already covered by that data entry's own handle sitting inside this constructor), and _url_to_code, a private reverse index used only as an O(1) lookup optimization for create_short_code's own duplicate-URL check - an implementation detail, not new state"
-  },
   "Backend.UrlShortener.create_short_code": {
     "disposition": "extract_by_handle now includes the handle comment line in code_hash (bug fix, closes a real gap where the source comment could drift from the llmlang summary undetected) - no actual code change",
     "for_spec_hash": "a61e7c53ce8dc3988e6b6a733ac8d82b144ef968340d2b23b4d36098ca3a3781",

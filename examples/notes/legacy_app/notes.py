@@ -5,6 +5,7 @@ import string
 
 
 class NotesStore:
+    # body already covered by the _notes data entry's own handle [llm-exempt]
     def __init__(self):
         # stores notes keyed by their ID [llm:legacy_app.notes.NotesStore._notes]
         self._notes = {}

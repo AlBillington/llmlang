@@ -1,52 +1,57 @@
 #!/usr/bin/env python3
 """
-CLI: python build.py <llmlang_file> [--check | --finalize] [--coverage | --no-coverage]
-     python build.py --check [root_dir] [--coverage | --no-coverage]
+CLI: python build.py check [path...] [--coverage | --no-coverage] [--config PATH]
+     python build.py build <llmlang_file>
+     python build.py finalize <llmlang_file>
 
---coverage is an opt-in modifier on --check (ignored otherwise): it also
+check is the read-only, no-write action - the "linter" surface, matching
+ruff/eslint's split between a checking command and a writing one. It
+accepts any number of file or directory paths (default: the current
+directory), auto-discovering every *.llm file under a directory argument
+and checking a .llm file argument directly, reporting every failure
+across every path in one pass rather than stopping at the first.
+
+build and finalize are the write operations - each always requires
+exactly one llmlang file, since each is a guarded write for one project's
+own lockfile (and, for finalize, its own change manifest), never
+something to apply indiscriminately across everything check's discovery
+might find.
+
+--coverage is an opt-in modifier on check (ignored otherwise): it also
 verifies that every function actually defined in a Python source file has
 a comment handle covering it, reporting each uncovered one as
 UNMAPPED_CODE. Strict by design - there is no built-in exemption for
 dunder methods, private helpers, or anything else; every exemption is a
-real, reviewable decision recorded in <stem>.llmchanges.json's "exempt"
-section (see Compiler/CoverageChecker.py). Python-only for now - files in
+real, reviewable decision made inline, right above the function it
+covers: a bare "[llm-exempt]" comment, optionally with a reason before
+the tag (see Compiler/CoverageChecker.py). Python-only for now - files in
 other languages are silently skipped, not flagged, since there's no real
 parser for them yet to enumerate "every function that exists."
 
 Project-level defaults live in pyproject.toml's [tool.llmlang] table,
-found by walking up from the target directory (project-wide --check) or
-the target file's directory (single-file), same discovery pattern as
-ruff/black/mypy. A CLI flag always wins over the config:
+found by walking up from the current directory, same discovery pattern
+as ruff/black/mypy - or pass --config PATH to use a specific file
+instead of auto-discovery. A CLI flag always wins over the config:
 --coverage/--no-coverage override [tool.llmlang] coverage = true/false in
 either direction, and exclude = ["dir", ...] extends (never replaces) the
-built-in excluded-directory set used by --check's auto-discovery.
+built-in excluded-directory set used by check's auto-discovery.
 
 File location needs no discovery step or manifest, ever - the tree
 itself already carries it, since a file-typed node's own header
 ("UrlShortener.py:") is its extension and a folder-typed ancestor's
 names are its path.
 
---check with no file argument discovers every *.llm file under
-root_dir (default: the current directory) and checks each one,
-reporting all of them rather than stopping at the first failure -
-same "report every deficiency in one pass" behavior a single-file
---check already has, just widened to a whole project. --finalize and
-plain (no-flag) rebuild always require an explicit file - each is a
-guarded write for one project, not something to apply indiscriminately
-across everything discovery happens to find.
-
---finalize is the guarded incremental path: it refuses to rebuild
-unless <stem>.llmchanges.json - a real, git-tracked sibling file, not
-a throwaway CLI argument - covers every entry currently flagged by
---check. That file is authored the same way the .llm file itself is
-(by hand or by an LLM, reviewed via its own git diff) - a fresh entry
-is just {key: "disposition text"}. finalize() upgrades an accepted
-entry into a hash-bound record and prunes any entry whose hash no
-longer matches current reality, but never invents or edits the
-disposition text itself. Plain (no-flag) rebuild stays completely
-unguarded and has no notion of dispositions at all, for bootstrapping
-a brand new lockfile or for a human directly supervising their own
-edit.
+finalize is the guarded incremental path: it refuses to rebuild unless
+<stem>.llmchanges.json - a real, git-tracked sibling file, not a
+throwaway CLI argument - covers every entry currently flagged by check.
+That file is authored the same way the .llm file itself is (by hand or
+by an LLM, reviewed via its own git diff) - a fresh entry is just
+{key: "disposition text"}. finalize() upgrades an accepted entry into a
+hash-bound record and prunes any entry whose hash no longer matches
+current reality, but never invents or edits the disposition text itself.
+Plain build stays completely unguarded and has no notion of dispositions
+at all, for bootstrapping a brand new lockfile or for a human directly
+supervising their own edit.
 """
 import sys
 from pathlib import Path
@@ -74,10 +79,17 @@ def _find_pyproject(start: Path):
     return None
 
 
-def _load_config(start: Path) -> dict:
-    pyproject_path = _find_pyproject(start)
-    if pyproject_path is None:
-        return {}
+def _load_config(start: Path, override: Path | None = None) -> dict:
+    if override is not None:
+        if not override.exists():
+            print(f"warning: --config path not found: {override} - ignoring")
+            return {}
+        pyproject_path = override
+    else:
+        pyproject_path = _find_pyproject(start)
+        if pyproject_path is None:
+            return {}
+
     if tomllib is None:
         print(
             f"warning: found {pyproject_path} but this Python "
@@ -115,8 +127,7 @@ def _check_one(llmlang_path: Path, coverage: bool = False) -> tuple[bool, list]:
         return False, [str(e)]
 
     if coverage:
-        changes_path = llmlang_path.parent / (llmlang_path.stem + ".llmchanges.json")
-        coverage_findings = check_coverage(llmlang_path, changes_path)
+        coverage_findings = check_coverage(llmlang_path)
         if coverage_findings:
             ok = False
             findings = findings + coverage_findings
@@ -153,66 +164,106 @@ def _print_report(findings_by_file: dict):
     print(bar)
 
 
-def _check_project(root: Path, coverage: bool = False, extra_exclude: set = frozenset()):
-    llm_files = _discover_llm_files(root, extra_exclude=extra_exclude)
+def _run_check(paths: list, flags: set, config_override: Path | None):
+    config = _load_config(Path("."), config_override)
+    coverage = _resolve_coverage(flags, config)
+    extra_exclude = set(config.get("exclude", []))
+
+    llm_files = []
+    for path in paths:
+        if path.is_dir():
+            llm_files.extend(_discover_llm_files(path, extra_exclude=extra_exclude))
+        elif path.is_file():
+            llm_files.append(path)
+        else:
+            print(f"warning: path not found: {path}")
+
+    llm_files = sorted(set(llm_files))
     if not llm_files:
-        print(f"No .llm files found under {root}")
+        print(f"No .llm files found under {', '.join(str(p) for p in paths)}")
         sys.exit(1)
 
     findings_by_file = {}
     for llmlang_path in llm_files:
         print(f"checking {llmlang_path}")
-        _ok, findings = _check_one(llmlang_path, coverage=coverage)
+        ok, findings = _check_one(llmlang_path, coverage=coverage)
         findings_by_file[str(llmlang_path)] = findings
 
     _print_report(findings_by_file)
     sys.exit(0 if all(not f for f in findings_by_file.values()) else 1)
 
 
-def main():
-    args = sys.argv[1:]
-    flags = {a for a in args if a.startswith("--")}
-    positional = [a for a in args if not a.startswith("--")]
-
-    if "--check" in flags and (not positional or Path(positional[0]).is_dir()):
-        root = Path(positional[0]) if positional else Path(".")
-        config = _load_config(root)
-        coverage = _resolve_coverage(flags, config)
-        extra_exclude = set(config.get("exclude", []))
-        _check_project(root, coverage=coverage, extra_exclude=extra_exclude)
-        return
-
-    if not positional:
-        print("usage: build.py <llmlang_file> [--check | --finalize] [--coverage | --no-coverage]")
-        print("       build.py --check [root_dir] [--coverage | --no-coverage]")
+def _run_build(positional: list):
+    if len(positional) != 1:
+        print("usage: build.py build <llmlang_file>")
         sys.exit(1)
-
     llmlang_path = Path(positional[0])
     lockfile_path = llmlang_path.parent / (llmlang_path.stem + ".llmlock")
-
-    if "--check" in flags:
-        config = _load_config(llmlang_path.parent)
-        coverage = _resolve_coverage(flags, config)
-        ok, findings = _check_one(llmlang_path, coverage=coverage)
-        _print_report({str(llmlang_path): findings})
-        sys.exit(0 if ok else 1)
-
-    if "--finalize" in flags:
-        changes_path = llmlang_path.parent / (llmlang_path.stem + ".llmchanges.json")
-        try:
-            finalize(llmlang_path, lockfile_path, changes_path)
-        except ValueError as e:
-            print(e)
-            sys.exit(1)
-        print(f"Wrote {lockfile_path}")
-        return
-
     try:
         build(llmlang_path, lockfile_path)
     except ValueError as e:
         print(e)
         sys.exit(1)
     print(f"Wrote {lockfile_path}")
+
+
+def _run_finalize(positional: list):
+    if len(positional) != 1:
+        print("usage: build.py finalize <llmlang_file>")
+        sys.exit(1)
+    llmlang_path = Path(positional[0])
+    lockfile_path = llmlang_path.parent / (llmlang_path.stem + ".llmlock")
+    changes_path = llmlang_path.parent / (llmlang_path.stem + ".llmchanges.json")
+    try:
+        finalize(llmlang_path, lockfile_path, changes_path)
+    except ValueError as e:
+        print(e)
+        sys.exit(1)
+    print(f"Wrote {lockfile_path}")
+
+
+def _usage():
+    print("usage: build.py check [path...] [--coverage | --no-coverage] [--config PATH]")
+    print("       build.py build <llmlang_file>")
+    print("       build.py finalize <llmlang_file>")
+
+
+def main():
+    args = sys.argv[1:]
+    if not args:
+        _usage()
+        sys.exit(1)
+
+    action, rest = args[0], args[1:]
+
+    flags = set()
+    positional = []
+    config_override = None
+    i = 0
+    while i < len(rest):
+        a = rest[i]
+        if a == "--config":
+            i += 1
+            if i >= len(rest):
+                print("--config requires a path argument")
+                sys.exit(1)
+            config_override = Path(rest[i])
+        elif a.startswith("--"):
+            flags.add(a)
+        else:
+            positional.append(a)
+        i += 1
+
+    if action == "check":
+        paths = [Path(p) for p in positional] or [Path(".")]
+        _run_check(paths, flags, config_override)
+    elif action == "build":
+        _run_build(positional)
+    elif action == "finalize":
+        _run_finalize(positional)
+    else:
+        _usage()
+        sys.exit(1)
 
 
 if __name__ == "__main__":

@@ -1,7 +1,4 @@
 {
-  "exempt": {
-    "legacy_app/notes.py::NotesStore.__init__": "the entire body (self._notes = {}) is already described by the _notes data entry, whose handle sits on the line directly inside this constructor - the only thing not covered by that handle's own code_hash region is the trivial 'def __init__(self):' signature line itself, which has no behavior of its own"
-  },
   "legacy_app.notes.NotesStore.add_note": {
     "disposition": "extract_by_handle now includes the handle comment line in code_hash (bug fix, closes a real gap where the source comment could drift from the llmlang summary undetected) - no actual code change",
     "for_spec_hash": "d4c058c56c83af684db5a1a47964e674c00832c84721a886ca73aba20de52300",

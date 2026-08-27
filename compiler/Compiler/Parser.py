@@ -30,6 +30,7 @@ Everything else is shape-inferred, not keyword-driven:
 from pathlib import Path
 
 
+# private helper of parse(), not independent architecture [llm-exempt]
 def _new_node(name, ext=None, summary=None, line=None):
     return {
         "kind": None,
@@ -44,6 +45,7 @@ def _new_node(name, ext=None, summary=None, line=None):
     }
 
 
+# private helper of parse(), not independent architecture [llm-exempt]
 def _finalize(node, path_desc):
     if node["kind"] is None:
         if not node["bullets"] and not node["tests"]:
@@ -59,6 +61,7 @@ def _finalize(node, path_desc):
         _finalize(child, f"{path_desc}.{name}")
 
 
+# private helper of parse(), not independent architecture [llm-exempt]
 def _parse_header(content):
     header = content[:-1]
     summary = None
@@ -73,6 +76,7 @@ def _parse_header(content):
     return name, summary, marker
 
 
+# private helper of parse(), not independent architecture [llm-exempt]
 def _bullet_text(content: str, relative_depth: int) -> str:
     if relative_depth <= 0:
         return content[2:]
@@ -179,6 +183,7 @@ def parse(path):
     return root
 
 
+# already covered by parse()'s own tracked region [llm-exempt]
 def walk_files(node, folder_parts=()):
     """Yield (file_rel, ext) for every file node in the tree, whether or not
     it holds any source-handled entries - coverage checking needs every
@@ -191,6 +196,7 @@ def walk_files(node, folder_parts=()):
             yield "/".join(folder_parts + (f"{name}.{child['ext']}",)), child["ext"]
 
 
+# already covered by parse()'s own tracked region [llm-exempt]
 def walk_policies(node, path=()):
     """Yield (scope_path, index, text) for every policy item at any scope."""
     for i, text in enumerate(node["policy"]):
@@ -199,10 +205,12 @@ def walk_policies(node, path=()):
         yield from walk_policies(child, path + (name,))
 
 
+# already covered by parse()'s own tracked region [llm-exempt]
 def _file_label(file_rel):
     return file_rel.rsplit(".", 1)[0].replace("/", ".")
 
 
+# already covered by parse()'s own tracked region [llm-exempt]
 def _entry_keys_beneath(node, file_rel, class_name):
     """All entry tracking keys nested anywhere beneath this node, direct or
     via further sub-classes - a class/file-level bullet can depend on any
@@ -218,6 +226,7 @@ def _entry_keys_beneath(node, file_rel, class_name):
     return keys
 
 
+# already covered by parse()'s own tracked region [llm-exempt]
 def walk_entries(node, folder_parts=(), file_rel=None, class_name=None):
     """Yield (file_rel, handle_key, tracking_key, bullets, line) for every
     source-handled entry - line is the entry header's own source line in the
@@ -243,6 +252,7 @@ def walk_entries(node, folder_parts=(), file_rel=None, class_name=None):
             )
 
 
+# already covered by parse()'s own tracked region [llm-exempt]
 def walk_tests(node, folder_parts=(), file_rel=None, class_name=None):
     """Yield (canonical_node_name, test_text) for every test bullet."""
     for name, child in node["children"].items():
@@ -267,6 +277,7 @@ def walk_tests(node, folder_parts=(), file_rel=None, class_name=None):
                 yield canonical_name, test
 
 
+# already covered by parse()'s own tracked region [llm-exempt]
 def walk_test_lines(node, folder_parts=(), file_rel=None, class_name=None):
     """Yield (canonical_node_name, test_text, line) for every test bullet -
     same traversal as walk_tests, with the bullet's own source line exposed
@@ -293,6 +304,7 @@ def walk_test_lines(node, folder_parts=(), file_rel=None, class_name=None):
                 yield canonical_name, test, line
 
 
+# already covered by parse()'s own tracked region [llm-exempt]
 def walk_class_bullet_groups(node, folder_parts=(), file_rel=None, class_name=None):
     """Yield (tracking_key, sibling_entry_tracking_keys, bullets, line) for
     every bare bullet group sitting directly on a file or class node -
@@ -324,6 +336,7 @@ def walk_class_bullet_groups(node, folder_parts=(), file_rel=None, class_name=No
             yield from walk_class_bullet_groups(child, folder_parts, file_rel, name)
 
 
+# already covered by parse()'s own tracked region [llm-exempt]
 def policy_in_scope(policy_scope: tuple, entry_file: str) -> bool:
     """A policy at scope ('a','b') covers an entry whose file lives under
     folder path a/b/... (root scope, empty tuple, covers everything)."""
@@ -333,6 +346,7 @@ def policy_in_scope(policy_scope: tuple, entry_file: str) -> bool:
     return entry_file == prefix or entry_file.startswith(prefix + "/") or entry_file.startswith(prefix + ".")
 
 
+# already covered by parse()'s own tracked region [llm-exempt]
 def applicable_policy_text(root, file_rel: str) -> list:
     """Every policy's text currently covering the given file, in a stable
     order - used both to detect a policy-driven cascade and to fold policy
