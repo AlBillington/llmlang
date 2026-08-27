@@ -179,3 +179,4 @@ This collapses to `pip install llmlang && llmlang check` once packaging exists �
 - §6 — no mitigation for correct-but-flawed generated code that hasn't triggered a bug report yet.
 - §4.4 — `--finalize` guarantees coverage (nothing silently skipped), not correctness (whether a disposition is true); a fabricated disposition is still possible, and still ultimately a human-review problem, same as generated code always has been.
 - Not yet touched: what compile-time LLM context looks like in practice (how much of the rest of the codebase a given entry's compile step sees), what language(s) beyond Python/HTML/JS the tooling has been proven against, the split-a-method direction of the 1:1 rule (only the merge-bullets direction has come up in practice so far).
+
