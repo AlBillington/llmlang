@@ -60,8 +60,8 @@
     "for_code_hash": "5803ac20f83800300c442990be32e36ba48c1f9b9628564a0f0611cfb64f0a48"
   },
   "Compiler.LockfileChecker.check": {
-    "disposition": "real change: check() no longer prints findings directly - it collects and returns them as a list (findings) instead, so a caller can present every failure across a whole run in one delineated report instead of interleaved prints, and can be sure it saw all of them rather than stopping at the first. Every SPEC_DIVERGED/CODE_DIVERGED/TEST_* message now also includes a file:line location: entry-side messages point at the entry's header line in the .llm file, code-side messages point at the handle's own comment line in the source file, using the line numbers Parser and Extractor now track.",
+    "disposition": "real change: every finding's parenthetical now explains what happened and, where useful, what to do about it, instead of a short label - e.g. the class-level cascade message used to say only \"an entry it depends on changed\" (unclear which entry, or why it mattered); it now names the specific triggering entry by tracking key and explains that the cross-entry bullet's own text is unchanged but should be re-reviewed anyway. Also carries forward the file:line reporting and findings-list return from the prior change to this entry.",
     "for_spec_hash": "f0e59f692b1d3a2f5825cdac369136be9b62ea58856212499b120b5efb17a789",
-    "for_code_hash": "d764c78179be9e04102596fda1c55359598b34d94ff1f41a7d0880aaf0b995f2"
+    "for_code_hash": "10f3e37a1e8494bc21ba8d5cb026456470960b4ab3e956570fd8ff2c7fe9921c"
   }
 }
