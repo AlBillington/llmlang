@@ -1,6 +1,6 @@
 # llmlang: Concept & Design (v0.2)
 
-Status: prototype tooling, built and working. Three example projects verified end-to-end: `shortener.llm` (greenfield), `compiler.llm` (self-hosted, the compiler's own tooling described in its own language), `notes.llm` (onboarded legacy code). Sections marked **OPEN** are unresolved. For the concrete syntax and writing conventions, see the [format spec](llmlang-format.md).
+Status: initial release. Three example projects verified end-to-end: `shortener.llm` (greenfield), `compiler.llm` (self-hosted, the compiler's own tooling described in its own language), `notes.llm` (onboarded legacy code). See §8 for known limitations. For the concrete syntax and writing conventions, see the [format spec](llmlang-format.md).
 
 ## 1. What llmlang is
 
@@ -31,7 +31,7 @@ A compile-time decision not specified in llmlang (timeout handling, caching stra
 
 **One rule, three triggers**: whenever compile hits a gap between what llmlang says and what the code needs to do, the compiler proposes an addition and waits. This is what makes llmlang bidirectional: the AI is a co-author of the spec, not just a consumer of it.
 
-Every code branch is technically an unmapped decision, and the compiler still needs judgment about which ones rise to "a human would care" vs. pure plumbing. That's not a gap awaiting a fix; it's the accepted non-determinism tradeoff from §2.1, applied here specifically, and no separate rule is meant to close it.
+Not every implementation choice needs a proposal, only ones that would create something needing its own named entry to stay traceable. Picking a retry count for a network call is exactly that kind of choice: worth proposing, since it's a real guarantee someone might rely on later. Picking whether to build a list with a loop or a comprehension isn't: it has no external behavior to trace. Most decisions fall somewhere between those two examples, and there's no formula that sorts them; that's the same accepted non-determinism from §2.1, applied here specifically, not a rule this design is missing.
 
 ### 2.3 Policy: cross-cutting concerns, inlined rather than woven in
 
@@ -111,7 +111,7 @@ Two-layer trust:
 1. **Human review of the llmlang diff**: the primary PR artifact, the level engineers think and communicate at.
 2. **Automated conformance** (§2.1): structural + behavioral gates catch what a human would normally catch reading code, since generated code isn't the primary review surface by default.
 
-**Partially open**: `@policy:` (§2.3) already covers any non-functional constraint someone thought to write down in advance, security or performance requirements included, since a policy is reviewed and inlined into every entry it covers the same as any other spec content. What's still unaddressed is a concern nobody thought to flag in the first place: code that's behaviorally correct (passes tests, matches llmlang) but has a real problem the spec never anticipated, and that hasn't surfaced as a bug report yet. That residual gap isn't specific to llmlang; no static review process catches a risk nobody thought to check for.
+`@policy:` (§2.3) already covers any non-functional constraint someone thought to write down in advance, security or performance requirements included, since a policy is reviewed and inlined into every entry it covers the same as any other spec content. What it can't catch is a concern nobody thought to flag in the first place: code that's behaviorally correct (passes tests, matches llmlang) but has a real problem the spec never anticipated. See §8.
 
 ## 6. Implementation status
 
@@ -177,12 +177,13 @@ This repo's own `pyproject.toml` sets `coverage = true`, which is why the CI wor
 
 **Machine-readable output.** `check --output-format json` prints `{"ok": bool, "results": {file: [finding, ...]}}`, each finding a `{category, message, file, line}` object, the same `Finding` records (§3, `llmlang/lockfile.py`) the text report renders, not a separate parse of it, so the two can never drift apart. `message` carries the exact same text the human report shows; `category`/`file`/`line` are there for a caller that wants to act on a finding programmatically instead of reading prose (a GitHub Actions annotation renderer would be the natural next thing built on top of this, though it doesn't exist yet). Progress lines ("checking X") and warnings always go to stderr in either format, so stdout is safe to pipe straight into `jq` or a file.
 
-**Still open**: publishing to PyPI, so `pip install llmlang` alone resolves instead of needing a git URL. Deliberately deferred: this tool's shape has changed multiple times in short order (the exemption mechanism, the CLI structure, the output format), and a published package implies a stability commitment this isn't ready to make yet.
+Not yet published to PyPI, so `pip install llmlang` alone doesn't resolve, only `pip install .` or a git URL. Deliberately deferred: a published package implies a stability commitment around naming and versioning that's easier to make once the CLI and output shape have had more real use behind them. See §8.
 
-## 8. Summary of open questions
+## 8. Limitations
 
-- §3.4: `finalize` guarantees coverage (nothing silently skipped), not correctness (whether a disposition is true); a fabricated disposition is still possible, and still ultimately a human-review problem, same as generated code always has been.
-- §5: `@policy:` (§2.3) covers anticipated non-functional concerns, but nothing catches one nobody thought to flag before it surfaces as a bug; not a gap specific to llmlang, but unaddressed here.
-- Not yet touched: what compile-time LLM context looks like in practice (how much of the rest of the codebase a given entry's compile step sees), what language(s) beyond Python/HTML/JS the tooling has been proven against, the split-a-method direction of the 1:1 rule (only the merge-bullets direction has come up in practice so far).
-- §7 `--coverage` is Python-only: enumerating "every function that exists" needs a real per-language parser, which only exists for Python right now; other languages are silently skipped, not flagged.
-- §7 `--coverage` only checks files an `.llm` file already declares (via `walk_files`); it can't catch a whole file nobody ever mentioned in llmlang at all. Same "missing file" gap the 3dprinter-tycoon onboarding stress test surfaced originally, still unaddressed by any mechanical check. Buildable (an `UNMAPPED_FILE` check, same shape as the existing function-level one, just scanning the project tree for files no `.llm` file's `walk_files()` references), just not built yet.
+- **Correctness of a disposition is a human-review responsibility, not something this tool verifies** (§3.4). `finalize` guarantees coverage: nothing gets silently skipped. It can't guarantee a disposition is true; a fabricated one is possible, the same way generated code can always be wrong in ways that still pass every check.
+- **No mitigation for a spec gap nobody noticed yet** (§5). `@policy:` covers any non-functional concern someone thought to write down in advance. It can't catch one nobody thought to flag, the same limitation any static review process has.
+- **Proven scope is narrow so far.** Every example in this repo is Python, HTML, or JS, and hand-scale. Compile-time LLM context sizing, other languages, and the split-a-method direction of the 1:1 mapping rule (only merge-bullets has come up in practice) haven't been tested against a real case yet.
+- **`--coverage` is Python-only** (§7). Enumerating every function that exists needs a real parser per language; other languages are silently skipped, not flagged.
+- **`--coverage` can't detect a whole unmapped file** (§7). It only checks functions inside files an `.llm` file already declares via `walk_files`, so a file nobody ever mentioned in llmlang goes unchecked entirely. Buildable as an `UNMAPPED_FILE` check with the same shape as the existing function-level one, just not built yet.
+- **Not published to PyPI** (§7). `pip install .` or a git URL both work; `pip install llmlang` alone doesn't resolve.

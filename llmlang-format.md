@@ -1,6 +1,6 @@
 # llmlang — Format & Grammar Spec (v0.2)
 
-Status: the concrete syntax and writing conventions for llmlang source files (`.llm`) — what to type and how to structure it. For what llmlang is for, the compilation/review model, the lockfile mechanism, and open questions, see the [concept doc](readme.md).
+Status: the concrete syntax and writing conventions for llmlang source files (`.llm`): what to type and how to structure it. For what llmlang is for, the compilation/review model, the lockfile mechanism, and known limitations, see the [concept doc](readme.md).
 
 ## 1. Terms
 
