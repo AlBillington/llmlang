@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-CLI: python build.py check [path...] [--coverage | --no-coverage] [--config PATH]
+CLI: python build.py check [path...] [--coverage | --no-coverage] [--config PATH] [--output-format text|json]
      python build.py build <llmlang_file>
      python build.py finalize <llmlang_file>
      python build.py --version
@@ -17,6 +17,11 @@ accepts any number of file or directory paths (default: the current
 directory), auto-discovering every *.llm file under a directory argument
 and checking a .llm file argument directly, reporting every failure
 across every path in one pass rather than stopping at the first.
+Progress/diagnostic lines ("checking X", path-not-found warnings) always
+go to stderr, so stdout stays clean for the actual report in either
+--output-format - text (default) or json (a {"ok", "results": {file:
+[{category, message, file, line}, ...]}} object, one entry per finding,
+built from the exact same Finding records the text report renders).
 
 build and finalize are the write operations - each always requires
 exactly one llmlang file, since each is a guarded write for one project's
@@ -60,7 +65,9 @@ Plain build stays completely unguarded and has no notion of dispositions
 at all, for bootstrapping a brand new lockfile or for a human directly
 supervising their own edit.
 """
+import json
 import sys
+from dataclasses import asdict
 from pathlib import Path
 
 try:
@@ -146,7 +153,7 @@ def _plural(count: int, word: str) -> str:
     return f"{count} {word}" if count == 1 else f"{count} {word}s"
 
 
-def _print_report(findings_by_file: dict):
+def _print_report_text(findings_by_file: dict):
     total = sum(len(findings) for findings in findings_by_file.values())
     if total == 0:
         print("OK — lockfile matches llmlang and code.")
@@ -164,14 +171,25 @@ def _print_report(findings_by_file: dict):
         files_with_findings += 1
         print(f"\n{file_key}")
         for finding in findings:
-            print(f"  {finding}")
+            print(f"  {finding.message}")
     print()
     print(bar)
     print(f"{_plural(total, 'failure')} across {_plural(files_with_findings, 'file')}")
     print(bar)
 
 
-def _run_check(paths: list, flags: set, config_override: Path | None):
+def _print_report_json(findings_by_file: dict):
+    payload = {
+        "ok": all(not findings for findings in findings_by_file.values()),
+        "results": {
+            file_key: [asdict(finding) for finding in findings]
+            for file_key, findings in findings_by_file.items()
+        },
+    }
+    print(json.dumps(payload, indent=2))
+
+
+def _run_check(paths: list, flags: set, config_override: Path | None, output_format: str):
     config = _load_config(Path("."), config_override)
     coverage = _resolve_coverage(flags, config)
     extra_exclude = set(config.get("exclude", []))
@@ -183,20 +201,23 @@ def _run_check(paths: list, flags: set, config_override: Path | None):
         elif path.is_file():
             llm_files.append(path)
         else:
-            print(f"warning: path not found: {path}")
+            print(f"warning: path not found: {path}", file=sys.stderr)
 
     llm_files = sorted(set(llm_files))
     if not llm_files:
-        print(f"No .llm files found under {', '.join(str(p) for p in paths)}")
+        print(f"No .llm files found under {', '.join(str(p) for p in paths)}", file=sys.stderr)
         sys.exit(1)
 
     findings_by_file = {}
     for llmlang_path in llm_files:
-        print(f"checking {llmlang_path}")
+        print(f"checking {llmlang_path}", file=sys.stderr)
         ok, findings = _check_one(llmlang_path, coverage=coverage)
         findings_by_file[str(llmlang_path)] = findings
 
-    _print_report(findings_by_file)
+    if output_format == "json":
+        _print_report_json(findings_by_file)
+    else:
+        _print_report_text(findings_by_file)
     sys.exit(0 if all(not f for f in findings_by_file.values()) else 1)
 
 
@@ -238,8 +259,11 @@ _ALLOWED_FLAGS = {
 }
 
 
+_OUTPUT_FORMATS = {"text", "json"}
+
+
 def _usage():
-    print("usage: build.py check [path...] [--coverage | --no-coverage] [--config PATH]")
+    print("usage: build.py check [path...] [--coverage | --no-coverage] [--config PATH] [--output-format text|json]")
     print("       build.py build <llmlang_file>")
     print("       build.py finalize <llmlang_file>")
     print("       build.py --version")
@@ -270,6 +294,8 @@ def main():
     flags = set()
     positional = []
     config_override = None
+    output_format = "text"
+    value_flags_seen = set()
     i = 0
     while i < len(rest):
         a = rest[i]
@@ -279,6 +305,17 @@ def main():
                 print("--config requires a path argument")
                 sys.exit(1)
             config_override = Path(rest[i])
+            value_flags_seen.add("--config")
+        elif a == "--output-format":
+            i += 1
+            if i >= len(rest):
+                print("--output-format requires a value argument")
+                sys.exit(1)
+            output_format = rest[i]
+            if output_format not in _OUTPUT_FORMATS:
+                print(f"unknown --output-format {output_format!r} (expected one of: {', '.join(sorted(_OUTPUT_FORMATS))})")
+                sys.exit(1)
+            value_flags_seen.add("--output-format")
         elif a.startswith("--"):
             flags.add(a)
         else:
@@ -286,8 +323,8 @@ def main():
         i += 1
 
     unknown_flags = flags - _ALLOWED_FLAGS[action]
-    if config_override is not None and action != "check":
-        unknown_flags = unknown_flags | {"--config"}
+    if action != "check":
+        unknown_flags = unknown_flags | value_flags_seen
     if unknown_flags:
         print(f"unknown flag(s) for '{action}': {', '.join(sorted(unknown_flags))}")
         _usage()
@@ -295,7 +332,7 @@ def main():
 
     if action == "check":
         paths = [Path(p) for p in positional] or [Path(".")]
-        _run_check(paths, flags, config_override)
+        _run_check(paths, flags, config_override, output_format)
     elif action == "build":
         _run_build(positional)
     elif action == "finalize":

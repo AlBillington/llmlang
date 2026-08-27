@@ -30,6 +30,7 @@ import re
 from pathlib import Path
 
 from Compiler.Extractor import handle_line_numbers
+from Compiler.Lockfile import Finding
 from Compiler.Parser import parse, walk_files
 
 _EXEMPT_RE = re.compile(r"\[llm-exempt\]")
@@ -74,10 +75,15 @@ def check_coverage(llmlang_path: Path) -> list:
         for qualified_name, def_line in _qualified_functions(text):
             if (def_line - 1) in handle_lines or (def_line - 1) in exempt_lines:
                 continue
-            findings.append(
-                "UNMAPPED_CODE (no comment handle covers this function, and it isn't marked "
-                '"[llm-exempt]" either - add a handle, or add "# [llm-exempt]" directly above it, '
-                f"optionally with a reason before the tag): {qualified_name} — {file_rel}:{def_line}"
-            )
+            findings.append(Finding(
+                category="UNMAPPED_CODE",
+                message=(
+                    "UNMAPPED_CODE (no comment handle covers this function, and it isn't marked "
+                    '"[llm-exempt]" either - add a handle, or add "# [llm-exempt]" directly above it, '
+                    f"optionally with a reason before the tag): {qualified_name} — {file_rel}:{def_line}"
+                ),
+                file=file_rel,
+                line=def_line,
+            ))
 
     return findings

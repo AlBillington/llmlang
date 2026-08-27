@@ -7,6 +7,12 @@ Compiler:
 		TestTrace (stores, per linked test comment, the explanation text and backing code hash):
 			- stores, per linked test comment, the explanation text, relative path, and backing code hash
 
+		Finding data (stores one check/coverage failure as structured data, not just display text):
+			- category: text ("CODE_DIVERGED"): a fixed, stable identifier for the kind of failure, decoupled from the human-readable message's exact wording
+			- message: text ("the code changed with no matching llmlang update - investigate before assuming it was intentional"): the full human-readable explanation, identical to what was printed before this existed
+			- file: text ("legacy_app/notes.py") or nothing: the file the failure is about, when known
+			- line: number (12) or nothing: the line within that file, when known
+
 		LOCKFILE_SCHEMA_VERSION (the lockfile's own schema version, bumped whenever its shape changes):
 			- the lockfile's own schema version, bumped whenever its shape changes
 
@@ -83,7 +89,7 @@ Compiler:
 			- a function is covered if a comment handle sits on the line directly above it, or above its first decorator
 			- a function nested inside another function is never checked on its own; it has no stable qualified name to report or exempt, and its enclosing function's own handle (if any) already sweeps its code into that handle's region
 			- a function is exempt if a bare "[llm-exempt]" comment sits on the line directly above it, or above its first decorator - a reason may be written before the tag on the same line but isn't required, and there is no built-in exemption for dunder methods, private helpers, or anything else
-			- returns the list of findings
+			- returns the list of findings, each a Finding record
 
 	LockfileChecker.py:
 		check (checks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as SPEC_DIVERGED, CODE_DIVERGED, or unchanged, alongside its file and line):
@@ -95,6 +101,6 @@ Compiler:
 			- should report an entry as SPEC_DIVERGED when its own llmlang text changed, it's brand new, or an upstream policy covering it changed
 			- should report an entry as CODE_DIVERGED when its handle is missing from the code or its code changed unexpectedly
 			- should report an unmodified codebase as fully clean
-			- never prints anything itself; every finding is returned as a message in a list, so a caller can present every failure from a run together instead of relying on interleaved prints
-			- each finding names a file and line: entry-level findings point at the entry's header line in the llmlang file, code-level findings point at the handle's own comment line in the source file
+			- never prints anything itself; every finding is returned as a Finding record in a list, so a caller can present every failure from a run together instead of relying on interleaved prints, or render them as structured data instead of text
+			- each finding names a file and line where known: entry-level findings point at the entry's header line in the llmlang file, code-level findings point at the handle's own comment line in the source file
 			- returns whether everything checked out clean, the set of named-entry tracking keys currently flagged for any reason, and the list of findings
