@@ -134,7 +134,8 @@ Built and verified end-to-end (in [`compiler/`](compiler/)):
 - `Compiler/Parser.py` — the grammar in [the format spec](llmlang-format.md), stack-based (item depth varies by context, so a fixed-depth parser doesn't work).
 - `Compiler/Extractor.py` — handle-based code lookup (§4.1).
 - `Compiler/LockfileBuilder.py` / `LockfileChecker.py` — the lockfile, all three cascades in §4, and the guarded `--finalize` path (§4.4).
-- `build.py` — generic CLI (`build.py <file>.llm [--check | --finalize]`), works on any llmlang file, self-hosts (compiles its own `compiler.llm`).
+- `Compiler/CoverageChecker.py` — opt-in `--coverage` check (§8) that every module- and class-level Python function has a comment handle or an explicit exemption; Python-only for now.
+- `build.py` — generic CLI (`build.py <file>.llm [--check | --finalize] [--coverage]`), works on any llmlang file, self-hosts (compiles its own `compiler.llm`).
 
 Compiling (llmlang → code) still isn't automated, but that's not missing software — it's an LLM given the format spec, this doc, and the target `.llm` file, writing code that satisfies every bullet. That's exactly what happened, by hand, for every example in this repo, and it doesn't need a separate portable instructions document restating rules the format spec and this doc already state in full — that would just be the duplication §3.5's single-sourcing discipline exists to avoid. What `--finalize` actually adds is narrower and more useful: a mechanical guarantee that whoever does the compiling, human or LLM, can't silently skip an entry while doing it.
 
@@ -172,6 +173,8 @@ repos:
 This collapses to `pip install llmlang && llmlang check` once packaging exists — the two-checkout form above is a stopgap, not the intended long-term shape.
 
 **Still open**: real packaging (`pyproject.toml` + a console-script entry point). Nothing above depends on it, but it's what turns `language: script` into `language: python` and the two-checkout CI snippet into a one-line install.
+
+**Coverage checking (`--coverage`).** `--check` alone verifies that entries llmlang already knows about still match the code; it says nothing about a function that was never declared in llmlang at all. `--coverage` closes that gap for Python: every module- and class-level function must have a comment handle immediately above it (or above its first decorator), or must be listed in `<stem>.llmchanges.json`'s `"exempt"` section — `{"exempt": {"path/to/file.py::Qualified.Name": "reason"}}`. Deliberately opt-in and strict: there's no built-in exemption for dunder methods, private helpers, or anything else — every exemption is a real decision recorded the same reviewable way a disposition is, and unlike a disposition it's permanent and not hash-bound, since it's a standing "this will never need a handle" claim rather than an explanation for a particular drift. A function nested inside another function is never checked on its own — it has no stable qualified name to report, and it's already swept into its enclosing function's own tracked code region by §4.1's "next handle or EOF" rule. Files in languages other than Python are silently skipped, not flagged, since enumerating "every function that exists" needs a real parser for that language, unlike hash checking (which only ever searches for a comment it already expects to find).
 
 ## 9. Summary of open questions
 

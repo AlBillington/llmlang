@@ -51,11 +51,11 @@
       "file": "Compiler/Parser.py",
       "text": "+ parses a tab-indented llmlang file into a tree of folders, files, classes, and entries\naccepts a file path\nparses a tab-indented llmlang file into a tree of folders, files, classes, named entries, and data entries\na source-handled entry header must include a parenthesized summary after the identifier and before the colon\na data entry header must include the data marker after the identifier and before the parenthesized summary\na nested regular bullet belongs to the same nearest entry, file or class bullet group, or policy item as its parent\na test bullet can live under a named entry, file, or class node\na header's real name is always its first word; any words after a folder, file, or class name up to the colon are a freetext hint, discarded once the name is extracted\nrecords the source line number of each folder, file, class, named entry, and data entry header, and of each test bullet\nreturns the parsed tree",
       "text_hash": "9a98858def2a139268c1793698fc3f22b318fa0e622a2155a0c26c8d19656322",
-      "code_hash": "edf1cd37e275c5d8b42ddbe1ba587f9091fa23861a4b762bfa951495d3446789",
+      "code_hash": "b7ede5ef0b088b5a4ec7729e9270507d5a10d9d8878e60393458b23a34e301b1",
       "last_change": {
-        "disposition": "real change: parse() now records each folder/file/class/entry header's own source line, and test bullets are stored as (text, line) pairs - added walk_test_lines() and extended walk_entries()/walk_class_bullet_groups() to yield each item's line too, so check() can report exact file:line locations instead of just a file name. Also fixed line-number accuracy: iterates raw splitlines() and skips blanks explicitly, instead of filtering blanks out before line numbers are ever assigned (which would have miscounted).",
+        "disposition": "unrelated ripple: adding walk_files() (a new tree-traversal helper for coverage checking, defined right after parse's own def) changes what parse's code_hash region captures under the 'next handle or EOF' rule - parse's own logic is unchanged",
         "for_spec_hash": "9a98858def2a139268c1793698fc3f22b318fa0e622a2155a0c26c8d19656322",
-        "for_code_hash": "edf1cd37e275c5d8b42ddbe1ba587f9091fa23861a4b762bfa951495d3446789"
+        "for_code_hash": "b7ede5ef0b088b5a4ec7729e9270507d5a10d9d8878e60393458b23a34e301b1"
       }
     },
     "Compiler.Extractor.TestComment": {
@@ -73,11 +73,22 @@
       "file": "Compiler/Extractor.py",
       "text": "+ extracts the code implementing an entry by locating its comment handle and taking everything from the handle's own comment line up to the next handle\naccepts a file path and canonical entry name\nextracts the code implementing an entry by locating its comment handle and taking everything from the handle's own comment line up to the next handle\nincluding the comment line itself means the entry's summary comment is part of the resulting hash, so it can't drift from the llmlang summary undetected\nreturns the extracted code and the line number of its handle comment, or nothing if the handle isn't found",
       "text_hash": "8452197c555ea937c30520b03ce03b84a7bd8b0c2916b7b36517f2657cdc4f33",
-      "code_hash": "43064c1622652d6911882902108b22407a07397a7a843aa2a280b92a8cc1fa92",
+      "code_hash": "a9d296582a809659231af51dba8c86d8e5ae9176c364b1437f78788529a3613f",
       "last_change": {
-        "disposition": "real change: now returns (code, line_number) instead of just code, so CODE_DIVERGED can report the handle's own source line instead of just the file it lives in.",
+        "disposition": "unrelated ripple: adding handle_line_numbers() as a new tracked entry right after extract_by_handle shrinks extract_by_handle's own code_hash region to stop before it, changing the hash even though extract_by_handle's own logic is unchanged",
         "for_spec_hash": "8452197c555ea937c30520b03ce03b84a7bd8b0c2916b7b36517f2657cdc4f33",
-        "for_code_hash": "43064c1622652d6911882902108b22407a07397a7a843aa2a280b92a8cc1fa92"
+        "for_code_hash": "a9d296582a809659231af51dba8c86d8e5ae9176c364b1437f78788529a3613f"
+      }
+    },
+    "Compiler.Extractor.handle_line_numbers": {
+      "file": "Compiler/Extractor.py",
+      "text": "+ finds the source line of every comment handle in a file, for coverage checking\naccepts a file path\nfinds the source line of every comment handle in a file, for coverage checking\nreturns the set of line numbers",
+      "text_hash": "cfd49872979966b7290a3230865f3eb77ba8da0878632708786d170762be7514",
+      "code_hash": "fd1444053fd5f344d7ee7da31336b22496de15a1ec8ecded88cd2d601ab7a1e1",
+      "last_change": {
+        "disposition": "new entry: real feature, part of the new opt-in --coverage check",
+        "for_spec_hash": "cfd49872979966b7290a3230865f3eb77ba8da0878632708786d170762be7514",
+        "for_code_hash": "fd1444053fd5f344d7ee7da31336b22496de15a1ec8ecded88cd2d601ab7a1e1"
       }
     },
     "Compiler.Extractor.test_comment_roots": {
@@ -126,13 +137,24 @@
     },
     "Compiler.LockfileBuilder.finalize": {
       "file": "Compiler/LockfileBuilder.py",
-      "text": "+ guards an incremental rebuild against silently skipping a flagged entry, reading and updating a change manifest bound to the exact spec and code hashes it describes\naccepts an llmlang file path, a lockfile output path, and a change manifest file path\nuses Checker to find every named entry currently flagged against the existing lockfile, and refuses to write anything unless the change manifest covers every one of them with a non-empty disposition\naccepts a fresh disposition in the manifest as a plain string, and stamps it with the entry's current spec hash and code hash\na spec hash combines the entry's own text with every policy currently covering it, so a disposition goes stale whether the entry's own text changed or an applicable policy did\nfor a manifest entry that's already stamped, keeps it only if both hashes still match the entry's current state; otherwise drops it as stale, along with any entry whose key no longer exists in the llmlang tree at all\nbuilds every hash and disposition fresh from the current llmlang text, current code, current policies, and current manifest only; never carries anything forward from the lockfile's own prior content\nwrites both the new lockfile and the updated (stamped and pruned) manifest file, but never alters a disposition's own text\nreturns the built lock data",
-      "text_hash": "a2ae9afba0e5e4aeb1babdf4611893990774fd787fa86d8dca3e8718f2689e6f",
-      "code_hash": "5803ac20f83800300c442990be32e36ba48c1f9b9628564a0f0611cfb64f0a48",
+      "text": "+ guards an incremental rebuild against silently skipping a flagged entry, reading and updating a change manifest bound to the exact spec and code hashes it describes\naccepts an llmlang file path, a lockfile output path, and a change manifest file path\nuses Checker to find every named entry currently flagged against the existing lockfile, and refuses to write anything unless the change manifest covers every one of them with a non-empty disposition\naccepts a fresh disposition in the manifest as a plain string, and stamps it with the entry's current spec hash and code hash\na spec hash combines the entry's own text with every policy currently covering it, so a disposition goes stale whether the entry's own text changed or an applicable policy did\nfor a manifest entry that's already stamped, keeps it only if both hashes still match the entry's current state; otherwise drops it as stale, along with any entry whose key no longer exists in the llmlang tree at all\nbuilds every hash and disposition fresh from the current llmlang text, current code, current policies, and current manifest only; never carries anything forward from the lockfile's own prior content\nwrites both the new lockfile and the updated (stamped and pruned) manifest file, but never alters a disposition's own text\npreserves the change manifest's \"exempt\" section verbatim across every run, since coverage-check exemptions are permanent and keyed by file and qualified name rather than a tracking_key, unlike every other entry in the manifest\nreturns the built lock data",
+      "text_hash": "a243ff924f5f508c74503c37ab4eb9faa1c06c67b3ceb6b2648f71709d606e5a",
+      "code_hash": "2c86421328ff46fdcfa6c0c529e1906b8abe833409cd777a766f5aaf055b384a",
       "last_change": {
-        "disposition": "unrelated ripple: check() now returns a findings list as a third tuple element instead of printing directly. finalize() unpacks it and prints currently-flagged findings itself before its own disposition-coverage check, preserving the prior visibility into what's flagged during --finalize - its own logic (coverage gate, hash stamping) is unchanged.",
-        "for_spec_hash": "a2ae9afba0e5e4aeb1babdf4611893990774fd787fa86d8dca3e8718f2689e6f",
-        "for_code_hash": "5803ac20f83800300c442990be32e36ba48c1f9b9628564a0f0611cfb64f0a48"
+        "disposition": "real change: finalize() now special-cases the changes file's \"exempt\" key (coverage-check exemptions, keyed by file+qualified-name rather than a tracking_key) so it's preserved verbatim across every finalize run instead of being pruned as an orphaned disposition",
+        "for_spec_hash": "a243ff924f5f508c74503c37ab4eb9faa1c06c67b3ceb6b2648f71709d606e5a",
+        "for_code_hash": "2c86421328ff46fdcfa6c0c529e1906b8abe833409cd777a766f5aaf055b384a"
+      }
+    },
+    "Compiler.CoverageChecker.check_coverage": {
+      "file": "Compiler/CoverageChecker.py",
+      "text": "+ checks every module- and class-level Python function against comment handles and changes-file exemptions, reporting each uncovered one as UNMAPPED_CODE\naccepts an llmlang file path and a change manifest file path\nchecks every module- and class-level Python function against comment handles and changes-file exemptions, reporting each uncovered one as UNMAPPED_CODE\nonly checks files with a Python extension; files in other languages are silently skipped, not flagged\na function is covered if a comment handle sits on the line directly above it, or above its first decorator\na function nested inside another function is never checked on its own; it has no stable qualified name to report or exempt, and its enclosing function's own handle (if any) already sweeps its code into that handle's region\na function is exempt if the change manifest's \"exempt\" section has an entry keyed \"{file path}::{qualified name}\" - there is no built-in exemption for dunder methods, private helpers, or anything else\nreturns the list of findings",
+      "text_hash": "23b74df0929a302096d38e45961359f12907e7b468b2171b49a0b82add9b5091",
+      "code_hash": "e4a949ac6f444aab28c5a16fa0779fb04353b995b7bcf60299d8215e3e1efccf",
+      "last_change": {
+        "disposition": "new entry: real feature, the new opt-in --coverage check itself",
+        "for_spec_hash": "23b74df0929a302096d38e45961359f12907e7b468b2171b49a0b82add9b5091",
+        "for_code_hash": "e4a949ac6f444aab28c5a16fa0779fb04353b995b7bcf60299d8215e3e1efccf"
       }
     },
     "Compiler.LockfileChecker.check": {

@@ -20,6 +20,7 @@ from Compiler.Extractor import (
     test_comment_roots,
     test_comments_by_node,
 )
+from Compiler.CoverageChecker import EXEMPT_KEY
 from Compiler.Lockfile import LOCKFILE_SCHEMA_VERSION, RULESET_VERSION
 from Compiler.LockfileChecker import check
 from Compiler.Parser import (
@@ -181,7 +182,13 @@ def finalize(llmlang_path: Path, lockfile_path: Path, changes_path: Path):
 
     new_changes = {}
     resolved = {}
+    if EXEMPT_KEY in changes:
+        # permanent, not hash-bound, and keyed by file+qualified-name rather
+        # than a tracking_key - never treat it as an orphaned disposition
+        new_changes[EXEMPT_KEY] = changes[EXEMPT_KEY]
     for key, value in changes.items():
+        if key == EXEMPT_KEY:
+            continue
         if key not in hashed:
             continue  # orphaned - this entry no longer exists in the llmlang tree
         _, _, _, code_hash, spec_hash = hashed[key]
