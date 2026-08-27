@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 CLI: python build.py <llmlang_file> [--check | --finalize]
      python build.py --check [root_dir]

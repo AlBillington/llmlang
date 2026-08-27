@@ -138,7 +138,42 @@ Built and verified end-to-end (in [`compiler/`](compiler/)):
 
 Compiling (llmlang → code) still isn't automated, but that's not missing software — it's an LLM given the format spec, this doc, and the target `.llm` file, writing code that satisfies every bullet. That's exactly what happened, by hand, for every example in this repo, and it doesn't need a separate portable instructions document restating rules the format spec and this doc already state in full — that would just be the duplication §3.5's single-sourcing discipline exists to avoid. What `--finalize` actually adds is narrower and more useful: a mechanical guarantee that whoever does the compiling, human or LLM, can't silently skip an entry while doing it.
 
-## 8. Summary of open questions
+## 8. Installing llmlang as a linter
+
+The goal: add llmlang's check to a project the same way you'd add ruff or eslint — a pre-commit hook, a CI step — without every consumer hand-rolling the invocation.
+
+**Auto-discovery.** `build.py --check` with no file argument (or a directory argument) walks the tree for every `*.llm` file and checks each one, reporting all failures in one pass rather than stopping at the first. This is what makes a single project-wide hook possible instead of one hook per `.llm` file:
+
+```
+python compiler/build.py --check .
+```
+
+**Pre-commit.** [`.pre-commit-hooks.yaml`](.pre-commit-hooks.yaml) at the repo root defines an `llmlang-check` hook using `language: script` — pre-commit runs `compiler/build.py` directly out of this repo's own checkout, with no install step. That's a deliberate interim choice: `language: python` (the more typical shape for a pre-commit hook, e.g. how `ruff-pre-commit` works) has pre-commit pip-install the hook repo into an isolated venv, which requires a real `pyproject.toml`/entry point — packaging that doesn't exist yet. `language: script` sidesteps that dependency entirely and upgrades cleanly to `language: python` later, with no change to how consumers reference the hook. `pass_filenames: false` matters here too: pre-commit's default behavior is to append the list of staged files as trailing arguments, which would break `--check`'s directory-vs-file argument parsing. A consumer wires it up the usual way:
+
+```yaml
+repos:
+  - repo: https://github.com/AlBillington/llmlang
+    rev: <commit-or-tag>
+    hooks:
+      - id: llmlang-check
+```
+
+**CI.** Without a published package, a CI job checks out llmlang alongside the target repo and invokes `build.py` directly:
+
+```yaml
+- uses: actions/checkout@v4
+- uses: actions/checkout@v4
+  with:
+    repository: AlBillington/llmlang
+    path: .llmlang-tool
+- run: python .llmlang-tool/compiler/build.py --check .
+```
+
+This collapses to `pip install llmlang && llmlang check` once packaging exists — the two-checkout form above is a stopgap, not the intended long-term shape.
+
+**Still open**: real packaging (`pyproject.toml` + a console-script entry point). Nothing above depends on it, but it's what turns `language: script` into `language: python` and the two-checkout CI snippet into a one-line install.
+
+## 9. Summary of open questions
 
 - §3.2 — no fixed rule for which decisions are "significant enough" to require a proposal; an accepted judgment call.
 - §6 — no mitigation for correct-but-flawed generated code that hasn't triggered a bug report yet.
