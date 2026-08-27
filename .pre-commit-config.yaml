@@ -1,0 +1,10 @@
+repos:
+  - repo: local
+    hooks:
+      - id: llmlang-check
+        name: llmlang check
+        description: Verify llmlang specs match their code and lockfiles.
+        entry: compiler/build.py --check .
+        language: script
+        pass_filenames: false
+        always_run: true
