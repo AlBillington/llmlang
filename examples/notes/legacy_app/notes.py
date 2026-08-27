@@ -12,7 +12,7 @@ class NotesStore:
 
     # adds a note and returns a randomly generated 8-character lowercase ID [llm:legacy_app.notes.NotesStore.add_note]
     def add_note(self, text):
-        note_id = "".join(random.choices(string.ascii_lowercase, k=8))
+        note_id = "".join(random.choices(string.ascii_lowercase, k=10))
         self._notes[note_id] = text
         return note_id
 
