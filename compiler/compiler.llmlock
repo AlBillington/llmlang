@@ -49,35 +49,35 @@
     },
     "Compiler.Parser.parse": {
       "file": "Compiler/Parser.py",
-      "text": "+ parses a tab-indented llmlang file into a tree of folders, files, classes, and entries\naccepts a file path\nparses a tab-indented llmlang file into a tree of folders, files, classes, named entries, and data entries\na source-handled entry header must include a parenthesized summary after the identifier and before the colon\na data entry header must include the data marker after the identifier and before the parenthesized summary\na nested regular bullet belongs to the same nearest entry, file or class bullet group, or policy item as its parent\na test bullet can live under a named entry, file, or class node\na header's real name is always its first word; any words after a folder, file, or class name up to the colon are a freetext hint, discarded once the name is extracted\nreturns the parsed tree",
-      "text_hash": "943316ee7560be49d349c7ac21453d15245cda9068ee003267058f9f93b59942",
-      "code_hash": "25de11716e01bf7b7574bab3c63d858d5c0591b2f3509bcd1aed79be3613ca89",
+      "text": "+ parses a tab-indented llmlang file into a tree of folders, files, classes, and entries\naccepts a file path\nparses a tab-indented llmlang file into a tree of folders, files, classes, named entries, and data entries\na source-handled entry header must include a parenthesized summary after the identifier and before the colon\na data entry header must include the data marker after the identifier and before the parenthesized summary\na nested regular bullet belongs to the same nearest entry, file or class bullet group, or policy item as its parent\na test bullet can live under a named entry, file, or class node\na header's real name is always its first word; any words after a folder, file, or class name up to the colon are a freetext hint, discarded once the name is extracted\nrecords the source line number of each folder, file, class, named entry, and data entry header, and of each test bullet\nreturns the parsed tree",
+      "text_hash": "9a98858def2a139268c1793698fc3f22b318fa0e622a2155a0c26c8d19656322",
+      "code_hash": "edf1cd37e275c5d8b42ddbe1ba587f9091fa23861a4b762bfa951495d3446789",
       "last_change": {
-        "disposition": "real fix: read_text() now pins encoding=\"utf-8\" - previously defaulted to locale.getpreferredencoding(), which silently misdecodes non-ASCII bytes as cp1252 on Windows, producing a hash that matched itself locally but diverged from the correct UTF-8 decode on Linux CI (caught via a real cross-platform CI failure on Compiler.LockfileChecker.check, which contains em-dashes)",
-        "for_spec_hash": "943316ee7560be49d349c7ac21453d15245cda9068ee003267058f9f93b59942",
-        "for_code_hash": "25de11716e01bf7b7574bab3c63d858d5c0591b2f3509bcd1aed79be3613ca89"
+        "disposition": "real change: parse() now records each folder/file/class/entry header's own source line, and test bullets are stored as (text, line) pairs - added walk_test_lines() and extended walk_entries()/walk_class_bullet_groups() to yield each item's line too, so check() can report exact file:line locations instead of just a file name. Also fixed line-number accuracy: iterates raw splitlines() and skips blanks explicitly, instead of filtering blanks out before line numbers are ever assigned (which would have miscounted).",
+        "for_spec_hash": "9a98858def2a139268c1793698fc3f22b318fa0e622a2155a0c26c8d19656322",
+        "for_code_hash": "edf1cd37e275c5d8b42ddbe1ba587f9091fa23861a4b762bfa951495d3446789"
       }
     },
     "Compiler.Extractor.TestComment": {
       "file": "Compiler/Extractor.py",
-      "text": "+ stores a linked llm-test comment and the backing code it anchors\nstores a linked llm-test comment's canonical node, explanation text, relative path, and backing code\nexposes a code hash derived from the backing code",
-      "text_hash": "0c93c3b87b1a76d8887c97c673e2c71fce28ece961e443e835ce4c313cd998a5",
-      "code_hash": "17c84d4b8b415331c015be7c3d8e5a65f83182e82f170d0f08b251c21776680a",
+      "text": "+ stores a linked llm-test comment and the backing code it anchors\nstores a linked llm-test comment's canonical node, explanation text, relative path, source line, and backing code\nexposes a code hash derived from the backing code",
+      "text_hash": "20d5152dab70806917f28be31a0954855463ca98f78bef00159892c8c28c2ec5",
+      "code_hash": "387083fc80b92c3a4b4f189b9bd5c5be3499cadfeb4dd265e95b2684f4ce8cf7",
       "last_change": {
-        "disposition": "unrelated ripple from the extract_by_handle fix (comment line now included in code_hash) - this entry own code is untouched, only the hash computation changed",
-        "for_spec_hash": "0c93c3b87b1a76d8887c97c673e2c71fce28ece961e443e835ce4c313cd998a5",
-        "for_code_hash": "17c84d4b8b415331c015be7c3d8e5a65f83182e82f170d0f08b251c21776680a"
+        "disposition": "real change: added a line field recording the llm-test comment's own source line, so test-trace findings (TEST_LINK_MISSING, TEST_TRACE_STALE, TEST_TRACE_DIVERGED, TEST_CODE_DIVERGED) can report a location, not just a file.",
+        "for_spec_hash": "20d5152dab70806917f28be31a0954855463ca98f78bef00159892c8c28c2ec5",
+        "for_code_hash": "387083fc80b92c3a4b4f189b9bd5c5be3499cadfeb4dd265e95b2684f4ce8cf7"
       }
     },
     "Compiler.Extractor.extract_by_handle": {
       "file": "Compiler/Extractor.py",
-      "text": "+ extracts the code implementing an entry by locating its comment handle and taking everything from the handle's own comment line up to the next handle\naccepts a file path and canonical entry name\nextracts the code implementing an entry by locating its comment handle and taking everything from the handle's own comment line up to the next handle\nincluding the comment line itself means the entry's summary comment is part of the resulting hash, so it can't drift from the llmlang summary undetected\nreturns the extracted code, or nothing if the handle isn't found",
-      "text_hash": "1cdac1e533c1c3d2e1799cafaed45f1a158b3e0046b5cb9738eda4d96313d0df",
-      "code_hash": "aa764da5ebd30806cacb7600df45b691f3b1d281be8abb175d4a8039687b566a",
+      "text": "+ extracts the code implementing an entry by locating its comment handle and taking everything from the handle's own comment line up to the next handle\naccepts a file path and canonical entry name\nextracts the code implementing an entry by locating its comment handle and taking everything from the handle's own comment line up to the next handle\nincluding the comment line itself means the entry's summary comment is part of the resulting hash, so it can't drift from the llmlang summary undetected\nreturns the extracted code and the line number of its handle comment, or nothing if the handle isn't found",
+      "text_hash": "8452197c555ea937c30520b03ce03b84a7bd8b0c2916b7b36517f2657cdc4f33",
+      "code_hash": "43064c1622652d6911882902108b22407a07397a7a843aa2a280b92a8cc1fa92",
       "last_change": {
-        "disposition": "real fix: read_text() now pins encoding=\"utf-8\", for the same reason as Compiler.Parser.parse - locale-dependent decoding made this function's own hash-affecting behavior silently platform-dependent",
-        "for_spec_hash": "1cdac1e533c1c3d2e1799cafaed45f1a158b3e0046b5cb9738eda4d96313d0df",
-        "for_code_hash": "aa764da5ebd30806cacb7600df45b691f3b1d281be8abb175d4a8039687b566a"
+        "disposition": "real change: now returns (code, line_number) instead of just code, so CODE_DIVERGED can report the handle's own source line instead of just the file it lives in.",
+        "for_spec_hash": "8452197c555ea937c30520b03ce03b84a7bd8b0c2916b7b36517f2657cdc4f33",
+        "for_code_hash": "43064c1622652d6911882902108b22407a07397a7a843aa2a280b92a8cc1fa92"
       }
     },
     "Compiler.Extractor.test_comment_roots": {
@@ -104,13 +104,13 @@
     },
     "Compiler.Extractor.test_comments_by_node": {
       "file": "Compiler/Extractor.py",
-      "text": "+ collects llm-test comments by canonical node name\naccepts one or more root paths\nscans source-like text files under the root paths for llm-test handles\nrecords each llm-test comment's canonical node, exact explanation text, relative path, and backing test code\nreturns a mapping of canonical node name to linked test comment records",
-      "text_hash": "1c1c838652c93e0fe20728989c381cfda758c15639411ef60a646283f716c368",
-      "code_hash": "cf2f502dd2f3614a1b516155acb09feb61c82bf08ecf3319b2ff01ed0c882792",
+      "text": "+ collects llm-test comments by canonical node name\naccepts one or more root paths\nscans source-like text files under the root paths for llm-test handles\nrecords each llm-test comment's canonical node, exact explanation text, relative path, source line, and backing test code\nreturns a mapping of canonical node name to linked test comment records",
+      "text_hash": "e95b81b2ad50c83236d2c2e96feae4996d51fb52766584b082adb91434adfb7f",
+      "code_hash": "3b4103fe90b8b761f064aa16b7f7a99a1597ff7643870c1b5bbcc8b7a1ebfdcf",
       "last_change": {
-        "disposition": "real fix: the source-comment scan's read_text() now pins encoding=\"utf-8\" instead of relying on locale default, and the existing UnicodeDecodeError guard now actually means something (cp1252 can decode almost any byte, so it never triggered before, masking genuinely undecodable files instead of skipping them)",
-        "for_spec_hash": "1c1c838652c93e0fe20728989c381cfda758c15639411ef60a646283f716c368",
-        "for_code_hash": "cf2f502dd2f3614a1b516155acb09feb61c82bf08ecf3319b2ff01ed0c882792"
+        "disposition": "real change: now passes the comment's own source line into the TestComment record it builds (ripple from TestComment's new line field, used for test-trace location reporting).",
+        "for_spec_hash": "e95b81b2ad50c83236d2c2e96feae4996d51fb52766584b082adb91434adfb7f",
+        "for_code_hash": "3b4103fe90b8b761f064aa16b7f7a99a1597ff7643870c1b5bbcc8b7a1ebfdcf"
       }
     },
     "Compiler.LockfileBuilder.build": {
@@ -128,22 +128,22 @@
       "file": "Compiler/LockfileBuilder.py",
       "text": "+ guards an incremental rebuild against silently skipping a flagged entry, reading and updating a change manifest bound to the exact spec and code hashes it describes\naccepts an llmlang file path, a lockfile output path, and a change manifest file path\nuses Checker to find every named entry currently flagged against the existing lockfile, and refuses to write anything unless the change manifest covers every one of them with a non-empty disposition\naccepts a fresh disposition in the manifest as a plain string, and stamps it with the entry's current spec hash and code hash\na spec hash combines the entry's own text with every policy currently covering it, so a disposition goes stale whether the entry's own text changed or an applicable policy did\nfor a manifest entry that's already stamped, keeps it only if both hashes still match the entry's current state; otherwise drops it as stale, along with any entry whose key no longer exists in the llmlang tree at all\nbuilds every hash and disposition fresh from the current llmlang text, current code, current policies, and current manifest only; never carries anything forward from the lockfile's own prior content\nwrites both the new lockfile and the updated (stamped and pruned) manifest file, but never alters a disposition's own text\nreturns the built lock data",
       "text_hash": "a2ae9afba0e5e4aeb1babdf4611893990774fd787fa86d8dca3e8718f2689e6f",
-      "code_hash": "5683d45de6c32323f34e7876771e843b9fed9a13828a1196c4c0f4c7df029077",
+      "code_hash": "5803ac20f83800300c442990be32e36ba48c1f9b9628564a0f0611cfb64f0a48",
       "last_change": {
-        "disposition": "real fix: same encoding=\"utf-8\" pin as Compiler.LockfileBuilder.build, applied to finalize's own read_text()/write_text() calls",
+        "disposition": "unrelated ripple: check() now returns a findings list as a third tuple element instead of printing directly. finalize() unpacks it and prints currently-flagged findings itself before its own disposition-coverage check, preserving the prior visibility into what's flagged during --finalize - its own logic (coverage gate, hash stamping) is unchanged.",
         "for_spec_hash": "a2ae9afba0e5e4aeb1babdf4611893990774fd787fa86d8dca3e8718f2689e6f",
-        "for_code_hash": "5683d45de6c32323f34e7876771e843b9fed9a13828a1196c4c0f4c7df029077"
+        "for_code_hash": "5803ac20f83800300c442990be32e36ba48c1f9b9628564a0f0611cfb64f0a48"
       }
     },
     "Compiler.LockfileChecker.check": {
       "file": "Compiler/LockfileChecker.py",
-      "text": "+ checks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as SPEC_DIVERGED, CODE_DIVERGED, or unchanged, alongside its file and comment handle\naccepts an llmlang file path and a lockfile path\nchecks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as SPEC_DIVERGED, CODE_DIVERGED, or unchanged, alongside its file and comment handle\nreports TEST_LINK_MISSING when any test bullet lacks a matching llm-test comment with the same text and canonical node name\nreports TEST_TRACE_STALE when any llm-test comment lacks a matching test bullet with the same text and canonical node name\nreports TEST_CODE_DIVERGED when a linked test's backing code hash differs from the lockfile\nshould report an entry as SPEC_DIVERGED when its own llmlang text changed, it's brand new, or an upstream policy covering it changed\nshould report an entry as CODE_DIVERGED when its handle is missing from the code or its code changed unexpectedly\nshould report an unmodified codebase as fully clean\nreturns whether everything checked out clean, and the set of named-entry tracking keys currently flagged for any reason",
-      "text_hash": "eb5ac191cf13c4c6c86eea079b166bc0c4183591b8e9dccded3cb6bf0207f422",
-      "code_hash": "2be287cae94abf941f38c8fb445bf2696f0602f42b5f6167f72c64d02744792c",
+      "text": "+ checks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as SPEC_DIVERGED, CODE_DIVERGED, or unchanged, alongside its file and line\naccepts an llmlang file path and a lockfile path\nchecks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as SPEC_DIVERGED, CODE_DIVERGED, or unchanged, alongside its file and line\nreports TEST_LINK_MISSING when any test bullet lacks a matching llm-test comment with the same text and canonical node name\nreports TEST_TRACE_STALE when any llm-test comment lacks a matching test bullet with the same text and canonical node name\nreports TEST_CODE_DIVERGED when a linked test's backing code hash differs from the lockfile\nshould report an entry as SPEC_DIVERGED when its own llmlang text changed, it's brand new, or an upstream policy covering it changed\nshould report an entry as CODE_DIVERGED when its handle is missing from the code or its code changed unexpectedly\nshould report an unmodified codebase as fully clean\nnever prints anything itself; every finding is returned as a message in a list, so a caller can present every failure from a run together instead of relying on interleaved prints\neach finding names a file and line: entry-level findings point at the entry's header line in the llmlang file, code-level findings point at the handle's own comment line in the source file\nreturns whether everything checked out clean, the set of named-entry tracking keys currently flagged for any reason, and the list of findings",
+      "text_hash": "f0e59f692b1d3a2f5825cdac369136be9b62ea58856212499b120b5efb17a789",
+      "code_hash": "d764c78179be9e04102596fda1c55359598b34d94ff1f41a7d0880aaf0b995f2",
       "last_change": {
-        "disposition": "real fix: lockfile_path.read_text() now pins encoding=\"utf-8\" - this is the entry that actually surfaced the bug: its own code contains em-dashes, so its stored code_hash was silently computed from a cp1252-mojibake decode on Windows (matching itself locally) until a GitHub Actions CI run (Linux, UTF-8 locale) computed the correct hash and correctly reported CODE_DIVERGED",
-        "for_spec_hash": "eb5ac191cf13c4c6c86eea079b166bc0c4183591b8e9dccded3cb6bf0207f422",
-        "for_code_hash": "2be287cae94abf941f38c8fb445bf2696f0602f42b5f6167f72c64d02744792c"
+        "disposition": "real change: check() no longer prints findings directly - it collects and returns them as a list (findings) instead, so a caller can present every failure across a whole run in one delineated report instead of interleaved prints, and can be sure it saw all of them rather than stopping at the first. Every SPEC_DIVERGED/CODE_DIVERGED/TEST_* message now also includes a file:line location: entry-side messages point at the entry's header line in the .llm file, code-side messages point at the handle's own comment line in the source file, using the line numbers Parser and Extractor now track.",
+        "for_spec_hash": "f0e59f692b1d3a2f5825cdac369136be9b62ea58856212499b120b5efb17a789",
+        "for_code_hash": "d764c78179be9e04102596fda1c55359598b34d94ff1f41a7d0880aaf0b995f2"
       }
     }
   },

@@ -48,13 +48,14 @@ def _hash_all_entries(llmlang_path: Path, root) -> dict:
     applicable policy's text, so it moves if either one does; when nothing
     covers the entry it reduces to exactly text_hash."""
     result = {}
-    for file_rel, handle_key, tracking_key, bullets in walk_entries(root):
+    for file_rel, handle_key, tracking_key, bullets, _entry_line in walk_entries(root):
         text = _combined(bullets)
         file_path = llmlang_path.parent / file_rel
-        code = extract_by_handle(file_path, handle_key)
-        if code is None:
+        found = extract_by_handle(file_path, handle_key)
+        if found is None:
             print(f"WARNING: no handle [llm:{handle_key}] found for {tracking_key} in {file_rel}")
             continue
+        code, _code_line = found
         policy_texts = applicable_policy_text(root, file_rel)
         spec_hash = _sha256("\n".join([text] + policy_texts))
         result[tracking_key] = (file_rel, text, _sha256(text), _sha256(code), spec_hash)
@@ -69,7 +70,7 @@ def _policies_and_class_bullets(root) -> tuple:
         policies[scope_str][f"policy[{i}]"] = {"text": text, "text_hash": _sha256(text)}
 
     class_bullets = {}
-    for tracking_key, sibling_keys, bullets in walk_class_bullet_groups(root):
+    for tracking_key, sibling_keys, bullets, _class_line in walk_class_bullet_groups(root):
         text = _combined(bullets)
         class_bullets[tracking_key] = {
             "text": text,
@@ -158,12 +159,18 @@ def build(llmlang_path: Path, lockfile_path: Path):
 
 # guards an incremental rebuild against silently skipping a flagged entry, reading and updating a change manifest bound to the exact spec and code hashes it describes [llm:Compiler.LockfileBuilder.finalize]
 def finalize(llmlang_path: Path, lockfile_path: Path, changes_path: Path):
-    ok, flagged_entries = check(llmlang_path, lockfile_path)
+    ok, flagged_entries, findings = check(llmlang_path, lockfile_path)
     if not ok and not flagged_entries:
+        for finding in findings:
+            print(finding)
         raise ValueError(
             "finalize refused: no valid lockfile to check against "
             "(missing, or schema out of date) - bootstrap with a plain rebuild first"
         )
+    if findings:
+        print("Currently flagged (a disposition is required for each to finalize):")
+        for finding in findings:
+            print(f"  {finding}")
 
     changes = json.loads(changes_path.read_text(encoding="utf-8")) if changes_path.exists() else {}
 

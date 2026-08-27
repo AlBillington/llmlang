@@ -37,6 +37,7 @@ from Compiler.Parser import (
     policy_in_scope,
     walk_class_bullet_groups,
     walk_entries,
+    walk_test_lines,
     walk_tests,
     walk_policies,
 )
@@ -57,34 +58,41 @@ def _test_comment_lookup(llmlang_path: Path):
     )
 
 
-def _trace_location(canonical_name: str, text: str, path: str) -> str:
-    return f"{canonical_name} — {path} — {text}"
+def _trace_location(canonical_name: str, text: str, path: str, line: int | None = None) -> str:
+    loc = f"{path}:{line}" if line else path
+    return f"{canonical_name} — {loc} — {text}"
 
 
-def _check_test_traces(llmlang_path: Path, root, lock: dict) -> tuple[bool, set]:
+def _check_test_traces(llmlang_path: Path, root, lock: dict) -> tuple[bool, set, list]:
     ok = True
     flagged = set()
+    findings = []
     comments = _test_comment_lookup(llmlang_path)
     expected_tests = set(walk_tests(root))
+    test_line_by_pair = {
+        (canonical_name, test_text): line for canonical_name, test_text, line in walk_test_lines(root)
+    }
     current_traces = [
-        (canonical_name, comment.text, comment.path, comment.code_hash)
+        (canonical_name, comment.text, comment.path, comment.line, comment.code_hash)
         for canonical_name, comments_for_node in comments.items()
         for comment in comments_for_node
     ]
     current_text_paths = {
-        (canonical_name, text, path) for canonical_name, text, path, _code_hash in current_traces
+        (canonical_name, text, path) for canonical_name, text, path, _line, _code_hash in current_traces
     }
-    current_texts = {(canonical_name, text) for canonical_name, text, _path, _hash in current_traces}
+    current_texts = {(canonical_name, text) for canonical_name, text, _path, _line, _hash in current_traces}
 
     for canonical_name, test_text in expected_tests:
         if (canonical_name, test_text) not in current_texts:
-            print(f"TEST_LINK_MISSING: {canonical_name} — {test_text}")
+            line = test_line_by_pair.get((canonical_name, test_text))
+            loc = f"{llmlang_path}:{line}" if line else str(llmlang_path)
+            findings.append(f"TEST_LINK_MISSING: {canonical_name} — {test_text} ({loc})")
             ok = False
             flagged.add(canonical_name)
 
-    for canonical_name, test_text, path, code_hash in current_traces:
+    for canonical_name, test_text, path, line, code_hash in current_traces:
         if (canonical_name, test_text) not in expected_tests:
-            print(f"TEST_TRACE_STALE: {_trace_location(canonical_name, test_text, path)}")
+            findings.append(f"TEST_TRACE_STALE: {_trace_location(canonical_name, test_text, path, line)}")
             ok = False
             flagged.add(canonical_name)
             continue
@@ -94,12 +102,14 @@ def _check_test_traces(llmlang_path: Path, root, lock: dict) -> tuple[bool, set]
             if trace.get("text") == test_text and trace.get("path") == path
         ]
         if not locked_matches:
-            print(f"TEST_TRACE_DIVERGED (new or moved test trace): {path} — {canonical_name}")
+            findings.append(
+                f"TEST_TRACE_DIVERGED (new or moved test trace): {path}:{line} — {canonical_name}"
+            )
             ok = False
             flagged.add(canonical_name)
             continue
         if not any(trace.get("code_hash") == code_hash for trace in locked_matches):
-            print(f"TEST_CODE_DIVERGED: {_trace_location(canonical_name, test_text, path)}")
+            findings.append(f"TEST_CODE_DIVERGED: {_trace_location(canonical_name, test_text, path, line)}")
             ok = False
             flagged.add(canonical_name)
 
@@ -110,43 +120,45 @@ def _check_test_traces(llmlang_path: Path, root, lock: dict) -> tuple[bool, set]
             if (canonical_name, test_text, path) in current_text_paths:
                 continue
             if (canonical_name, test_text) in expected_tests:
-                print(
+                llm_line = test_line_by_pair.get((canonical_name, test_text))
+                loc = f"{llmlang_path}:{llm_line}" if llm_line else path
+                findings.append(
                     "TEST_TRACE_DIVERGED (locked test trace missing): "
-                    f"{_trace_location(canonical_name, test_text, path)}"
+                    f"{canonical_name} — {loc} — {test_text}"
                 )
                 ok = False
                 flagged.add(canonical_name)
 
-    return ok, flagged
+    return ok, flagged, findings
 
 
-# checks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as SPEC_DIVERGED, CODE_DIVERGED, or unchanged, alongside its file and comment handle [llm:Compiler.LockfileChecker.check]
+# checks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as SPEC_DIVERGED, CODE_DIVERGED, or unchanged, alongside its file and line [llm:Compiler.LockfileChecker.check]
 def check(llmlang_path: Path, lockfile_path: Path) -> tuple:
     if not lockfile_path.exists():
-        print("No lockfile found.")
-        return False, set()
+        return False, set(), ["No lockfile found."]
 
     lock = json.loads(lockfile_path.read_text(encoding="utf-8"))
 
     if lock.get("lockfile_schema_version") != LOCKFILE_SCHEMA_VERSION:
-        print(
+        return False, set(), [
             f"Lockfile schema is out of date (found "
             f"{lock.get('lockfile_schema_version')!r}, expected {LOCKFILE_SCHEMA_VERSION}). "
             f"Rebuild it."
-        )
-        return False, set()
+        ]
 
     root = parse(llmlang_path)
     ok = True
+    findings = []
     changed_policy_scopes = []
     flagged_entries = set()
-    test_traces_ok, flagged_test_traces = _check_test_traces(llmlang_path, root, lock)
+    test_traces_ok, flagged_test_traces, test_trace_findings = _check_test_traces(llmlang_path, root, lock)
     if not test_traces_ok:
         ok = False
         flagged_entries.update(flagged_test_traces)
+        findings.extend(test_trace_findings)
 
     if lock.get("ruleset_version") != RULESET_VERSION:
-        print(
+        findings.append(
             f"RULESET CHANGED (was {lock.get('ruleset_version')!r}, now "
             f"{RULESET_VERSION!r}), review affected entries: root"
         )
@@ -157,66 +169,67 @@ def check(llmlang_path: Path, lockfile_path: Path) -> tuple:
         scope_str = ".".join(scope) if scope else "root"
         entry = lock.get("policies", {}).get(scope_str, {}).get(f"policy[{i}]")
         if entry is None:
-            print(f"MISSING in lockfile: {scope_str}.policy[{i}]")
+            findings.append(f"MISSING in lockfile: {scope_str}.policy[{i}]")
             ok = False
             changed_policy_scopes.append(scope)
             continue
         if _sha256(text) != entry["text_hash"]:
-            print(f"POLICY CHANGED, review affected entries: {scope_str}.policy[{i}]")
+            findings.append(f"POLICY CHANGED, review affected entries: {scope_str}.policy[{i}]")
             ok = False
             changed_policy_scopes.append(scope)
 
-    for file_rel, handle_key, tracking_key, bullets in walk_entries(root):
+    for file_rel, handle_key, tracking_key, bullets, entry_line in walk_entries(root):
         text = _combined(bullets)
         entry = lock.get("entries", {}).get(tracking_key)
-
-        location = f"{tracking_key} — {file_rel} [llm:{handle_key}]"
+        llm_loc = f"{llmlang_path}:{entry_line}"
 
         if entry is None:
-            print(f"SPEC_DIVERGED (new entry, not yet in lockfile): {location}")
+            findings.append(f"SPEC_DIVERGED (new entry, not yet in lockfile): {tracking_key} [llm:{handle_key}] — {llm_loc}")
             ok = False
             flagged_entries.add(tracking_key)
             continue
 
         if _sha256(text) != entry["text_hash"]:
-            print(f"SPEC_DIVERGED (bullets changed since last build): {location}")
+            findings.append(f"SPEC_DIVERGED (bullets changed since last build): {tracking_key} [llm:{handle_key}] — {llm_loc}")
             ok = False
             flagged_entries.add(tracking_key)
             continue
 
         file_path = llmlang_path.parent / file_rel
-        code = extract_by_handle(file_path, handle_key)
-        if code is None:
-            print(f"CODE_DIVERGED (handle [llm:{handle_key}] not found): {location}")
+        found = extract_by_handle(file_path, handle_key)
+        if found is None:
+            findings.append(f"CODE_DIVERGED (handle [llm:{handle_key}] not found): {tracking_key} — {file_rel}")
             ok = False
             flagged_entries.add(tracking_key)
-        elif _sha256(code) != entry["code_hash"]:
-            print(f"CODE_DIVERGED (code changed unexpectedly): {location}")
+            continue
+        code, code_line = found
+        code_loc = f"{file_rel}:{code_line}"
+        if _sha256(code) != entry["code_hash"]:
+            findings.append(f"CODE_DIVERGED (code changed unexpectedly): {tracking_key} — {code_loc}")
             ok = False
             flagged_entries.add(tracking_key)
         elif any(policy_in_scope(scope, file_rel) for scope in changed_policy_scopes):
-            print(f"SPEC_DIVERGED (upstream policy changed): {location}")
+            findings.append(f"SPEC_DIVERGED (upstream policy changed): {tracking_key} — {llm_loc}")
             ok = False
             flagged_entries.add(tracking_key)
 
-    for tracking_key, sibling_keys, bullets in walk_class_bullet_groups(root):
+    for tracking_key, sibling_keys, bullets, class_line in walk_class_bullet_groups(root):
         text = _combined(bullets)
         entry = lock.get("class_bullets", {}).get(tracking_key)
+        llm_loc = f"{llmlang_path}:{class_line}"
 
         if entry is None:
-            print(f"SPEC_DIVERGED (new class-level bullet, not yet in lockfile): {tracking_key}")
+            findings.append(f"SPEC_DIVERGED (new class-level bullet, not yet in lockfile): {tracking_key} — {llm_loc}")
             ok = False
             continue
 
         if _sha256(text) != entry["text_hash"]:
-            print(f"SPEC_DIVERGED (bullets changed since last build): {tracking_key} (class-level)")
+            findings.append(f"SPEC_DIVERGED (bullets changed since last build): {tracking_key} (class-level) — {llm_loc}")
             ok = False
             continue
 
         if any(key in flagged_entries for key in sibling_keys):
-            print(f"SPEC_DIVERGED (an entry it depends on changed): {tracking_key} (class-level)")
+            findings.append(f"SPEC_DIVERGED (an entry it depends on changed): {tracking_key} (class-level) — {llm_loc}")
             ok = False
 
-    if ok:
-        print("OK — lockfile matches llmlang and code.")
-    return ok, flagged_entries
+    return ok, flagged_entries, findings

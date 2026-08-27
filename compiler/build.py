@@ -49,14 +49,38 @@ def _discover_llm_files(root: Path):
     )
 
 
-def _check_one(llmlang_path: Path) -> bool:
+def _check_one(llmlang_path: Path) -> tuple[bool, list]:
     lockfile_path = llmlang_path.parent / (llmlang_path.stem + ".llmlock")
     try:
-        ok, _ = check(llmlang_path, lockfile_path)
+        ok, _flagged, findings = check(llmlang_path, lockfile_path)
     except ValueError as e:
-        print(e)
-        return False
-    return ok
+        return False, [str(e)]
+    return ok, findings
+
+
+def _print_report(findings_by_file: dict):
+    total = sum(len(findings) for findings in findings_by_file.values())
+    if total == 0:
+        print("OK — lockfile matches llmlang and code.")
+        return
+
+    bar = "=" * 70
+    print()
+    print(bar)
+    print("FAILURES")
+    print(bar)
+    files_with_findings = 0
+    for file_key, findings in findings_by_file.items():
+        if not findings:
+            continue
+        files_with_findings += 1
+        print(f"\n{file_key}")
+        for finding in findings:
+            print(f"  {finding}")
+    print()
+    print(bar)
+    print(f"{total} failure(s) across {files_with_findings} file(s)")
+    print(bar)
 
 
 def _check_project(root: Path):
@@ -65,12 +89,14 @@ def _check_project(root: Path):
         print(f"No .llm files found under {root}")
         sys.exit(1)
 
-    overall_ok = True
+    findings_by_file = {}
     for llmlang_path in llm_files:
         print(f"checking {llmlang_path}")
-        if not _check_one(llmlang_path):
-            overall_ok = False
-    sys.exit(0 if overall_ok else 1)
+        _ok, findings = _check_one(llmlang_path)
+        findings_by_file[str(llmlang_path)] = findings
+
+    _print_report(findings_by_file)
+    sys.exit(0 if all(not f for f in findings_by_file.values()) else 1)
 
 
 def main():
@@ -92,7 +118,9 @@ def main():
     lockfile_path = llmlang_path.parent / (llmlang_path.stem + ".llmlock")
 
     if "--check" in flags:
-        sys.exit(0 if _check_one(llmlang_path) else 1)
+        ok, findings = _check_one(llmlang_path)
+        _print_report({str(llmlang_path): findings})
+        sys.exit(0 if ok else 1)
 
     if "--finalize" in flags:
         changes_path = llmlang_path.parent / (llmlang_path.stem + ".llmchanges.json")

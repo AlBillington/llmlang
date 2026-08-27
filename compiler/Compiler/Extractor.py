@@ -55,6 +55,7 @@ class TestComment:
     node: str
     text: str
     path: str
+    line: int
     code: str
 
     @property
@@ -84,7 +85,8 @@ def extract_by_handle(file_path: Path, key: str):
         if handle_key != key:
             continue
         code_end = handles[i + 1][1] if i + 1 < len(handles) else len(text)
-        return text[line_start:code_end].strip("\n")
+        line_number = text.count("\n", 0, line_start) + 1
+        return text[line_start:code_end].strip("\n"), line_number
 
     return None
 
@@ -205,6 +207,7 @@ def test_comments_by_node(root_paths, base_path: Path | None = None):
                             node=node,
                             text=comment_text,
                             path=_relative_path(path, base_path),
+                            line=line_index + 1,
                             code=_test_code_for_comment(path, text, line_index),
                         )
                     )

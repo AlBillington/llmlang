@@ -30,12 +30,13 @@ Everything else is shape-inferred, not keyword-driven:
 from pathlib import Path
 
 
-def _new_node(name, ext=None, summary=None):
+def _new_node(name, ext=None, summary=None, line=None):
     return {
         "kind": None,
         "name": name,
         "ext": ext,
         "summary": summary,
+        "line": line,
         "policy": [],
         "bullets": [],
         "tests": [],
@@ -80,12 +81,14 @@ def _bullet_text(content: str, relative_depth: int) -> str:
 
 # parses a tab-indented llmlang file into a tree of folders, files, classes, and entries [llm:Compiler.Parser.parse]
 def parse(path):
-    lines = [line for line in Path(path).read_text(encoding="utf-8").splitlines() if line.strip()]
+    raw_lines = Path(path).read_text(encoding="utf-8").splitlines()
     root = _new_node("", None)
     root["kind"] = "folder"
     stack = [(-1, root)]
 
-    for raw_line in lines:
+    for line_no, raw_line in enumerate(raw_lines, start=1):
+        if not raw_line.strip():
+            continue
         depth = len(raw_line) - len(raw_line.lstrip("\t"))
         content = raw_line.strip()
 
@@ -119,7 +122,7 @@ def parse(path):
                 ), f"a bullet isn't valid here: {content!r}"
                 if content.startswith("~ "):
                     assert parent["kind"] != "data", f"a test bullet isn't valid in data: {content!r}"
-                    parent["tests"].append(content[2:])
+                    parent["tests"].append((content[2:], line_no))
                     stack.append((depth, None))
                 else:
                     parent["bullets"].append(content[2:])
@@ -156,15 +159,15 @@ def parse(path):
                 raise ValueError(f"unexpected data marker outside a file or class: {content!r}")
             if "." in name:
                 base, ext = name.rsplit(".", 1)
-                node = _new_node(base, ext, summary)
+                node = _new_node(base, ext, summary, line=line_no)
                 node["kind"] = "file"
             else:
-                node = _new_node(name, summary=summary)
+                node = _new_node(name, summary=summary, line=line_no)
                 node["kind"] = "folder"
             parent["children"][node["name"]] = node
             stack.append((depth, node))
         elif parent["kind"] in ("file", "class"):
-            node = _new_node(name, summary=summary)
+            node = _new_node(name, summary=summary, line=line_no)
             if marker == "data":
                 node["kind"] = "data"
             parent["children"][name] = node
@@ -204,7 +207,9 @@ def _entry_keys_beneath(node, file_rel, class_name):
 
 
 def walk_entries(node, folder_parts=(), file_rel=None, class_name=None):
-    """Yield (file_rel, handle_key, tracking_key, bullets) for every source-handled entry."""
+    """Yield (file_rel, handle_key, tracking_key, bullets, line) for every
+    source-handled entry - line is the entry header's own source line in the
+    llmlang file."""
     for name, child in node["children"].items():
         kind = child["kind"]
         if kind == "folder":
@@ -221,7 +226,8 @@ def walk_entries(node, folder_parts=(), file_rel=None, class_name=None):
                 file_rel,
                 tracking_key,
                 tracking_key,
-                [f"+ {child['summary']}"] + child["bullets"] + [f"~ {t}" for t in child["tests"]],
+                [f"+ {child['summary']}"] + child["bullets"] + [f"~ {t}" for t, _line in child["tests"]],
+                child["line"],
             )
 
 
@@ -234,25 +240,52 @@ def walk_tests(node, folder_parts=(), file_rel=None, class_name=None):
         elif kind == "file":
             rel = "/".join(folder_parts + (f"{name}.{child['ext']}",))
             canonical_name = _file_label(rel)
-            for test in child["tests"]:
+            for test, _line in child["tests"]:
                 yield canonical_name, test
             yield from walk_tests(child, folder_parts, rel, None)
         elif kind == "class":
             canonical_name = f"{_file_label(file_rel)}.{name}"
-            for test in child["tests"]:
+            for test, _line in child["tests"]:
                 yield canonical_name, test
             yield from walk_tests(child, folder_parts, file_rel, name)
         elif kind == "entry":
             local_key = f"{class_name}.{name}" if class_name else name
             canonical_name = f"{_file_label(file_rel)}.{local_key}"
-            for test in child["tests"]:
+            for test, _line in child["tests"]:
                 yield canonical_name, test
 
 
+def walk_test_lines(node, folder_parts=(), file_rel=None, class_name=None):
+    """Yield (canonical_node_name, test_text, line) for every test bullet -
+    same traversal as walk_tests, with the bullet's own source line exposed
+    for location reporting."""
+    for name, child in node["children"].items():
+        kind = child["kind"]
+        if kind == "folder":
+            yield from walk_test_lines(child, folder_parts + (name,), None, None)
+        elif kind == "file":
+            rel = "/".join(folder_parts + (f"{name}.{child['ext']}",))
+            canonical_name = _file_label(rel)
+            for test, line in child["tests"]:
+                yield canonical_name, test, line
+            yield from walk_test_lines(child, folder_parts, rel, None)
+        elif kind == "class":
+            canonical_name = f"{_file_label(file_rel)}.{name}"
+            for test, line in child["tests"]:
+                yield canonical_name, test, line
+            yield from walk_test_lines(child, folder_parts, file_rel, name)
+        elif kind == "entry":
+            local_key = f"{class_name}.{name}" if class_name else name
+            canonical_name = f"{_file_label(file_rel)}.{local_key}"
+            for test, line in child["tests"]:
+                yield canonical_name, test, line
+
+
 def walk_class_bullet_groups(node, folder_parts=(), file_rel=None, class_name=None):
-    """Yield (tracking_key, sibling_entry_tracking_keys, bullets) for every
-    bare bullet group sitting directly on a file or class node - guarantees
-    spanning more than one entry, with no single entry's code to attach to."""
+    """Yield (tracking_key, sibling_entry_tracking_keys, bullets, line) for
+    every bare bullet group sitting directly on a file or class node -
+    guarantees spanning more than one entry, with no single entry's code to
+    attach to. line is the owning file/class header's own source line."""
     for name, child in node["children"].items():
         kind = child["kind"]
         if kind == "folder":
@@ -263,7 +296,8 @@ def walk_class_bullet_groups(node, folder_parts=(), file_rel=None, class_name=No
                 yield (
                     _file_label(rel),
                     _entry_keys_beneath(child, rel, None),
-                    child["bullets"] + [f"~ {t}" for t in child["tests"]],
+                    child["bullets"] + [f"~ {t}" for t, _line in child["tests"]],
+                    child["line"],
                 )
             yield from walk_class_bullet_groups(child, folder_parts, rel, None)
         elif kind == "class":
@@ -272,7 +306,8 @@ def walk_class_bullet_groups(node, folder_parts=(), file_rel=None, class_name=No
                 yield (
                     tracking_key,
                     _entry_keys_beneath(child, file_rel, name),
-                    child["bullets"] + [f"~ {t}" for t in child["tests"]],
+                    child["bullets"] + [f"~ {t}" for t, _line in child["tests"]],
+                    child["line"],
                 )
             yield from walk_class_bullet_groups(child, folder_parts, file_rel, name)
 

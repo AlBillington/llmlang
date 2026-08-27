@@ -22,18 +22,19 @@ Compiler:
 			- a nested regular bullet belongs to the same nearest entry, file or class bullet group, or policy item as its parent
 			- a test bullet can live under a named entry, file, or class node
 			- a header's real name is always its first word; any words after a folder, file, or class name up to the colon are a freetext hint, discarded once the name is extracted
+			- records the source line number of each folder, file, class, named entry, and data entry header, and of each test bullet
 			- returns the parsed tree
 
 	Extractor.py:
 		TestComment (stores a linked llm-test comment and the backing code it anchors):
-			- stores a linked llm-test comment's canonical node, explanation text, relative path, and backing code
+			- stores a linked llm-test comment's canonical node, explanation text, relative path, source line, and backing code
 			- exposes a code hash derived from the backing code
 
 		extract_by_handle (extracts the code implementing an entry by locating its comment handle and taking everything from the handle's own comment line up to the next handle):
 			- accepts a file path and canonical entry name
 			- extracts the code implementing an entry by locating its comment handle and taking everything from the handle's own comment line up to the next handle
 			- including the comment line itself means the entry's summary comment is part of the resulting hash, so it can't drift from the llmlang summary undetected
-			- returns the extracted code, or nothing if the handle isn't found
+			- returns the extracted code and the line number of its handle comment, or nothing if the handle isn't found
 
 		test_comment_roots (chooses where llm-test comments are scanned):
 			- accepts an llmlang file path
@@ -46,7 +47,7 @@ Compiler:
 		test_comments_by_node (collects llm-test comments by canonical node name):
 			- accepts one or more root paths
 			- scans source-like text files under the root paths for llm-test handles
-			- records each llm-test comment's canonical node, exact explanation text, relative path, and backing test code
+			- records each llm-test comment's canonical node, exact explanation text, relative path, source line, and backing test code
 			- returns a mapping of canonical node name to linked test comment records
 
 	LockfileBuilder.py:
@@ -70,13 +71,15 @@ Compiler:
 			- returns the built lock data
 
 	LockfileChecker.py:
-		check (checks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as SPEC_DIVERGED, CODE_DIVERGED, or unchanged, alongside its file and comment handle):
+		check (checks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as SPEC_DIVERGED, CODE_DIVERGED, or unchanged, alongside its file and line):
 			- accepts an llmlang file path and a lockfile path
-			- checks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as SPEC_DIVERGED, CODE_DIVERGED, or unchanged, alongside its file and comment handle
+			- checks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as SPEC_DIVERGED, CODE_DIVERGED, or unchanged, alongside its file and line
 			- reports TEST_LINK_MISSING when any test bullet lacks a matching llm-test comment with the same text and canonical node name
 			- reports TEST_TRACE_STALE when any llm-test comment lacks a matching test bullet with the same text and canonical node name
 			- reports TEST_CODE_DIVERGED when a linked test's backing code hash differs from the lockfile
 			- should report an entry as SPEC_DIVERGED when its own llmlang text changed, it's brand new, or an upstream policy covering it changed
 			- should report an entry as CODE_DIVERGED when its handle is missing from the code or its code changed unexpectedly
 			- should report an unmodified codebase as fully clean
-			- returns whether everything checked out clean, and the set of named-entry tracking keys currently flagged for any reason
+			- never prints anything itself; every finding is returned as a message in a list, so a caller can present every failure from a run together instead of relying on interleaved prints
+			- each finding names a file and line: entry-level findings point at the entry's header line in the llmlang file, code-level findings point at the handle's own comment line in the source file
+			- returns whether everything checked out clean, the set of named-entry tracking keys currently flagged for any reason, and the list of findings
