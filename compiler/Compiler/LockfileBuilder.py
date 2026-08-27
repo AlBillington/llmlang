@@ -20,7 +20,6 @@ from Compiler.Extractor import (
     test_comment_roots,
     test_comments_by_node,
 )
-from Compiler.CoverageChecker import EXEMPT_KEY
 from Compiler.Lockfile import LOCKFILE_SCHEMA_VERSION, RULESET_VERSION
 from Compiler.LockfileChecker import check
 from Compiler.Parser import (
@@ -33,14 +32,17 @@ from Compiler.Parser import (
 )
 
 
+# private helper of build()/finalize(), not independent architecture [llm-exempt]
 def _sha256(text: str) -> str:
     return hashlib.sha256(text.encode()).hexdigest()
 
 
+# private helper of build()/finalize(), not independent architecture [llm-exempt]
 def _combined(bullets: list) -> str:
     return "\n".join(bullets)
 
 
+# private helper of build()/finalize(), not independent architecture [llm-exempt]
 def _hash_all_entries(llmlang_path: Path, root) -> dict:
     """tracking_key -> (file_rel, text, text_hash, code_hash, spec_hash) for
     every source-handled entry, computed fresh from the current llmlang text, current
@@ -63,6 +65,7 @@ def _hash_all_entries(llmlang_path: Path, root) -> dict:
     return result
 
 
+# private helper of build()/finalize(), not independent architecture [llm-exempt]
 def _policies_and_class_bullets(root) -> tuple:
     policies = {}
     for scope, i, text in walk_policies(root):
@@ -81,6 +84,7 @@ def _policies_and_class_bullets(root) -> tuple:
     return policies, class_bullets
 
 
+# private helper of build()/finalize(), not independent architecture [llm-exempt]
 def _test_comment_lookup(llmlang_path: Path):
     return test_comments_by_node(
         test_comment_roots(llmlang_path),
@@ -88,6 +92,7 @@ def _test_comment_lookup(llmlang_path: Path):
     )
 
 
+# private helper of build()/finalize(), not independent architecture [llm-exempt]
 def _test_trace_record(comment) -> dict:
     return {
         "text": comment.text,
@@ -96,6 +101,7 @@ def _test_trace_record(comment) -> dict:
     }
 
 
+# private helper of build()/finalize(), not independent architecture [llm-exempt]
 def _test_traces(llmlang_path: Path, root) -> dict:
     comments = _test_comment_lookup(llmlang_path)
     traces = {}
@@ -182,13 +188,7 @@ def finalize(llmlang_path: Path, lockfile_path: Path, changes_path: Path):
 
     new_changes = {}
     resolved = {}
-    if EXEMPT_KEY in changes:
-        # permanent, not hash-bound, and keyed by file+qualified-name rather
-        # than a tracking_key - never treat it as an orphaned disposition
-        new_changes[EXEMPT_KEY] = changes[EXEMPT_KEY]
     for key, value in changes.items():
-        if key == EXEMPT_KEY:
-            continue
         if key not in hashed:
             continue  # orphaned - this entry no longer exists in the llmlang tree
         _, _, _, code_hash, spec_hash = hashed[key]

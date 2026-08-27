@@ -73,17 +73,16 @@ Compiler:
 			- for a manifest entry that's already stamped, keeps it only if both hashes still match the entry's current state; otherwise drops it as stale, along with any entry whose key no longer exists in the llmlang tree at all
 			- builds every hash and disposition fresh from the current llmlang text, current code, current policies, and current manifest only; never carries anything forward from the lockfile's own prior content
 			- writes both the new lockfile and the updated (stamped and pruned) manifest file, but never alters a disposition's own text
-			- preserves the change manifest's "exempt" section verbatim across every run, since coverage-check exemptions are permanent and keyed by file and qualified name rather than a tracking_key, unlike every other entry in the manifest
 			- returns the built lock data
 
 	CoverageChecker.py:
-		check_coverage (checks every module- and class-level Python function against comment handles and changes-file exemptions, reporting each uncovered one as UNMAPPED_CODE):
-			- accepts an llmlang file path and a change manifest file path
-			- checks every module- and class-level Python function against comment handles and changes-file exemptions, reporting each uncovered one as UNMAPPED_CODE
+		check_coverage (checks every module- and class-level Python function against comment handles and inline llm-exempt markers, reporting each uncovered one as UNMAPPED_CODE):
+			- accepts an llmlang file path
+			- checks every module- and class-level Python function against comment handles and inline llm-exempt markers, reporting each uncovered one as UNMAPPED_CODE
 			- only checks files with a Python extension; files in other languages are silently skipped, not flagged
 			- a function is covered if a comment handle sits on the line directly above it, or above its first decorator
 			- a function nested inside another function is never checked on its own; it has no stable qualified name to report or exempt, and its enclosing function's own handle (if any) already sweeps its code into that handle's region
-			- a function is exempt if the change manifest's "exempt" section has an entry keyed "{file path}::{qualified name}" - there is no built-in exemption for dunder methods, private helpers, or anything else
+			- a function is exempt if a bare "[llm-exempt]" comment sits on the line directly above it, or above its first decorator - a reason may be written before the tag on the same line but isn't required, and there is no built-in exemption for dunder methods, private helpers, or anything else
 			- returns the list of findings
 
 	LockfileChecker.py:

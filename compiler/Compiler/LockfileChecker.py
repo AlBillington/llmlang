@@ -43,14 +43,17 @@ from Compiler.Parser import (
 )
 
 
+# private helper of check(), not independent architecture [llm-exempt]
 def _sha256(text: str) -> str:
     return hashlib.sha256(text.encode()).hexdigest()
 
 
+# private helper of check(), not independent architecture [llm-exempt]
 def _combined(bullets: list) -> str:
     return "\n".join(bullets)
 
 
+# private helper of check(), not independent architecture [llm-exempt]
 def _test_comment_lookup(llmlang_path: Path):
     return test_comments_by_node(
         test_comment_roots(llmlang_path),
@@ -58,11 +61,13 @@ def _test_comment_lookup(llmlang_path: Path):
     )
 
 
+# private helper of check(), not independent architecture [llm-exempt]
 def _trace_location(canonical_name: str, text: str, path: str, line: int | None = None) -> str:
     loc = f"{path}:{line}" if line else path
     return f"{canonical_name} — {loc} — {text}"
 
 
+# private helper of check(), not independent architecture [llm-exempt]
 def _check_test_traces(llmlang_path: Path, root, lock: dict) -> tuple[bool, set, list]:
     ok = True
     flagged = set()

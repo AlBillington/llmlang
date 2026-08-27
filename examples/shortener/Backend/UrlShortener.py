@@ -2,6 +2,7 @@ from Backend.CodeGenerator import CodeGenerator
 
 
 class UrlShortener:
+    # code_generator/_code_to_url already documented at their point of use; _url_to_code is a private lookup optimization [llm-exempt]
     def __init__(self, code_generator: CodeGenerator):
         self._code_generator = code_generator
 
