@@ -169,7 +169,7 @@ def finalize(llmlang_path: Path, lockfile_path: Path, changes_path: Path):
     ok, flagged_entries, findings = check(llmlang_path, lockfile_path)
     if not ok and not flagged_entries:
         for finding in findings:
-            print(finding)
+            print(finding.message)
         raise ValueError(
             "finalize refused: no valid lockfile to check against "
             "(missing, or schema out of date) - bootstrap with a plain rebuild first"
@@ -177,7 +177,7 @@ def finalize(llmlang_path: Path, lockfile_path: Path, changes_path: Path):
     if findings:
         print("Currently flagged (a disposition is required for each to finalize):")
         for finding in findings:
-            print(f"  {finding}")
+            print(f"  {finding.message}")
 
     changes = json.loads(changes_path.read_text(encoding="utf-8")) if changes_path.exists() else {}
 

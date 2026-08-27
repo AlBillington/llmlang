@@ -1,4 +1,5 @@
 """Lockfile entry shape and versioning used by LockfileBuilder and LockfileChecker."""
+from dataclasses import dataclass
 from typing import TypedDict
 
 
@@ -15,6 +16,15 @@ class TestTrace(TypedDict, total=False):
     text: str
     path: str
     code_hash: str
+
+
+# stores one check/coverage failure as structured data, not just display text [llm:Compiler.Lockfile.Finding]
+@dataclass
+class Finding:
+    category: str
+    message: str
+    file: str | None = None
+    line: int | None = None
 
 
 # the lockfile's own schema version, bumped whenever its shape changes [llm:Compiler.Lockfile.LOCKFILE_SCHEMA_VERSION]

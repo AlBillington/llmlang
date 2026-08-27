@@ -1,4 +1,24 @@
 {
+  "Compiler.Lockfile.Finding": {
+    "disposition": "new entry: real feature - a small structured record (category, message, file, line) replacing bare strings as what check()/check_coverage() return, so a caller (e.g. JSON output) can consume file/line as real fields instead of parsing them back out of display text",
+    "for_spec_hash": "1a1b6fb664f66c038a6013ef840c5774b1495b855e7df339b46c1ae9722c5e90",
+    "for_code_hash": "0d9f8471ca9b54818214d63188060ed57874e95fb35515e9acf3b6ab470580c8"
+  },
+  "Compiler.LockfileBuilder.finalize": {
+    "disposition": "unrelated ripple: prints finding.message instead of finding (findings are now Finding records, not strings) - finalize's own logic (coverage gate, hash stamping) is unchanged",
+    "for_spec_hash": "a2ae9afba0e5e4aeb1babdf4611893990774fd787fa86d8dca3e8718f2689e6f",
+    "for_code_hash": "a81a9a1a2b8d0f33dba5ce2e7fc1df5aca88fdf4f4d5760c0668c4935a862ae0"
+  },
+  "Compiler.CoverageChecker.check_coverage": {
+    "disposition": "real change: returns a list of Finding records instead of formatted strings - same information (category, message, file, line), now as separate fields instead of one joined string",
+    "for_spec_hash": "fce995bc4afb7df1e534e3449ba1e5dddfa30bc6e66917a2869b74e7676f7cbc",
+    "for_code_hash": "e558290e0fa0cbbab786698fa41aab96d367effae2b1049cb956cf9bfd80bd0c"
+  },
+  "Compiler.LockfileChecker.check": {
+    "disposition": "real change: every finding is now a Finding record (category, message, file, line) instead of a formatted string - the exact same message text is still there as one field, so human-readable output is byte-for-byte unchanged, but file/line are now real fields a caller can use directly (e.g. for JSON output) instead of parsing them back out of the string",
+    "for_spec_hash": "f31b3fd5d36ee28a9552bed3bb5c0b8140d608cf3edfae73b42b1d9da0ec4363",
+    "for_code_hash": "c07b9c9dfa3fb95b92d3f21627bf79c83f1fb25443749771e084de5dc96fcb8f"
+  },
   "Compiler.Parser.parse": {
     "disposition": "unrelated ripple: inline [llm-exempt] comments added above several private helpers now sitting inside parse()'s own tracked code_hash region - parse's own logic is unchanged",
     "for_spec_hash": "9a98858def2a139268c1793698fc3f22b318fa0e622a2155a0c26c8d19656322",
@@ -18,16 +38,6 @@
     "disposition": "unrelated ripple: inline [llm-exempt] comments above _python_block_for_line/_fallback_block_end/_test_code_for_comment now sit inside test_comment_base's own tracked code_hash region - test_comment_base's own logic is unchanged",
     "for_spec_hash": "036a14bad4f6f52675b6e1fd6f661121e5f761196c3f673ff68c3f2d1d18d7e1",
     "for_code_hash": "e6249db05279296c82a0b3f7b878c4041da6d1e7bf167ad0af5c6191a4bd51f5"
-  },
-  "Compiler.LockfileBuilder.finalize": {
-    "disposition": "real change: no longer special-cases a changes-file \"exempt\" key - coverage exemptions moved to inline [llm-exempt] source comments, so there's no side-file section left to protect from pruning",
-    "for_spec_hash": "a2ae9afba0e5e4aeb1babdf4611893990774fd787fa86d8dca3e8718f2689e6f",
-    "for_code_hash": "5803ac20f83800300c442990be32e36ba48c1f9b9628564a0f0611cfb64f0a48"
-  },
-  "Compiler.CoverageChecker.check_coverage": {
-    "disposition": "real change: exemptions are now a bare \"[llm-exempt]\" comment directly above a function (optionally with a reason before the tag), not a changes-file \"exempt\" section - more consistent with how [llm:name]/[llm-test:name] already work (a fact about the code, living next to the code), and avoids a real staleness gap the JSON approach had: nothing checked whether an exemption's file+qualified-name key still matched a real function after a rename. check_coverage() no longer takes a changes_path argument at all.",
-    "for_spec_hash": "80a4be5b654b0fd9ba7db8981e387bc12a8f65b59bd1a32d5e65da9d13b81efa",
-    "for_code_hash": "5063ca115f0994a9505c3b6aef4f70012691fb819afc0c293671f29941b002bf"
   },
   "Compiler.Lockfile.LockEntry": {
     "disposition": "unrelated ripple from the extract_by_handle fix (comment line now included in code_hash) - this entry own code is untouched, only the hash computation changed",
@@ -68,10 +78,5 @@
     "disposition": "real fix: lockfile/changes-file read_text()/write_text() calls now pin encoding=\"utf-8\", so the JSON round-trips identically regardless of the host's locale default",
     "for_spec_hash": "e1461a1fa6d2acf40cb3894662ebca547b9e78f72a94931b6f8a180ca4b952f8",
     "for_code_hash": "376b998d4521ac079c75412fc8d4864474f77d025a5ee8d3033f4dc49af9895a"
-  },
-  "Compiler.LockfileChecker.check": {
-    "disposition": "real change: every finding's parenthetical now explains what happened and, where useful, what to do about it, instead of a short label - e.g. the class-level cascade message used to say only \"an entry it depends on changed\" (unclear which entry, or why it mattered); it now names the specific triggering entry by tracking key and explains that the cross-entry bullet's own text is unchanged but should be re-reviewed anyway. Also carries forward the file:line reporting and findings-list return from the prior change to this entry.",
-    "for_spec_hash": "f0e59f692b1d3a2f5825cdac369136be9b62ea58856212499b120b5efb17a789",
-    "for_code_hash": "10f3e37a1e8494bc21ba8d5cb026456470960b4ab3e956570fd8ff2c7fe9921c"
   }
 }
