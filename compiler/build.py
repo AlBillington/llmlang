@@ -58,6 +58,10 @@ def _check_one(llmlang_path: Path) -> tuple[bool, list]:
     return ok, findings
 
 
+def _plural(count: int, word: str) -> str:
+    return f"{count} {word}" if count == 1 else f"{count} {word}s"
+
+
 def _print_report(findings_by_file: dict):
     total = sum(len(findings) for findings in findings_by_file.values())
     if total == 0:
@@ -79,7 +83,7 @@ def _print_report(findings_by_file: dict):
             print(f"  {finding}")
     print()
     print(bar)
-    print(f"{total} failure(s) across {files_with_findings} file(s)")
+    print(f"{_plural(total, 'failure')} across {_plural(files_with_findings, 'file')}")
     print(bar)
 
 
