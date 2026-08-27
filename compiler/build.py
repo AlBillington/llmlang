@@ -3,6 +3,13 @@
 CLI: python build.py check [path...] [--coverage | --no-coverage] [--config PATH]
      python build.py build <llmlang_file>
      python build.py finalize <llmlang_file>
+     python build.py --version
+     python build.py --help
+
+Any command not in {check, build, finalize} is rejected with an error,
+same as an unrecognized flag for whichever command was given (e.g.
+--coverage is only valid for check, not build/finalize) - nothing is
+silently ignored.
 
 check is the read-only, no-write action - the "linter" surface, matching
 ruff/eslint's split between a checking command and a writing one. It
@@ -222,19 +229,43 @@ def _run_finalize(positional: list):
     print(f"Wrote {lockfile_path}")
 
 
+_VERSION = "0.1.0"
+
+_ALLOWED_FLAGS = {
+    "check": {"--coverage", "--no-coverage"},
+    "build": set(),
+    "finalize": set(),
+}
+
+
 def _usage():
     print("usage: build.py check [path...] [--coverage | --no-coverage] [--config PATH]")
     print("       build.py build <llmlang_file>")
     print("       build.py finalize <llmlang_file>")
+    print("       build.py --version")
+    print("       build.py --help")
 
 
 def main():
     args = sys.argv[1:]
+
+    if "--help" in args or "-h" in args:
+        _usage()
+        return
+
     if not args:
         _usage()
         sys.exit(1)
 
+    if args[0] == "--version":
+        print(f"llmlang {_VERSION}")
+        return
+
     action, rest = args[0], args[1:]
+    if action not in _ALLOWED_FLAGS:
+        print(f"unknown command: {action!r}")
+        _usage()
+        sys.exit(1)
 
     flags = set()
     positional = []
@@ -254,6 +285,14 @@ def main():
             positional.append(a)
         i += 1
 
+    unknown_flags = flags - _ALLOWED_FLAGS[action]
+    if config_override is not None and action != "check":
+        unknown_flags = unknown_flags | {"--config"}
+    if unknown_flags:
+        print(f"unknown flag(s) for '{action}': {', '.join(sorted(unknown_flags))}")
+        _usage()
+        sys.exit(1)
+
     if action == "check":
         paths = [Path(p) for p in positional] or [Path(".")]
         _run_check(paths, flags, config_override)
@@ -261,9 +300,6 @@ def main():
         _run_build(positional)
     elif action == "finalize":
         _run_finalize(positional)
-    else:
-        _usage()
-        sys.exit(1)
 
 
 if __name__ == "__main__":
