@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-CLI: python build.py <llmlang_file> [--check | --finalize] [--coverage]
-     python build.py --check [root_dir] [--coverage]
+CLI: python build.py <llmlang_file> [--check | --finalize] [--coverage | --no-coverage]
+     python build.py --check [root_dir] [--coverage | --no-coverage]
 
 --coverage is an opt-in modifier on --check (ignored otherwise): it also
 verifies that every function actually defined in a Python source file has
@@ -12,6 +12,14 @@ real, reviewable decision recorded in <stem>.llmchanges.json's "exempt"
 section (see Compiler/CoverageChecker.py). Python-only for now - files in
 other languages are silently skipped, not flagged, since there's no real
 parser for them yet to enumerate "every function that exists."
+
+Project-level defaults live in pyproject.toml's [tool.llmlang] table,
+found by walking up from the target directory (project-wide --check) or
+the target file's directory (single-file), same discovery pattern as
+ruff/black/mypy. A CLI flag always wins over the config:
+--coverage/--no-coverage override [tool.llmlang] coverage = true/false in
+either direction, and exclude = ["dir", ...] extends (never replaces) the
+built-in excluded-directory set used by --check's auto-discovery.
 
 File location needs no discovery step or manifest, ever - the tree
 itself already carries it, since a file-typed node's own header
@@ -43,20 +51,59 @@ edit.
 import sys
 from pathlib import Path
 
+try:
+    import tomllib
+except ModuleNotFoundError:
+    tomllib = None
+
 sys.path.insert(0, str(Path(__file__).parent))
 
 from Compiler.CoverageChecker import check_coverage
 from Compiler.LockfileBuilder import build, finalize
 from Compiler.LockfileChecker import check
 
-_EXCLUDED_DIR_PARTS = {".git", "__pycache__", "node_modules", "venv", ".venv"}
+_BUILTIN_EXCLUDED_DIR_PARTS = {".git", "__pycache__", "node_modules", "venv", ".venv"}
 
 
-def _discover_llm_files(root: Path):
+def _find_pyproject(start: Path):
+    start = start.resolve()
+    for directory in (start, *start.parents):
+        candidate = directory / "pyproject.toml"
+        if candidate.exists():
+            return candidate
+    return None
+
+
+def _load_config(start: Path) -> dict:
+    pyproject_path = _find_pyproject(start)
+    if pyproject_path is None:
+        return {}
+    if tomllib is None:
+        print(
+            f"warning: found {pyproject_path} but this Python "
+            f"({sys.version.split()[0]}) has no tomllib (needs 3.11+) - "
+            f"ignoring its [tool.llmlang] config"
+        )
+        return {}
+    with pyproject_path.open("rb") as f:
+        data = tomllib.load(f)
+    return data.get("tool", {}).get("llmlang", {})
+
+
+def _resolve_coverage(flags: set, config: dict) -> bool:
+    if "--no-coverage" in flags:
+        return False
+    if "--coverage" in flags:
+        return True
+    return bool(config.get("coverage", False))
+
+
+def _discover_llm_files(root: Path, extra_exclude: set = frozenset()):
+    excluded = _BUILTIN_EXCLUDED_DIR_PARTS | extra_exclude
     return sorted(
         path
         for path in root.rglob("*.llm")
-        if not _EXCLUDED_DIR_PARTS.intersection(path.parts)
+        if not excluded.intersection(path.parts)
     )
 
 
@@ -106,8 +153,8 @@ def _print_report(findings_by_file: dict):
     print(bar)
 
 
-def _check_project(root: Path, coverage: bool = False):
-    llm_files = _discover_llm_files(root)
+def _check_project(root: Path, coverage: bool = False, extra_exclude: set = frozenset()):
+    llm_files = _discover_llm_files(root, extra_exclude=extra_exclude)
     if not llm_files:
         print(f"No .llm files found under {root}")
         sys.exit(1)
@@ -127,22 +174,25 @@ def main():
     flags = {a for a in args if a.startswith("--")}
     positional = [a for a in args if not a.startswith("--")]
 
-    coverage = "--coverage" in flags
-
     if "--check" in flags and (not positional or Path(positional[0]).is_dir()):
         root = Path(positional[0]) if positional else Path(".")
-        _check_project(root, coverage=coverage)
+        config = _load_config(root)
+        coverage = _resolve_coverage(flags, config)
+        extra_exclude = set(config.get("exclude", []))
+        _check_project(root, coverage=coverage, extra_exclude=extra_exclude)
         return
 
     if not positional:
-        print("usage: build.py <llmlang_file> [--check | --finalize] [--coverage]")
-        print("       build.py --check [root_dir] [--coverage]")
+        print("usage: build.py <llmlang_file> [--check | --finalize] [--coverage | --no-coverage]")
+        print("       build.py --check [root_dir] [--coverage | --no-coverage]")
         sys.exit(1)
 
     llmlang_path = Path(positional[0])
     lockfile_path = llmlang_path.parent / (llmlang_path.stem + ".llmlock")
 
     if "--check" in flags:
+        config = _load_config(llmlang_path.parent)
+        coverage = _resolve_coverage(flags, config)
         ok, findings = _check_one(llmlang_path, coverage=coverage)
         _print_report({str(llmlang_path): findings})
         sys.exit(0 if ok else 1)
