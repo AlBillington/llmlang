@@ -130,7 +130,7 @@ Compiling (llmlang → code) still isn't automated, but that's not missing softw
 
 The goal: add llmlang's check to a project the same way you'd add any other static-analysis tool — a pre-commit hook, a CI step, a plain `pip install` — without every consumer hand-rolling the invocation.
 
-**Installing.** `pyproject.toml` has real `[build-system]`/`[project]` metadata (setuptools) and a console-script entry point, so `pip install .` (from a checkout) or `pip install git+<this repo's URL>` (directly, no local checkout needed) both give you a real `llmlang` command anywhere on `PATH` — not published to PyPI yet, so `pip install llmlang` alone doesn't resolve, but everything else works exactly like an installed tool. The importable package is `llmlang`, living under `compiler/llmlang/` in this repo (`[tool.setuptools.packages.find]` points setuptools at `compiler/` for discovery) — the location doesn't affect what you get from installing it.
+**Installing.** `pyproject.toml` has real `[build-system]`/`[project]` metadata (setuptools) and a console-script entry point, so `pip install .` (from a checkout) or `pip install git+https://github.com/AlBillington/llmlang.git` (directly, no local checkout needed) both give you a real `llmlang` command anywhere on `PATH` — not published to PyPI yet, so `pip install llmlang` alone doesn't resolve, but everything else works exactly like an installed tool. The importable package is `llmlang`, living under `compiler/llmlang/` in this repo (`[tool.setuptools.packages.find]` points setuptools at `compiler/` for discovery) — the location doesn't affect what you get from installing it.
 
 **Auto-discovery.** `llmlang check` accepts any number of file or directory paths (default: the current directory), auto-discovering every `*.llm` file under a directory argument and checking a `.llm` file argument directly — reporting every failure across every path in one pass rather than stopping at the first. This is what makes a single project-wide hook possible instead of one hook per `.llm` file:
 
@@ -142,7 +142,7 @@ llmlang check .
 
 ```yaml
 repos:
-  - repo: <this repo's URL>
+  - repo: https://github.com/AlBillington/llmlang
     rev: <commit-or-tag>
     hooks:
       - id: llmlang-check
@@ -157,7 +157,7 @@ This repo's own [`.pre-commit-config.yaml`](.pre-commit-config.yaml) dogfoods th
 - uses: actions/setup-python@v5
   with:
     python-version: "3.11"
-- run: pip install git+<this repo's URL>
+- run: pip install git+https://github.com/AlBillington/llmlang.git
 - run: llmlang check .
 ```
 
