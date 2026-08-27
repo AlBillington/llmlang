@@ -91,6 +91,12 @@ def extract_by_handle(file_path: Path, key: str):
     return None
 
 
+# finds the source line of every comment handle in a file, for coverage checking [llm:Compiler.Extractor.handle_line_numbers]
+def handle_line_numbers(file_path: Path) -> set:
+    text = file_path.read_text(encoding="utf-8")
+    return {text.count("\n", 0, line_start) + 1 for _key, line_start in _all_handles(text)}
+
+
 def _clean_comment_text(text: str) -> str:
     cleaned = text.strip()
     for prefix in ("#", "//", "<!--", "*"):

@@ -13,7 +13,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: python compiler/build.py --check .
+      - run: python compiler/build.py --check . --coverage
       - run: python -m unittest discover -s tests -t .
         working-directory: examples/shortener
       - run: python verify_notes.py

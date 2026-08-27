@@ -1,7 +1,17 @@
 #!/usr/bin/env python3
 """
-CLI: python build.py <llmlang_file> [--check | --finalize]
-     python build.py --check [root_dir]
+CLI: python build.py <llmlang_file> [--check | --finalize] [--coverage]
+     python build.py --check [root_dir] [--coverage]
+
+--coverage is an opt-in modifier on --check (ignored otherwise): it also
+verifies that every function actually defined in a Python source file has
+a comment handle covering it, reporting each uncovered one as
+UNMAPPED_CODE. Strict by design - there is no built-in exemption for
+dunder methods, private helpers, or anything else; every exemption is a
+real, reviewable decision recorded in <stem>.llmchanges.json's "exempt"
+section (see Compiler/CoverageChecker.py). Python-only for now - files in
+other languages are silently skipped, not flagged, since there's no real
+parser for them yet to enumerate "every function that exists."
 
 File location needs no discovery step or manifest, ever - the tree
 itself already carries it, since a file-typed node's own header
@@ -35,6 +45,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
+from Compiler.CoverageChecker import check_coverage
 from Compiler.LockfileBuilder import build, finalize
 from Compiler.LockfileChecker import check
 
@@ -49,12 +60,20 @@ def _discover_llm_files(root: Path):
     )
 
 
-def _check_one(llmlang_path: Path) -> tuple[bool, list]:
+def _check_one(llmlang_path: Path, coverage: bool = False) -> tuple[bool, list]:
     lockfile_path = llmlang_path.parent / (llmlang_path.stem + ".llmlock")
     try:
         ok, _flagged, findings = check(llmlang_path, lockfile_path)
     except ValueError as e:
         return False, [str(e)]
+
+    if coverage:
+        changes_path = llmlang_path.parent / (llmlang_path.stem + ".llmchanges.json")
+        coverage_findings = check_coverage(llmlang_path, changes_path)
+        if coverage_findings:
+            ok = False
+            findings = findings + coverage_findings
+
     return ok, findings
 
 
@@ -87,7 +106,7 @@ def _print_report(findings_by_file: dict):
     print(bar)
 
 
-def _check_project(root: Path):
+def _check_project(root: Path, coverage: bool = False):
     llm_files = _discover_llm_files(root)
     if not llm_files:
         print(f"No .llm files found under {root}")
@@ -96,7 +115,7 @@ def _check_project(root: Path):
     findings_by_file = {}
     for llmlang_path in llm_files:
         print(f"checking {llmlang_path}")
-        _ok, findings = _check_one(llmlang_path)
+        _ok, findings = _check_one(llmlang_path, coverage=coverage)
         findings_by_file[str(llmlang_path)] = findings
 
     _print_report(findings_by_file)
@@ -108,21 +127,23 @@ def main():
     flags = {a for a in args if a.startswith("--")}
     positional = [a for a in args if not a.startswith("--")]
 
+    coverage = "--coverage" in flags
+
     if "--check" in flags and (not positional or Path(positional[0]).is_dir()):
         root = Path(positional[0]) if positional else Path(".")
-        _check_project(root)
+        _check_project(root, coverage=coverage)
         return
 
     if not positional:
-        print("usage: build.py <llmlang_file> [--check | --finalize]")
-        print("       build.py --check [root_dir]")
+        print("usage: build.py <llmlang_file> [--check | --finalize] [--coverage]")
+        print("       build.py --check [root_dir] [--coverage]")
         sys.exit(1)
 
     llmlang_path = Path(positional[0])
     lockfile_path = llmlang_path.parent / (llmlang_path.stem + ".llmlock")
 
     if "--check" in flags:
-        ok, findings = _check_one(llmlang_path)
+        ok, findings = _check_one(llmlang_path, coverage=coverage)
         _print_report({str(llmlang_path): findings})
         sys.exit(0 if ok else 1)
 

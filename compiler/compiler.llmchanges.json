@@ -1,4 +1,42 @@
 {
+  "exempt": {
+    "Compiler/Parser.py::walk_files": "already swept into parse()'s own tracked code_hash region by the 'next handle or EOF' rule (parse's handle is the only one in this file, and this function is defined after it) - genuinely already hash-verified, not a real gap",
+    "Compiler/Parser.py::walk_policies": "already swept into parse()'s own tracked code_hash region, same as walk_files",
+    "Compiler/Parser.py::_file_label": "already swept into parse()'s own tracked code_hash region, same as walk_files",
+    "Compiler/Parser.py::_entry_keys_beneath": "already swept into parse()'s own tracked code_hash region, same as walk_files",
+    "Compiler/Parser.py::walk_entries": "already swept into parse()'s own tracked code_hash region, same as walk_files",
+    "Compiler/Parser.py::walk_tests": "already swept into parse()'s own tracked code_hash region, same as walk_files",
+    "Compiler/Parser.py::walk_test_lines": "already swept into parse()'s own tracked code_hash region, same as walk_files",
+    "Compiler/Parser.py::walk_class_bullet_groups": "already swept into parse()'s own tracked code_hash region, same as walk_files",
+    "Compiler/Parser.py::policy_in_scope": "already swept into parse()'s own tracked code_hash region, same as walk_files",
+    "Compiler/Parser.py::applicable_policy_text": "already swept into parse()'s own tracked code_hash region, same as walk_files",
+    "Compiler/Extractor.py::TestComment.code_hash": "defined inside the TestComment class body, so it's already part of TestComment's own tracked code_hash region - a separate handle would be redundant, not additive coverage",
+    "Compiler/Extractor.py::_all_handles": "sits between TestComment's handle and extract_by_handle's handle, so it's already swept into TestComment's tracked code_hash region (accepted coarseness, documented in this file's own module docstring)",
+    "Compiler/Extractor.py::_clean_comment_text": "sits between handle_line_numbers's handle and test_comment_roots's handle, so it's already swept into handle_line_numbers's tracked code_hash region",
+    "Compiler/Extractor.py::_repo_root": "already swept into handle_line_numbers's tracked code_hash region, same as _clean_comment_text",
+    "Compiler/Extractor.py::_relative_path": "already swept into handle_line_numbers's tracked code_hash region, same as _clean_comment_text",
+    "Compiler/Extractor.py::_python_block_for_line": "sits between test_comment_base's handle and test_comments_by_node's handle, so it's already swept into test_comment_base's tracked code_hash region",
+    "Compiler/Extractor.py::_fallback_block_end": "already swept into test_comment_base's tracked code_hash region, same as _python_block_for_line",
+    "Compiler/Extractor.py::_test_code_for_comment": "already swept into test_comment_base's tracked code_hash region, same as _python_block_for_line",
+    "Compiler/Parser.py::_new_node": "module-private tree-construction helper defined before parse()'s own handle, so it isn't swept into any entry's code_hash region - not independently meaningful architecture, just how parse() is internally factored",
+    "Compiler/Parser.py::_finalize": "module-private helper defined before parse()'s handle, same situation as _new_node",
+    "Compiler/Parser.py::_parse_header": "module-private helper defined before parse()'s handle, same situation as _new_node",
+    "Compiler/Parser.py::_bullet_text": "module-private helper defined before parse()'s handle, same situation as _new_node",
+    "Compiler/LockfileBuilder.py::_sha256": "module-private helper defined before build()'s handle (the first in this file), so it isn't swept into either build's or finalize's code_hash region - a real gap in strict hash coverage, but not independently meaningful architecture worth its own llmlang entry",
+    "Compiler/LockfileBuilder.py::_combined": "module-private helper defined before build()'s handle, same situation as _sha256",
+    "Compiler/LockfileBuilder.py::_hash_all_entries": "module-private helper defined before build()'s handle, same situation as _sha256",
+    "Compiler/LockfileBuilder.py::_policies_and_class_bullets": "module-private helper defined before build()'s handle, same situation as _sha256",
+    "Compiler/LockfileBuilder.py::_test_comment_lookup": "module-private helper defined before build()'s handle, same situation as _sha256",
+    "Compiler/LockfileBuilder.py::_test_trace_record": "module-private helper defined before build()'s handle, same situation as _sha256",
+    "Compiler/LockfileBuilder.py::_test_traces": "module-private helper defined before build()'s handle, same situation as _sha256",
+    "Compiler/LockfileChecker.py::_sha256": "module-private helper defined before check()'s handle (the only one in this file), so it isn't swept into check's code_hash region - a real gap in strict hash coverage, but not independently meaningful architecture worth its own llmlang entry",
+    "Compiler/LockfileChecker.py::_combined": "module-private helper defined before check()'s handle, same situation as _sha256",
+    "Compiler/LockfileChecker.py::_test_comment_lookup": "module-private helper defined before check()'s handle, same situation as _sha256",
+    "Compiler/LockfileChecker.py::_trace_location": "module-private helper defined before check()'s handle, same situation as _sha256",
+    "Compiler/LockfileChecker.py::_check_test_traces": "module-private helper defined before check()'s handle, same situation as _sha256",
+    "Compiler/CoverageChecker.py::_qualified_functions": "module-private helper defined before check_coverage()'s handle (the only one in this file), so it isn't swept into check_coverage's code_hash region - a real gap in strict hash coverage, but not independently meaningful architecture worth its own llmlang entry",
+    "Compiler/CoverageChecker.py::_load_exemptions": "module-private helper defined before check_coverage()'s handle, same situation as _qualified_functions"
+  },
   "Compiler.Lockfile.LockEntry": {
     "disposition": "unrelated ripple from the extract_by_handle fix (comment line now included in code_hash) - this entry own code is untouched, only the hash computation changed",
     "for_spec_hash": "95f5b971fdc8b3d65888be804121d90e9437ec153f98bd013a71c009d5ce5c38",
@@ -20,9 +58,9 @@
     "for_code_hash": "0bf8ca86fd4d2b4f942e54b828f2229f5d01f5b6778a1e371a109305cffbdfee"
   },
   "Compiler.Parser.parse": {
-    "disposition": "real change: parse() now records each folder/file/class/entry header's own source line, and test bullets are stored as (text, line) pairs - added walk_test_lines() and extended walk_entries()/walk_class_bullet_groups() to yield each item's line too, so check() can report exact file:line locations instead of just a file name. Also fixed line-number accuracy: iterates raw splitlines() and skips blanks explicitly, instead of filtering blanks out before line numbers are ever assigned (which would have miscounted).",
+    "disposition": "unrelated ripple: adding walk_files() (a new tree-traversal helper for coverage checking, defined right after parse's own def) changes what parse's code_hash region captures under the 'next handle or EOF' rule - parse's own logic is unchanged",
     "for_spec_hash": "9a98858def2a139268c1793698fc3f22b318fa0e622a2155a0c26c8d19656322",
-    "for_code_hash": "edf1cd37e275c5d8b42ddbe1ba587f9091fa23861a4b762bfa951495d3446789"
+    "for_code_hash": "b7ede5ef0b088b5a4ec7729e9270507d5a10d9d8878e60393458b23a34e301b1"
   },
   "Compiler.Extractor.TestComment": {
     "disposition": "real change: added a line field recording the llm-test comment's own source line, so test-trace findings (TEST_LINK_MISSING, TEST_TRACE_STALE, TEST_TRACE_DIVERGED, TEST_CODE_DIVERGED) can report a location, not just a file.",
@@ -30,9 +68,9 @@
     "for_code_hash": "387083fc80b92c3a4b4f189b9bd5c5be3499cadfeb4dd265e95b2684f4ce8cf7"
   },
   "Compiler.Extractor.extract_by_handle": {
-    "disposition": "real change: now returns (code, line_number) instead of just code, so CODE_DIVERGED can report the handle's own source line instead of just the file it lives in.",
+    "disposition": "unrelated ripple: adding handle_line_numbers() as a new tracked entry right after extract_by_handle shrinks extract_by_handle's own code_hash region to stop before it, changing the hash even though extract_by_handle's own logic is unchanged",
     "for_spec_hash": "8452197c555ea937c30520b03ce03b84a7bd8b0c2916b7b36517f2657cdc4f33",
-    "for_code_hash": "43064c1622652d6911882902108b22407a07397a7a843aa2a280b92a8cc1fa92"
+    "for_code_hash": "a9d296582a809659231af51dba8c86d8e5ae9176c364b1437f78788529a3613f"
   },
   "Compiler.Extractor.test_comment_roots": {
     "disposition": "unrelated ripple from the extract_by_handle fix (comment line now included in code_hash) - this entry own code is untouched, only the hash computation changed",
@@ -55,13 +93,23 @@
     "for_code_hash": "376b998d4521ac079c75412fc8d4864474f77d025a5ee8d3033f4dc49af9895a"
   },
   "Compiler.LockfileBuilder.finalize": {
-    "disposition": "unrelated ripple: check() now returns a findings list as a third tuple element instead of printing directly. finalize() unpacks it and prints currently-flagged findings itself before its own disposition-coverage check, preserving the prior visibility into what's flagged during --finalize - its own logic (coverage gate, hash stamping) is unchanged.",
-    "for_spec_hash": "a2ae9afba0e5e4aeb1babdf4611893990774fd787fa86d8dca3e8718f2689e6f",
-    "for_code_hash": "5803ac20f83800300c442990be32e36ba48c1f9b9628564a0f0611cfb64f0a48"
+    "disposition": "real change: finalize() now special-cases the changes file's \"exempt\" key (coverage-check exemptions, keyed by file+qualified-name rather than a tracking_key) so it's preserved verbatim across every finalize run instead of being pruned as an orphaned disposition",
+    "for_spec_hash": "a243ff924f5f508c74503c37ab4eb9faa1c06c67b3ceb6b2648f71709d606e5a",
+    "for_code_hash": "2c86421328ff46fdcfa6c0c529e1906b8abe833409cd777a766f5aaf055b384a"
   },
   "Compiler.LockfileChecker.check": {
     "disposition": "real change: every finding's parenthetical now explains what happened and, where useful, what to do about it, instead of a short label - e.g. the class-level cascade message used to say only \"an entry it depends on changed\" (unclear which entry, or why it mattered); it now names the specific triggering entry by tracking key and explains that the cross-entry bullet's own text is unchanged but should be re-reviewed anyway. Also carries forward the file:line reporting and findings-list return from the prior change to this entry.",
     "for_spec_hash": "f0e59f692b1d3a2f5825cdac369136be9b62ea58856212499b120b5efb17a789",
     "for_code_hash": "10f3e37a1e8494bc21ba8d5cb026456470960b4ab3e956570fd8ff2c7fe9921c"
+  },
+  "Compiler.Extractor.handle_line_numbers": {
+    "disposition": "new entry: real feature, part of the new opt-in --coverage check",
+    "for_spec_hash": "cfd49872979966b7290a3230865f3eb77ba8da0878632708786d170762be7514",
+    "for_code_hash": "fd1444053fd5f344d7ee7da31336b22496de15a1ec8ecded88cd2d601ab7a1e1"
+  },
+  "Compiler.CoverageChecker.check_coverage": {
+    "disposition": "new entry: real feature, the new opt-in --coverage check itself",
+    "for_spec_hash": "23b74df0929a302096d38e45961359f12907e7b468b2171b49a0b82add9b5091",
+    "for_code_hash": "e4a949ac6f444aab28c5a16fa0779fb04353b995b7bcf60299d8215e3e1efccf"
   }
 }

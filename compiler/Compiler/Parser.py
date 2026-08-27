@@ -179,6 +179,18 @@ def parse(path):
     return root
 
 
+def walk_files(node, folder_parts=()):
+    """Yield (file_rel, ext) for every file node in the tree, whether or not
+    it holds any source-handled entries - coverage checking needs every
+    file llmlang knows about, not just the ones with entries already in it."""
+    for name, child in node["children"].items():
+        kind = child["kind"]
+        if kind == "folder":
+            yield from walk_files(child, folder_parts + (name,))
+        elif kind == "file":
+            yield "/".join(folder_parts + (f"{name}.{child['ext']}",)), child["ext"]
+
+
 def walk_policies(node, path=()):
     """Yield (scope_path, index, text) for every policy item at any scope."""
     for i, text in enumerate(node["policy"]):
