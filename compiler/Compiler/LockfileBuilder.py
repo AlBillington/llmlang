@@ -152,7 +152,7 @@ def build(llmlang_path: Path, lockfile_path: Path):
         "class_bullets": class_bullets,
         "test_traces": test_traces,
     }
-    lockfile_path.write_text(json.dumps(lock, indent=2))
+    lockfile_path.write_text(json.dumps(lock, indent=2), encoding="utf-8")
     return lock
 
 
@@ -165,7 +165,7 @@ def finalize(llmlang_path: Path, lockfile_path: Path, changes_path: Path):
             "(missing, or schema out of date) - bootstrap with a plain rebuild first"
         )
 
-    changes = json.loads(changes_path.read_text()) if changes_path.exists() else {}
+    changes = json.loads(changes_path.read_text(encoding="utf-8")) if changes_path.exists() else {}
 
     root = parse(llmlang_path)
     test_traces = _test_traces(llmlang_path, root)
@@ -211,6 +211,6 @@ def finalize(llmlang_path: Path, lockfile_path: Path, changes_path: Path):
             entry_record["last_change"] = resolved[key]
         lock["entries"][key] = entry_record
 
-    lockfile_path.write_text(json.dumps(lock, indent=2))
-    changes_path.write_text(json.dumps(new_changes, indent=2))
+    lockfile_path.write_text(json.dumps(lock, indent=2), encoding="utf-8")
+    changes_path.write_text(json.dumps(new_changes, indent=2), encoding="utf-8")
     return lock

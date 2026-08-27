@@ -20,9 +20,9 @@
     "for_code_hash": "0bf8ca86fd4d2b4f942e54b828f2229f5d01f5b6778a1e371a109305cffbdfee"
   },
   "Compiler.Parser.parse": {
-    "disposition": "unrelated ripple from the extract_by_handle fix (comment line now included in code_hash) - this entry own code is untouched, only the hash computation changed",
+    "disposition": "real fix: read_text() now pins encoding=\"utf-8\" - previously defaulted to locale.getpreferredencoding(), which silently misdecodes non-ASCII bytes as cp1252 on Windows, producing a hash that matched itself locally but diverged from the correct UTF-8 decode on Linux CI (caught via a real cross-platform CI failure on Compiler.LockfileChecker.check, which contains em-dashes)",
     "for_spec_hash": "943316ee7560be49d349c7ac21453d15245cda9068ee003267058f9f93b59942",
-    "for_code_hash": "7844ff6e49698411b9c59dd85afd1565d3b91d10cd5c170443eb67b8826113a4"
+    "for_code_hash": "25de11716e01bf7b7574bab3c63d858d5c0591b2f3509bcd1aed79be3613ca89"
   },
   "Compiler.Extractor.TestComment": {
     "disposition": "unrelated ripple from the extract_by_handle fix (comment line now included in code_hash) - this entry own code is untouched, only the hash computation changed",
@@ -30,9 +30,9 @@
     "for_code_hash": "17c84d4b8b415331c015be7c3d8e5a65f83182e82f170d0f08b251c21776680a"
   },
   "Compiler.Extractor.extract_by_handle": {
-    "disposition": "real fix: code_start now begins at the handle comment line itself instead of the line after it, so the summary comment is part of code_hash - closes a real gap where a source comment could drift arbitrarily from its llmlang summary with nothing ever detecting it (verified: editing only a comment, llm file untouched, previously passed --check clean)",
+    "disposition": "real fix: read_text() now pins encoding=\"utf-8\", for the same reason as Compiler.Parser.parse - locale-dependent decoding made this function's own hash-affecting behavior silently platform-dependent",
     "for_spec_hash": "1cdac1e533c1c3d2e1799cafaed45f1a158b3e0046b5cb9738eda4d96313d0df",
-    "for_code_hash": "f843afbfd9b21c21750c9b05ec76986d1a9657e3c109e340234ed5f2bdef0fc6"
+    "for_code_hash": "aa764da5ebd30806cacb7600df45b691f3b1d281be8abb175d4a8039687b566a"
   },
   "Compiler.Extractor.test_comment_roots": {
     "disposition": "unrelated ripple from the extract_by_handle fix (comment line now included in code_hash) - this entry own code is untouched, only the hash computation changed",
@@ -45,23 +45,23 @@
     "for_code_hash": "7fb022d17640aa92a14e8bdb3e7831dbf3a8aa24dca2b1c4964de7f5ae5677fb"
   },
   "Compiler.Extractor.test_comments_by_node": {
-    "disposition": "unrelated ripple from the extract_by_handle fix (comment line now included in code_hash) - this entry own code is untouched, only the hash computation changed",
+    "disposition": "real fix: the source-comment scan's read_text() now pins encoding=\"utf-8\" instead of relying on locale default, and the existing UnicodeDecodeError guard now actually means something (cp1252 can decode almost any byte, so it never triggered before, masking genuinely undecodable files instead of skipping them)",
     "for_spec_hash": "1c1c838652c93e0fe20728989c381cfda758c15639411ef60a646283f716c368",
-    "for_code_hash": "f25dc0935b7a407849f813bdbb85ddaa24ce3043b832e60018d538ac39df6eb2"
+    "for_code_hash": "cf2f502dd2f3614a1b516155acb09feb61c82bf08ecf3319b2ff01ed0c882792"
   },
   "Compiler.LockfileBuilder.build": {
-    "disposition": "unrelated ripple from the extract_by_handle fix (comment line now included in code_hash) - this entry own code is untouched, only the hash computation changed",
+    "disposition": "real fix: lockfile/changes-file read_text()/write_text() calls now pin encoding=\"utf-8\", so the JSON round-trips identically regardless of the host's locale default",
     "for_spec_hash": "e1461a1fa6d2acf40cb3894662ebca547b9e78f72a94931b6f8a180ca4b952f8",
-    "for_code_hash": "d5401f6deeb684aec289f1f0028a66c78a9cf8cb6a8a87cbbc42999b57f29c39"
+    "for_code_hash": "376b998d4521ac079c75412fc8d4864474f77d025a5ee8d3033f4dc49af9895a"
   },
   "Compiler.LockfileBuilder.finalize": {
-    "disposition": "unrelated ripple from the extract_by_handle fix (comment line now included in code_hash) - this entry own code is untouched, only the hash computation changed",
+    "disposition": "real fix: same encoding=\"utf-8\" pin as Compiler.LockfileBuilder.build, applied to finalize's own read_text()/write_text() calls",
     "for_spec_hash": "a2ae9afba0e5e4aeb1babdf4611893990774fd787fa86d8dca3e8718f2689e6f",
-    "for_code_hash": "20e0e74fa8c5793d63a7377e6f70d3bd8563c1b588fad2641f1e5d1f14daa285"
+    "for_code_hash": "5683d45de6c32323f34e7876771e843b9fed9a13828a1196c4c0f4c7df029077"
   },
   "Compiler.LockfileChecker.check": {
-    "disposition": "unrelated ripple from the extract_by_handle fix (comment line now included in code_hash) - this entry own code is untouched, only the hash computation changed",
+    "disposition": "real fix: lockfile_path.read_text() now pins encoding=\"utf-8\" - this is the entry that actually surfaced the bug: its own code contains em-dashes, so its stored code_hash was silently computed from a cp1252-mojibake decode on Windows (matching itself locally) until a GitHub Actions CI run (Linux, UTF-8 locale) computed the correct hash and correctly reported CODE_DIVERGED",
     "for_spec_hash": "eb5ac191cf13c4c6c86eea079b166bc0c4183591b8e9dccded3cb6bf0207f422",
-    "for_code_hash": "74582ef15b9c12cbba08c55934324ab3a3f9702db7519d399dd08f3f2654afa2"
+    "for_code_hash": "2be287cae94abf941f38c8fb445bf2696f0602f42b5f6167f72c64d02744792c"
   }
 }

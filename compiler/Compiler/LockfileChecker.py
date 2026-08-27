@@ -126,7 +126,7 @@ def check(llmlang_path: Path, lockfile_path: Path) -> tuple:
         print("No lockfile found.")
         return False, set()
 
-    lock = json.loads(lockfile_path.read_text())
+    lock = json.loads(lockfile_path.read_text(encoding="utf-8"))
 
     if lock.get("lockfile_schema_version") != LOCKFILE_SCHEMA_VERSION:
         print(

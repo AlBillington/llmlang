@@ -80,7 +80,7 @@ def _bullet_text(content: str, relative_depth: int) -> str:
 
 # parses a tab-indented llmlang file into a tree of folders, files, classes, and entries [llm:Compiler.Parser.parse]
 def parse(path):
-    lines = [line for line in Path(path).read_text().splitlines() if line.strip()]
+    lines = [line for line in Path(path).read_text(encoding="utf-8").splitlines() if line.strip()]
     root = _new_node("", None)
     root["kind"] = "folder"
     stack = [(-1, root)]

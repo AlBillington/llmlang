@@ -77,7 +77,7 @@ def extract_by_handle(file_path: Path, key: str):
     # can drift arbitrarily far from the llmlang summary it's supposed to
     # match with nothing ever detecting it, since nothing else compares
     # the two directly
-    text = file_path.read_text()
+    text = file_path.read_text(encoding="utf-8")
     handles = _all_handles(text)
 
     for i, (handle_key, line_start) in enumerate(handles):
@@ -193,7 +193,7 @@ def test_comments_by_node(root_paths, base_path: Path | None = None):
             ):
                 continue
             try:
-                text = path.read_text()
+                text = path.read_text(encoding="utf-8")
             except (UnicodeDecodeError, OSError):
                 continue
             for line_index, line in enumerate(text.splitlines()):

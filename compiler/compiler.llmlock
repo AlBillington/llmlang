@@ -51,11 +51,11 @@
       "file": "Compiler/Parser.py",
       "text": "+ parses a tab-indented llmlang file into a tree of folders, files, classes, and entries\naccepts a file path\nparses a tab-indented llmlang file into a tree of folders, files, classes, named entries, and data entries\na source-handled entry header must include a parenthesized summary after the identifier and before the colon\na data entry header must include the data marker after the identifier and before the parenthesized summary\na nested regular bullet belongs to the same nearest entry, file or class bullet group, or policy item as its parent\na test bullet can live under a named entry, file, or class node\na header's real name is always its first word; any words after a folder, file, or class name up to the colon are a freetext hint, discarded once the name is extracted\nreturns the parsed tree",
       "text_hash": "943316ee7560be49d349c7ac21453d15245cda9068ee003267058f9f93b59942",
-      "code_hash": "7844ff6e49698411b9c59dd85afd1565d3b91d10cd5c170443eb67b8826113a4",
+      "code_hash": "25de11716e01bf7b7574bab3c63d858d5c0591b2f3509bcd1aed79be3613ca89",
       "last_change": {
-        "disposition": "unrelated ripple from the extract_by_handle fix (comment line now included in code_hash) - this entry own code is untouched, only the hash computation changed",
+        "disposition": "real fix: read_text() now pins encoding=\"utf-8\" - previously defaulted to locale.getpreferredencoding(), which silently misdecodes non-ASCII bytes as cp1252 on Windows, producing a hash that matched itself locally but diverged from the correct UTF-8 decode on Linux CI (caught via a real cross-platform CI failure on Compiler.LockfileChecker.check, which contains em-dashes)",
         "for_spec_hash": "943316ee7560be49d349c7ac21453d15245cda9068ee003267058f9f93b59942",
-        "for_code_hash": "7844ff6e49698411b9c59dd85afd1565d3b91d10cd5c170443eb67b8826113a4"
+        "for_code_hash": "25de11716e01bf7b7574bab3c63d858d5c0591b2f3509bcd1aed79be3613ca89"
       }
     },
     "Compiler.Extractor.TestComment": {
@@ -73,11 +73,11 @@
       "file": "Compiler/Extractor.py",
       "text": "+ extracts the code implementing an entry by locating its comment handle and taking everything from the handle's own comment line up to the next handle\naccepts a file path and canonical entry name\nextracts the code implementing an entry by locating its comment handle and taking everything from the handle's own comment line up to the next handle\nincluding the comment line itself means the entry's summary comment is part of the resulting hash, so it can't drift from the llmlang summary undetected\nreturns the extracted code, or nothing if the handle isn't found",
       "text_hash": "1cdac1e533c1c3d2e1799cafaed45f1a158b3e0046b5cb9738eda4d96313d0df",
-      "code_hash": "f843afbfd9b21c21750c9b05ec76986d1a9657e3c109e340234ed5f2bdef0fc6",
+      "code_hash": "aa764da5ebd30806cacb7600df45b691f3b1d281be8abb175d4a8039687b566a",
       "last_change": {
-        "disposition": "real fix: code_start now begins at the handle comment line itself instead of the line after it, so the summary comment is part of code_hash - closes a real gap where a source comment could drift arbitrarily from its llmlang summary with nothing ever detecting it (verified: editing only a comment, llm file untouched, previously passed --check clean)",
+        "disposition": "real fix: read_text() now pins encoding=\"utf-8\", for the same reason as Compiler.Parser.parse - locale-dependent decoding made this function's own hash-affecting behavior silently platform-dependent",
         "for_spec_hash": "1cdac1e533c1c3d2e1799cafaed45f1a158b3e0046b5cb9738eda4d96313d0df",
-        "for_code_hash": "f843afbfd9b21c21750c9b05ec76986d1a9657e3c109e340234ed5f2bdef0fc6"
+        "for_code_hash": "aa764da5ebd30806cacb7600df45b691f3b1d281be8abb175d4a8039687b566a"
       }
     },
     "Compiler.Extractor.test_comment_roots": {
@@ -106,44 +106,44 @@
       "file": "Compiler/Extractor.py",
       "text": "+ collects llm-test comments by canonical node name\naccepts one or more root paths\nscans source-like text files under the root paths for llm-test handles\nrecords each llm-test comment's canonical node, exact explanation text, relative path, and backing test code\nreturns a mapping of canonical node name to linked test comment records",
       "text_hash": "1c1c838652c93e0fe20728989c381cfda758c15639411ef60a646283f716c368",
-      "code_hash": "f25dc0935b7a407849f813bdbb85ddaa24ce3043b832e60018d538ac39df6eb2",
+      "code_hash": "cf2f502dd2f3614a1b516155acb09feb61c82bf08ecf3319b2ff01ed0c882792",
       "last_change": {
-        "disposition": "unrelated ripple from the extract_by_handle fix (comment line now included in code_hash) - this entry own code is untouched, only the hash computation changed",
+        "disposition": "real fix: the source-comment scan's read_text() now pins encoding=\"utf-8\" instead of relying on locale default, and the existing UnicodeDecodeError guard now actually means something (cp1252 can decode almost any byte, so it never triggered before, masking genuinely undecodable files instead of skipping them)",
         "for_spec_hash": "1c1c838652c93e0fe20728989c381cfda758c15639411ef60a646283f716c368",
-        "for_code_hash": "f25dc0935b7a407849f813bdbb85ddaa24ce3043b832e60018d538ac39df6eb2"
+        "for_code_hash": "cf2f502dd2f3614a1b516155acb09feb61c82bf08ecf3319b2ff01ed0c882792"
       }
     },
     "Compiler.LockfileBuilder.build": {
       "file": "Compiler/LockfileBuilder.py",
       "text": "+ builds a lockfile by using Parser to read llmlang, Extractor to locate each entry's code, and Lockfile to record a text and code hash per entry\naccepts an llmlang file path and a lockfile output path\nbuilds a lockfile by using Parser to read llmlang, Extractor to locate each source-handled entry's code, and Lockfile to record a text and code hash per entry\nwrites test trace records with the llm-test explanation text, relative path, and backing code hash\nrefuses to write the lockfile when any test bullet lacks a matching llm-test comment or any llm-test comment lacks a matching test bullet\nhas no notion of dispositions or a change manifest at all; never reads or writes anything but the lockfile itself\nshould reproduce the same hashes when run again against an unchanged codebase\nreturns the built lock data",
       "text_hash": "e1461a1fa6d2acf40cb3894662ebca547b9e78f72a94931b6f8a180ca4b952f8",
-      "code_hash": "d5401f6deeb684aec289f1f0028a66c78a9cf8cb6a8a87cbbc42999b57f29c39",
+      "code_hash": "376b998d4521ac079c75412fc8d4864474f77d025a5ee8d3033f4dc49af9895a",
       "last_change": {
-        "disposition": "unrelated ripple from the extract_by_handle fix (comment line now included in code_hash) - this entry own code is untouched, only the hash computation changed",
+        "disposition": "real fix: lockfile/changes-file read_text()/write_text() calls now pin encoding=\"utf-8\", so the JSON round-trips identically regardless of the host's locale default",
         "for_spec_hash": "e1461a1fa6d2acf40cb3894662ebca547b9e78f72a94931b6f8a180ca4b952f8",
-        "for_code_hash": "d5401f6deeb684aec289f1f0028a66c78a9cf8cb6a8a87cbbc42999b57f29c39"
+        "for_code_hash": "376b998d4521ac079c75412fc8d4864474f77d025a5ee8d3033f4dc49af9895a"
       }
     },
     "Compiler.LockfileBuilder.finalize": {
       "file": "Compiler/LockfileBuilder.py",
       "text": "+ guards an incremental rebuild against silently skipping a flagged entry, reading and updating a change manifest bound to the exact spec and code hashes it describes\naccepts an llmlang file path, a lockfile output path, and a change manifest file path\nuses Checker to find every named entry currently flagged against the existing lockfile, and refuses to write anything unless the change manifest covers every one of them with a non-empty disposition\naccepts a fresh disposition in the manifest as a plain string, and stamps it with the entry's current spec hash and code hash\na spec hash combines the entry's own text with every policy currently covering it, so a disposition goes stale whether the entry's own text changed or an applicable policy did\nfor a manifest entry that's already stamped, keeps it only if both hashes still match the entry's current state; otherwise drops it as stale, along with any entry whose key no longer exists in the llmlang tree at all\nbuilds every hash and disposition fresh from the current llmlang text, current code, current policies, and current manifest only; never carries anything forward from the lockfile's own prior content\nwrites both the new lockfile and the updated (stamped and pruned) manifest file, but never alters a disposition's own text\nreturns the built lock data",
       "text_hash": "a2ae9afba0e5e4aeb1babdf4611893990774fd787fa86d8dca3e8718f2689e6f",
-      "code_hash": "20e0e74fa8c5793d63a7377e6f70d3bd8563c1b588fad2641f1e5d1f14daa285",
+      "code_hash": "5683d45de6c32323f34e7876771e843b9fed9a13828a1196c4c0f4c7df029077",
       "last_change": {
-        "disposition": "unrelated ripple from the extract_by_handle fix (comment line now included in code_hash) - this entry own code is untouched, only the hash computation changed",
+        "disposition": "real fix: same encoding=\"utf-8\" pin as Compiler.LockfileBuilder.build, applied to finalize's own read_text()/write_text() calls",
         "for_spec_hash": "a2ae9afba0e5e4aeb1babdf4611893990774fd787fa86d8dca3e8718f2689e6f",
-        "for_code_hash": "20e0e74fa8c5793d63a7377e6f70d3bd8563c1b588fad2641f1e5d1f14daa285"
+        "for_code_hash": "5683d45de6c32323f34e7876771e843b9fed9a13828a1196c4c0f4c7df029077"
       }
     },
     "Compiler.LockfileChecker.check": {
       "file": "Compiler/LockfileChecker.py",
       "text": "+ checks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as SPEC_DIVERGED, CODE_DIVERGED, or unchanged, alongside its file and comment handle\naccepts an llmlang file path and a lockfile path\nchecks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as SPEC_DIVERGED, CODE_DIVERGED, or unchanged, alongside its file and comment handle\nreports TEST_LINK_MISSING when any test bullet lacks a matching llm-test comment with the same text and canonical node name\nreports TEST_TRACE_STALE when any llm-test comment lacks a matching test bullet with the same text and canonical node name\nreports TEST_CODE_DIVERGED when a linked test's backing code hash differs from the lockfile\nshould report an entry as SPEC_DIVERGED when its own llmlang text changed, it's brand new, or an upstream policy covering it changed\nshould report an entry as CODE_DIVERGED when its handle is missing from the code or its code changed unexpectedly\nshould report an unmodified codebase as fully clean\nreturns whether everything checked out clean, and the set of named-entry tracking keys currently flagged for any reason",
       "text_hash": "eb5ac191cf13c4c6c86eea079b166bc0c4183591b8e9dccded3cb6bf0207f422",
-      "code_hash": "74582ef15b9c12cbba08c55934324ab3a3f9702db7519d399dd08f3f2654afa2",
+      "code_hash": "2be287cae94abf941f38c8fb445bf2696f0602f42b5f6167f72c64d02744792c",
       "last_change": {
-        "disposition": "unrelated ripple from the extract_by_handle fix (comment line now included in code_hash) - this entry own code is untouched, only the hash computation changed",
+        "disposition": "real fix: lockfile_path.read_text() now pins encoding=\"utf-8\" - this is the entry that actually surfaced the bug: its own code contains em-dashes, so its stored code_hash was silently computed from a cp1252-mojibake decode on Windows (matching itself locally) until a GitHub Actions CI run (Linux, UTF-8 locale) computed the correct hash and correctly reported CODE_DIVERGED",
         "for_spec_hash": "eb5ac191cf13c4c6c86eea079b166bc0c4183591b8e9dccded3cb6bf0207f422",
-        "for_code_hash": "74582ef15b9c12cbba08c55934324ab3a3f9702db7519d399dd08f3f2654afa2"
+        "for_code_hash": "2be287cae94abf941f38c8fb445bf2696f0602f42b5f6167f72c64d02744792c"
       }
     }
   },
