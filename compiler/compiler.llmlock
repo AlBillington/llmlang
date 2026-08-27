@@ -178,6 +178,127 @@
         "for_spec_hash": "f31b3fd5d36ee28a9552bed3bb5c0b8140d608cf3edfae73b42b1d9da0ec4363",
         "for_code_hash": "0255708e78b57fe862ce348bd1d703dd140cc9222df46a19be8fcf89321e14e7"
       }
+    },
+    "llmlang.cli.find_pyproject": {
+      "file": "llmlang/cli.py",
+      "text": "+ finds the nearest pyproject.toml by walking up from a starting directory\naccepts a starting directory\nfinds the nearest pyproject.toml by walking up from a starting directory, all the way to the filesystem root\nreturns the first pyproject.toml found, or nothing",
+      "text_hash": "b4fee237a6dfa2d1f35366284bc10c3f01c07f4b4b4cac307e6e011218d7bb19",
+      "code_hash": "49a96116014d7a521d9449bc5e33c5da16876dbe4735a6bb812fa978d077eb17",
+      "last_change": {
+        "disposition": "new entry: moved build.py's CLI logic into the llmlang package as cli.py, as part of packaging this as a real pip-installable tool with a console-script entry point. Previously build.py was explicitly excluded from self-hosting (treated as \"just the CLI wrapper\"); on reflection that exemption was weaker than the ones used elsewhere (e.g. for one-line private helpers) since this code encodes real, user-facing behavioral contracts - flag-vs-config precedence, what --output-format json's shape actually is, how multiple paths merge into one report. Rather than carry forward an informal, unconfigured exemption, every function here now has either a real handle+entry or an explicit [llm-exempt] marker (_plural, _usage) - the same rule everything else in this codebase already follows. No behavior changed from the pre-move build.py, only usage/help text (build.py -> llmlang) and the leading underscore dropped from functions that now have real entries, reserving it for the two that stayed exempt.",
+        "for_spec_hash": "b4fee237a6dfa2d1f35366284bc10c3f01c07f4b4b4cac307e6e011218d7bb19",
+        "for_code_hash": "49a96116014d7a521d9449bc5e33c5da16876dbe4735a6bb812fa978d077eb17"
+      }
+    },
+    "llmlang.cli.load_config": {
+      "file": "llmlang/cli.py",
+      "text": "+ loads the [tool.llmlang] table from pyproject.toml, degrading gracefully when it can't be read\naccepts a starting directory and an optional explicit config path override\nloads the [tool.llmlang] table from pyproject.toml, degrading gracefully when it can't be read\nuses the override path directly when given, otherwise finds the nearest pyproject.toml from the starting directory\nwarns to stderr and returns an empty config, rather than crashing, when the override path doesn't exist or when this Python has no tomllib (needs 3.11+)\nreturns an empty config when no pyproject.toml is found at all\nreturns the [tool.llmlang] table",
+      "text_hash": "9521deb303a7b48284dd128dc8d415298b2757ee22b4b542399d9dd7333cebe8",
+      "code_hash": "eead4c5defe4756cf7edbb8e76631471c4dba01e7674e043861594c6ed0b2430",
+      "last_change": {
+        "disposition": "new entry: moved build.py's CLI logic into the llmlang package as cli.py, as part of packaging this as a real pip-installable tool with a console-script entry point. Previously build.py was explicitly excluded from self-hosting (treated as \"just the CLI wrapper\"); on reflection that exemption was weaker than the ones used elsewhere (e.g. for one-line private helpers) since this code encodes real, user-facing behavioral contracts - flag-vs-config precedence, what --output-format json's shape actually is, how multiple paths merge into one report. Rather than carry forward an informal, unconfigured exemption, every function here now has either a real handle+entry or an explicit [llm-exempt] marker (_plural, _usage) - the same rule everything else in this codebase already follows. No behavior changed from the pre-move build.py, only usage/help text (build.py -> llmlang) and the leading underscore dropped from functions that now have real entries, reserving it for the two that stayed exempt.",
+        "for_spec_hash": "9521deb303a7b48284dd128dc8d415298b2757ee22b4b542399d9dd7333cebe8",
+        "for_code_hash": "eead4c5defe4756cf7edbb8e76631471c4dba01e7674e043861594c6ed0b2430"
+      }
+    },
+    "llmlang.cli.resolve_coverage": {
+      "file": "llmlang/cli.py",
+      "text": "+ decides whether --coverage is active, letting a CLI flag override the config either way\naccepts the parsed flags and the loaded config\ndecides whether --coverage is active, letting a CLI flag override the config either way\n--no-coverage always forces it off, then --coverage always forces it on, then the config's own coverage value is the default\nreturns whether coverage checking is active",
+      "text_hash": "908c23420b23d97f16310ae384b4405e508da6e57d6cfe441cb99c98dd92a6b1",
+      "code_hash": "afbd41ca3373ec7c9cfb5abfd1d8b1806c3a3f2a2602b9dd679c56a140139516",
+      "last_change": {
+        "disposition": "new entry: moved build.py's CLI logic into the llmlang package as cli.py, as part of packaging this as a real pip-installable tool with a console-script entry point. Previously build.py was explicitly excluded from self-hosting (treated as \"just the CLI wrapper\"); on reflection that exemption was weaker than the ones used elsewhere (e.g. for one-line private helpers) since this code encodes real, user-facing behavioral contracts - flag-vs-config precedence, what --output-format json's shape actually is, how multiple paths merge into one report. Rather than carry forward an informal, unconfigured exemption, every function here now has either a real handle+entry or an explicit [llm-exempt] marker (_plural, _usage) - the same rule everything else in this codebase already follows. No behavior changed from the pre-move build.py, only usage/help text (build.py -> llmlang) and the leading underscore dropped from functions that now have real entries, reserving it for the two that stayed exempt.",
+        "for_spec_hash": "908c23420b23d97f16310ae384b4405e508da6e57d6cfe441cb99c98dd92a6b1",
+        "for_code_hash": "afbd41ca3373ec7c9cfb5abfd1d8b1806c3a3f2a2602b9dd679c56a140139516"
+      }
+    },
+    "llmlang.cli.discover_llm_files": {
+      "file": "llmlang/cli.py",
+      "text": "+ finds every *.llm file under a directory, honoring the built-in and config-configured exclusions\naccepts a root directory and an extra set of directory names to exclude\nfinds every *.llm file under a directory, honoring the built-in and config-configured exclusions\nexcludes .git, __pycache__, node_modules, venv, and .venv by default, plus anything the config's exclude list adds\nreturns the sorted list of discovered files",
+      "text_hash": "03612a38c9fe5f039b3bf015df81b76bfaa2356fd78c490458ec1a8e189797bf",
+      "code_hash": "42e41f3981306840366d52afd7c74df6661231e5bb03cce58a5b7b85c5d3781a",
+      "last_change": {
+        "disposition": "new entry: moved build.py's CLI logic into the llmlang package as cli.py, as part of packaging this as a real pip-installable tool with a console-script entry point. Previously build.py was explicitly excluded from self-hosting (treated as \"just the CLI wrapper\"); on reflection that exemption was weaker than the ones used elsewhere (e.g. for one-line private helpers) since this code encodes real, user-facing behavioral contracts - flag-vs-config precedence, what --output-format json's shape actually is, how multiple paths merge into one report. Rather than carry forward an informal, unconfigured exemption, every function here now has either a real handle+entry or an explicit [llm-exempt] marker (_plural, _usage) - the same rule everything else in this codebase already follows. No behavior changed from the pre-move build.py, only usage/help text (build.py -> llmlang) and the leading underscore dropped from functions that now have real entries, reserving it for the two that stayed exempt.",
+        "for_spec_hash": "03612a38c9fe5f039b3bf015df81b76bfaa2356fd78c490458ec1a8e189797bf",
+        "for_code_hash": "42e41f3981306840366d52afd7c74df6661231e5bb03cce58a5b7b85c5d3781a"
+      }
+    },
+    "llmlang.cli.check_one": {
+      "file": "llmlang/cli.py",
+      "text": "+ checks a single llmlang file, adding coverage findings when coverage is active\naccepts an llmlang file path and whether coverage checking is active\nchecks a single llmlang file, adding coverage findings when coverage is active\nreturns whether it checked out clean and the combined list of findings",
+      "text_hash": "3a32cd80f715ddbd18a063a0c61879171097ee2fa149de23a08acf1158ce59a8",
+      "code_hash": "2836eeea573ff7edb9dd77dfe1c593d45d95cd79334ecb03ee12b388868efefb",
+      "last_change": {
+        "disposition": "new entry: moved build.py's CLI logic into the llmlang package as cli.py, as part of packaging this as a real pip-installable tool with a console-script entry point. Previously build.py was explicitly excluded from self-hosting (treated as \"just the CLI wrapper\"); on reflection that exemption was weaker than the ones used elsewhere (e.g. for one-line private helpers) since this code encodes real, user-facing behavioral contracts - flag-vs-config precedence, what --output-format json's shape actually is, how multiple paths merge into one report. Rather than carry forward an informal, unconfigured exemption, every function here now has either a real handle+entry or an explicit [llm-exempt] marker (_plural, _usage) - the same rule everything else in this codebase already follows. No behavior changed from the pre-move build.py, only usage/help text (build.py -> llmlang) and the leading underscore dropped from functions that now have real entries, reserving it for the two that stayed exempt.",
+        "for_spec_hash": "3a32cd80f715ddbd18a063a0c61879171097ee2fa149de23a08acf1158ce59a8",
+        "for_code_hash": "2836eeea573ff7edb9dd77dfe1c593d45d95cd79334ecb03ee12b388868efefb"
+      }
+    },
+    "llmlang.cli.print_report_text": {
+      "file": "llmlang/cli.py",
+      "text": "+ prints every finding across every checked file in one delineated FAILURES section, or a bare OK line when nothing was flagged\naccepts every checked file's findings, keyed by file\nprints every finding across every checked file in one delineated FAILURES section, or a bare OK line when nothing was flagged\nreports the total failure and file count at the end, correctly pluralized",
+      "text_hash": "8d86537d2968bdfd31a908c13767d42f42b42b6a8f84cbf1162bcd9f7ac85aff",
+      "code_hash": "d7be1bc93658c964c4a2fb9945aeeb26bd445aa478354e4bf08e1f1f8c39a43b",
+      "last_change": {
+        "disposition": "new entry: moved build.py's CLI logic into the llmlang package as cli.py, as part of packaging this as a real pip-installable tool with a console-script entry point. Previously build.py was explicitly excluded from self-hosting (treated as \"just the CLI wrapper\"); on reflection that exemption was weaker than the ones used elsewhere (e.g. for one-line private helpers) since this code encodes real, user-facing behavioral contracts - flag-vs-config precedence, what --output-format json's shape actually is, how multiple paths merge into one report. Rather than carry forward an informal, unconfigured exemption, every function here now has either a real handle+entry or an explicit [llm-exempt] marker (_plural, _usage) - the same rule everything else in this codebase already follows. No behavior changed from the pre-move build.py, only usage/help text (build.py -> llmlang) and the leading underscore dropped from functions that now have real entries, reserving it for the two that stayed exempt.",
+        "for_spec_hash": "8d86537d2968bdfd31a908c13767d42f42b42b6a8f84cbf1162bcd9f7ac85aff",
+        "for_code_hash": "d7be1bc93658c964c4a2fb9945aeeb26bd445aa478354e4bf08e1f1f8c39a43b"
+      }
+    },
+    "llmlang.cli.print_report_json": {
+      "file": "llmlang/cli.py",
+      "text": "+ prints every finding as JSON, structured identically to what the text report renders from\naccepts every checked file's findings, keyed by file\nprints every finding as JSON, structured identically to what the text report renders from\nthe JSON shape is {\"ok\": bool, \"results\": {file: [{category, message, file, line}, ...]}}",
+      "text_hash": "a2cc0ba041db817943474655a28f25c3ba5c3d607ae3d44570801cf66f8ffd55",
+      "code_hash": "15c9add003438a83f16ca07265a23e9f8fcaabbd3014cbb2bacde624c87986bf",
+      "last_change": {
+        "disposition": "new entry: moved build.py's CLI logic into the llmlang package as cli.py, as part of packaging this as a real pip-installable tool with a console-script entry point. Previously build.py was explicitly excluded from self-hosting (treated as \"just the CLI wrapper\"); on reflection that exemption was weaker than the ones used elsewhere (e.g. for one-line private helpers) since this code encodes real, user-facing behavioral contracts - flag-vs-config precedence, what --output-format json's shape actually is, how multiple paths merge into one report. Rather than carry forward an informal, unconfigured exemption, every function here now has either a real handle+entry or an explicit [llm-exempt] marker (_plural, _usage) - the same rule everything else in this codebase already follows. No behavior changed from the pre-move build.py, only usage/help text (build.py -> llmlang) and the leading underscore dropped from functions that now have real entries, reserving it for the two that stayed exempt.",
+        "for_spec_hash": "a2cc0ba041db817943474655a28f25c3ba5c3d607ae3d44570801cf66f8ffd55",
+        "for_code_hash": "15c9add003438a83f16ca07265a23e9f8fcaabbd3014cbb2bacde624c87986bf"
+      }
+    },
+    "llmlang.cli.run_check": {
+      "file": "llmlang/cli.py",
+      "text": "+ checks every path given, applying config-resolved coverage and exclusions, and reports every failure together\naccepts a list of file or directory paths, the parsed flags, an optional config path override, and the output format\nchecks every path given, applying config-resolved coverage and exclusions, and reports every failure together\naccepts any number of file or directory paths, auto-discovering every *.llm file under a directory and checking a .llm file directly\nwarns to stderr and skips a path that doesn't exist, rather than failing the whole run\nexits with an error if no .llm files are found under any given path\nprints \"checking X\" progress and any warnings to stderr, so stdout stays clean for the report in either format\nexits 0 if every checked file was clean, 1 otherwise",
+      "text_hash": "abc8a57646f8242cba719f6610569a55b6bfc7f99d30dec108b5e6361c00f3ab",
+      "code_hash": "b9ddca013f67caa8582c768a4cb5db37069e3792041a245943b71e9e10ebfeb3",
+      "last_change": {
+        "disposition": "new entry: moved build.py's CLI logic into the llmlang package as cli.py, as part of packaging this as a real pip-installable tool with a console-script entry point. Previously build.py was explicitly excluded from self-hosting (treated as \"just the CLI wrapper\"); on reflection that exemption was weaker than the ones used elsewhere (e.g. for one-line private helpers) since this code encodes real, user-facing behavioral contracts - flag-vs-config precedence, what --output-format json's shape actually is, how multiple paths merge into one report. Rather than carry forward an informal, unconfigured exemption, every function here now has either a real handle+entry or an explicit [llm-exempt] marker (_plural, _usage) - the same rule everything else in this codebase already follows. No behavior changed from the pre-move build.py, only usage/help text (build.py -> llmlang) and the leading underscore dropped from functions that now have real entries, reserving it for the two that stayed exempt.",
+        "for_spec_hash": "abc8a57646f8242cba719f6610569a55b6bfc7f99d30dec108b5e6361c00f3ab",
+        "for_code_hash": "b9ddca013f67caa8582c768a4cb5db37069e3792041a245943b71e9e10ebfeb3"
+      }
+    },
+    "llmlang.cli.run_build": {
+      "file": "llmlang/cli.py",
+      "text": "+ builds a fresh lockfile for exactly one llmlang file, unguarded\naccepts a single llmlang file path\nbuilds a fresh lockfile for exactly one llmlang file, unguarded\nrefuses more than one file argument, since build is always scoped to one project\nexits 1 and prints the error on failure",
+      "text_hash": "d89e9b1d2cccb3c678caf13b337dc9050d1d77ce8bf879e8dc4558447cc64d97",
+      "code_hash": "918dc67e1b7d875a2d7251e5065e448e21cee8f97d301fd4106ad3ea5eec7ede",
+      "last_change": {
+        "disposition": "new entry: moved build.py's CLI logic into the llmlang package as cli.py, as part of packaging this as a real pip-installable tool with a console-script entry point. Previously build.py was explicitly excluded from self-hosting (treated as \"just the CLI wrapper\"); on reflection that exemption was weaker than the ones used elsewhere (e.g. for one-line private helpers) since this code encodes real, user-facing behavioral contracts - flag-vs-config precedence, what --output-format json's shape actually is, how multiple paths merge into one report. Rather than carry forward an informal, unconfigured exemption, every function here now has either a real handle+entry or an explicit [llm-exempt] marker (_plural, _usage) - the same rule everything else in this codebase already follows. No behavior changed from the pre-move build.py, only usage/help text (build.py -> llmlang) and the leading underscore dropped from functions that now have real entries, reserving it for the two that stayed exempt.",
+        "for_spec_hash": "d89e9b1d2cccb3c678caf13b337dc9050d1d77ce8bf879e8dc4558447cc64d97",
+        "for_code_hash": "918dc67e1b7d875a2d7251e5065e448e21cee8f97d301fd4106ad3ea5eec7ede"
+      }
+    },
+    "llmlang.cli.run_finalize": {
+      "file": "llmlang/cli.py",
+      "text": "+ finalizes exactly one llmlang file's lockfile and change manifest, guarded by Checker\naccepts a single llmlang file path\nfinalizes exactly one llmlang file's lockfile and change manifest, guarded by Checker\nrefuses more than one file argument, since finalize is always scoped to one project\nexits 1 and prints the error on failure",
+      "text_hash": "a54850aa25fbf1aab18ba12688057413de4c7a9e3854d7518e534ea31c7d9a22",
+      "code_hash": "e8dd6bca6270f057a55e1b5d22c7a51c4078eae2e7c5c7f6bcf0ece93e18288b",
+      "last_change": {
+        "disposition": "new entry: moved build.py's CLI logic into the llmlang package as cli.py, as part of packaging this as a real pip-installable tool with a console-script entry point. Previously build.py was explicitly excluded from self-hosting (treated as \"just the CLI wrapper\"); on reflection that exemption was weaker than the ones used elsewhere (e.g. for one-line private helpers) since this code encodes real, user-facing behavioral contracts - flag-vs-config precedence, what --output-format json's shape actually is, how multiple paths merge into one report. Rather than carry forward an informal, unconfigured exemption, every function here now has either a real handle+entry or an explicit [llm-exempt] marker (_plural, _usage) - the same rule everything else in this codebase already follows. No behavior changed from the pre-move build.py, only usage/help text (build.py -> llmlang) and the leading underscore dropped from functions that now have real entries, reserving it for the two that stayed exempt.",
+        "for_spec_hash": "a54850aa25fbf1aab18ba12688057413de4c7a9e3854d7518e534ea31c7d9a22",
+        "for_code_hash": "e8dd6bca6270f057a55e1b5d22c7a51c4078eae2e7c5c7f6bcf0ece93e18288b"
+      }
+    },
+    "llmlang.cli.main": {
+      "file": "llmlang/cli.py",
+      "text": "+ parses argv into a command and validated flags, then dispatches to check, build, or finalize\naccepts no arguments; reads argv directly\nparses argv into a command and validated flags, then dispatches to check, build, or finalize\n--help or -h anywhere in argv, or no arguments at all, prints usage\n--version prints the installed package version, falling back to a bundled version string when llmlang isn't actually installed\nrejects a command outside {check, build, finalize}, and rejects any flag that isn't valid for the given command (--coverage on build, say, or --config on finalize) - nothing is silently ignored\n--config and --output-format each consume the next argument as their value",
+      "text_hash": "7a38d673d1cc1f50ada5c46f3a6a434c50f4f986ab2656a8d2d2cff2569b5fc9",
+      "code_hash": "16aa05d4a37c0918ff196505518d96256b12ab046eef83ddd0883e112cefa25c",
+      "last_change": {
+        "disposition": "new entry: moved build.py's CLI logic into the llmlang package as cli.py, as part of packaging this as a real pip-installable tool with a console-script entry point. Previously build.py was explicitly excluded from self-hosting (treated as \"just the CLI wrapper\"); on reflection that exemption was weaker than the ones used elsewhere (e.g. for one-line private helpers) since this code encodes real, user-facing behavioral contracts - flag-vs-config precedence, what --output-format json's shape actually is, how multiple paths merge into one report. Rather than carry forward an informal, unconfigured exemption, every function here now has either a real handle+entry or an explicit [llm-exempt] marker (_plural, _usage) - the same rule everything else in this codebase already follows. No behavior changed from the pre-move build.py, only usage/help text (build.py -> llmlang) and the leading underscore dropped from functions that now have real entries, reserving it for the two that stayed exempt.",
+        "for_spec_hash": "7a38d673d1cc1f50ada5c46f3a6a434c50f4f986ab2656a8d2d2cff2569b5fc9",
+        "for_code_hash": "16aa05d4a37c0918ff196505518d96256b12ab046eef83ddd0883e112cefa25c"
+      }
     }
   },
   "class_bullets": {},
