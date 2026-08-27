@@ -77,9 +77,9 @@ except ModuleNotFoundError:
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from Compiler.CoverageChecker import check_coverage
-from Compiler.LockfileBuilder import build, finalize
-from Compiler.LockfileChecker import check
+from llmlang.coverage_checker import check_coverage
+from llmlang.lockfile_builder import build, finalize
+from llmlang.lockfile_checker import check
 
 _BUILTIN_EXCLUDED_DIR_PARTS = {".git", "__pycache__", "node_modules", "venv", ".venv"}
 

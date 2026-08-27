@@ -3,180 +3,180 @@
   "ruleset_version": "2026-08-20-hash-only-test-traces",
   "policies": {},
   "entries": {
-    "Compiler.Lockfile.LockEntry": {
-      "file": "Compiler/Lockfile.py",
+    "llmlang.lockfile.LockEntry": {
+      "file": "llmlang/lockfile.py",
       "text": "+ stores, per source-handled entry, its file, text hash, and code hash\nstores, per source-handled entry, its file, text hash, and code hash\nmay also store a last-change disposition, bound to the entry's spec hash (its own text combined with every currently applicable policy's text) and code hash it was recorded against",
       "text_hash": "95f5b971fdc8b3d65888be804121d90e9437ec153f98bd013a71c009d5ce5c38",
-      "code_hash": "9ff2166bf093d905bb25f195d3a4af3b2ab2999f0041031aa217ef12113f64d5",
+      "code_hash": "8b6f67e1b5389c40fbd5ab5c7c7d712d2ed15763c3c573e79779623c7a80085e",
       "last_change": {
-        "disposition": "unrelated ripple from the extract_by_handle fix (comment line now included in code_hash) - this entry own code is untouched, only the hash computation changed",
+        "disposition": "unrelated ripple: renamed the Compiler package to llmlang (matching standard Python packaging convention - the importable package now matches the pip distribution name), with each module file renamed to snake_case (Parser.py -> parser.py, LockfileBuilder.py -> lockfile_builder.py, etc.). Tracking key changed because it's built from the folder/file path; no behavior changed.",
         "for_spec_hash": "95f5b971fdc8b3d65888be804121d90e9437ec153f98bd013a71c009d5ce5c38",
-        "for_code_hash": "9ff2166bf093d905bb25f195d3a4af3b2ab2999f0041031aa217ef12113f64d5"
+        "for_code_hash": "8b6f67e1b5389c40fbd5ab5c7c7d712d2ed15763c3c573e79779623c7a80085e"
       }
     },
-    "Compiler.Lockfile.TestTrace": {
-      "file": "Compiler/Lockfile.py",
+    "llmlang.lockfile.TestTrace": {
+      "file": "llmlang/lockfile.py",
       "text": "+ stores, per linked test comment, the explanation text and backing code hash\nstores, per linked test comment, the explanation text, relative path, and backing code hash",
       "text_hash": "92fb8019738001b932631290f55fe676729bd0d531afb6b9378dfe8b1734c9ef",
-      "code_hash": "8340f5d7eaf5a77a6d62efd4dafab783b86efa1d8af08901a180aa9061cb039c",
+      "code_hash": "edd2e7db796eeea2c7699b48f12186b0afffb77f0da55d05d2a5b4e1231b59fb",
       "last_change": {
-        "disposition": "unrelated ripple from the extract_by_handle fix (comment line now included in code_hash) - this entry own code is untouched, only the hash computation changed",
+        "disposition": "unrelated ripple: renamed the Compiler package to llmlang (matching standard Python packaging convention - the importable package now matches the pip distribution name), with each module file renamed to snake_case (Parser.py -> parser.py, LockfileBuilder.py -> lockfile_builder.py, etc.). Tracking key changed because it's built from the folder/file path; no behavior changed.",
         "for_spec_hash": "92fb8019738001b932631290f55fe676729bd0d531afb6b9378dfe8b1734c9ef",
-        "for_code_hash": "8340f5d7eaf5a77a6d62efd4dafab783b86efa1d8af08901a180aa9061cb039c"
+        "for_code_hash": "edd2e7db796eeea2c7699b48f12186b0afffb77f0da55d05d2a5b4e1231b59fb"
       }
     },
-    "Compiler.Lockfile.Finding": {
-      "file": "Compiler/Lockfile.py",
+    "llmlang.lockfile.Finding": {
+      "file": "llmlang/lockfile.py",
       "text": "+ stores one check/coverage failure as structured data, not just display text\ncategory: text (\"CODE_DIVERGED\"): a fixed, stable identifier for the kind of failure, decoupled from the human-readable message's exact wording\nmessage: text (\"the code changed with no matching llmlang update - investigate before assuming it was intentional\"): the full human-readable explanation, identical to what was printed before this existed\nfile: text (\"legacy_app/notes.py\") or nothing: the file the failure is about, when known\nline: number (12) or nothing: the line within that file, when known",
       "text_hash": "1a1b6fb664f66c038a6013ef840c5774b1495b855e7df339b46c1ae9722c5e90",
-      "code_hash": "0d9f8471ca9b54818214d63188060ed57874e95fb35515e9acf3b6ab470580c8",
+      "code_hash": "927de630cc8f3b58e7cd7baf1577212d1ee00c4a185d803cfc745b2deab82a29",
       "last_change": {
-        "disposition": "new entry: real feature - a small structured record (category, message, file, line) replacing bare strings as what check()/check_coverage() return, so a caller (e.g. JSON output) can consume file/line as real fields instead of parsing them back out of display text",
+        "disposition": "unrelated ripple: renamed the Compiler package to llmlang (matching standard Python packaging convention - the importable package now matches the pip distribution name), with each module file renamed to snake_case (Parser.py -> parser.py, LockfileBuilder.py -> lockfile_builder.py, etc.). Tracking key changed because it's built from the folder/file path; no behavior changed.",
         "for_spec_hash": "1a1b6fb664f66c038a6013ef840c5774b1495b855e7df339b46c1ae9722c5e90",
-        "for_code_hash": "0d9f8471ca9b54818214d63188060ed57874e95fb35515e9acf3b6ab470580c8"
+        "for_code_hash": "927de630cc8f3b58e7cd7baf1577212d1ee00c4a185d803cfc745b2deab82a29"
       }
     },
-    "Compiler.Lockfile.LOCKFILE_SCHEMA_VERSION": {
-      "file": "Compiler/Lockfile.py",
+    "llmlang.lockfile.LOCKFILE_SCHEMA_VERSION": {
+      "file": "llmlang/lockfile.py",
       "text": "+ the lockfile's own schema version, bumped whenever its shape changes\nthe lockfile's own schema version, bumped whenever its shape changes",
       "text_hash": "b9f92471aa22fd03ab91f3b557549276034892eb0e1f302621a907dde3363810",
-      "code_hash": "51bdf268cb2c6f8e0b609133432c3093bb3501795486e84feb8cf5580950df62",
+      "code_hash": "79e9f5a60ef01affae330444ac1f2a9737029d3d19d9ceda6412c2f7eb030bda",
       "last_change": {
-        "disposition": "unrelated ripple from the extract_by_handle fix (comment line now included in code_hash) - this entry own code is untouched, only the hash computation changed",
+        "disposition": "unrelated ripple: renamed the Compiler package to llmlang (matching standard Python packaging convention - the importable package now matches the pip distribution name), with each module file renamed to snake_case (Parser.py -> parser.py, LockfileBuilder.py -> lockfile_builder.py, etc.). Tracking key changed because it's built from the folder/file path; no behavior changed.",
         "for_spec_hash": "b9f92471aa22fd03ab91f3b557549276034892eb0e1f302621a907dde3363810",
-        "for_code_hash": "51bdf268cb2c6f8e0b609133432c3093bb3501795486e84feb8cf5580950df62"
+        "for_code_hash": "79e9f5a60ef01affae330444ac1f2a9737029d3d19d9ceda6412c2f7eb030bda"
       }
     },
-    "Compiler.Lockfile.RULESET_VERSION": {
-      "file": "Compiler/Lockfile.py",
+    "llmlang.lockfile.RULESET_VERSION": {
+      "file": "llmlang/lockfile.py",
       "text": "+ the ruleset version every entry in a lockfile is built under together\nthe ruleset version every entry in a lockfile is built under together",
       "text_hash": "e601f7998dd91fd4a4749025f2de0e57027e38c9c95c0c412f4fb5df430aacda",
-      "code_hash": "0bf8ca86fd4d2b4f942e54b828f2229f5d01f5b6778a1e371a109305cffbdfee",
+      "code_hash": "80cea8f0a184907fef622befa1135fdc45c381deb19b485a1585c062923532ef",
       "last_change": {
-        "disposition": "unrelated ripple from the extract_by_handle fix (comment line now included in code_hash) - this entry own code is untouched, only the hash computation changed",
+        "disposition": "unrelated ripple: renamed the Compiler package to llmlang (matching standard Python packaging convention - the importable package now matches the pip distribution name), with each module file renamed to snake_case (Parser.py -> parser.py, LockfileBuilder.py -> lockfile_builder.py, etc.). Tracking key changed because it's built from the folder/file path; no behavior changed.",
         "for_spec_hash": "e601f7998dd91fd4a4749025f2de0e57027e38c9c95c0c412f4fb5df430aacda",
-        "for_code_hash": "0bf8ca86fd4d2b4f942e54b828f2229f5d01f5b6778a1e371a109305cffbdfee"
+        "for_code_hash": "80cea8f0a184907fef622befa1135fdc45c381deb19b485a1585c062923532ef"
       }
     },
-    "Compiler.Parser.parse": {
-      "file": "Compiler/Parser.py",
+    "llmlang.parser.parse": {
+      "file": "llmlang/parser.py",
       "text": "+ parses a tab-indented llmlang file into a tree of folders, files, classes, and entries\naccepts a file path\nparses a tab-indented llmlang file into a tree of folders, files, classes, named entries, and data entries\na source-handled entry header must include a parenthesized summary after the identifier and before the colon\na data entry header must include the data marker after the identifier and before the parenthesized summary\na nested regular bullet belongs to the same nearest entry, file or class bullet group, or policy item as its parent\na test bullet can live under a named entry, file, or class node\na header's real name is always its first word; any words after a folder, file, or class name up to the colon are a freetext hint, discarded once the name is extracted\nrecords the source line number of each folder, file, class, named entry, and data entry header, and of each test bullet\nreturns the parsed tree",
       "text_hash": "9a98858def2a139268c1793698fc3f22b318fa0e622a2155a0c26c8d19656322",
-      "code_hash": "dfe061f96eacc4f7a978500cc0dca4b5eb4c90069fa98c263ef8b849531462fc",
+      "code_hash": "d88810d703486a29a73db5cd0cba55e5ab5e508a646a5ef3f34ed14ac1f994f4",
       "last_change": {
-        "disposition": "unrelated ripple: inline [llm-exempt] comments added above several private helpers now sitting inside parse()'s own tracked code_hash region - parse's own logic is unchanged",
+        "disposition": "unrelated ripple: renamed the Compiler package to llmlang (matching standard Python packaging convention - the importable package now matches the pip distribution name), with each module file renamed to snake_case (Parser.py -> parser.py, LockfileBuilder.py -> lockfile_builder.py, etc.). Tracking key changed because it's built from the folder/file path; no behavior changed.",
         "for_spec_hash": "9a98858def2a139268c1793698fc3f22b318fa0e622a2155a0c26c8d19656322",
-        "for_code_hash": "dfe061f96eacc4f7a978500cc0dca4b5eb4c90069fa98c263ef8b849531462fc"
+        "for_code_hash": "d88810d703486a29a73db5cd0cba55e5ab5e508a646a5ef3f34ed14ac1f994f4"
       }
     },
-    "Compiler.Extractor.TestComment": {
-      "file": "Compiler/Extractor.py",
+    "llmlang.extractor.TestComment": {
+      "file": "llmlang/extractor.py",
       "text": "+ stores a linked llm-test comment and the backing code it anchors\nstores a linked llm-test comment's canonical node, explanation text, relative path, source line, and backing code\nexposes a code hash derived from the backing code",
       "text_hash": "20d5152dab70806917f28be31a0954855463ca98f78bef00159892c8c28c2ec5",
-      "code_hash": "f527fb98c25d573e118301a1193eac575a90bf8debf6c29dce4993bcd3a6bc8a",
+      "code_hash": "bb0d62379359f5992eef51dd16f666e25afdf22208176cc7add48059cd17aba4",
       "last_change": {
-        "disposition": "unrelated ripple: an inline [llm-exempt] comment above TestComment.code_hash (a computed property) now sits inside TestComment's own tracked code_hash region - TestComment's own logic is unchanged",
+        "disposition": "unrelated ripple: renamed the Compiler package to llmlang (matching standard Python packaging convention - the importable package now matches the pip distribution name), with each module file renamed to snake_case (Parser.py -> parser.py, LockfileBuilder.py -> lockfile_builder.py, etc.). Tracking key changed because it's built from the folder/file path; no behavior changed.",
         "for_spec_hash": "20d5152dab70806917f28be31a0954855463ca98f78bef00159892c8c28c2ec5",
-        "for_code_hash": "f527fb98c25d573e118301a1193eac575a90bf8debf6c29dce4993bcd3a6bc8a"
+        "for_code_hash": "bb0d62379359f5992eef51dd16f666e25afdf22208176cc7add48059cd17aba4"
       }
     },
-    "Compiler.Extractor.extract_by_handle": {
-      "file": "Compiler/Extractor.py",
+    "llmlang.extractor.extract_by_handle": {
+      "file": "llmlang/extractor.py",
       "text": "+ extracts the code implementing an entry by locating its comment handle and taking everything from the handle's own comment line up to the next handle\naccepts a file path and canonical entry name\nextracts the code implementing an entry by locating its comment handle and taking everything from the handle's own comment line up to the next handle\nincluding the comment line itself means the entry's summary comment is part of the resulting hash, so it can't drift from the llmlang summary undetected\nreturns the extracted code and the line number of its handle comment, or nothing if the handle isn't found",
       "text_hash": "8452197c555ea937c30520b03ce03b84a7bd8b0c2916b7b36517f2657cdc4f33",
-      "code_hash": "a9d296582a809659231af51dba8c86d8e5ae9176c364b1437f78788529a3613f",
+      "code_hash": "dfcdba4cfc149411d59081171b439737e81d27a2a6de0cb8e103dbb1d36e12b8",
       "last_change": {
-        "disposition": "unrelated ripple: adding handle_line_numbers() as a new tracked entry right after extract_by_handle shrinks extract_by_handle's own code_hash region to stop before it, changing the hash even though extract_by_handle's own logic is unchanged",
+        "disposition": "unrelated ripple: renamed the Compiler package to llmlang (matching standard Python packaging convention - the importable package now matches the pip distribution name), with each module file renamed to snake_case (Parser.py -> parser.py, LockfileBuilder.py -> lockfile_builder.py, etc.). Tracking key changed because it's built from the folder/file path; no behavior changed.",
         "for_spec_hash": "8452197c555ea937c30520b03ce03b84a7bd8b0c2916b7b36517f2657cdc4f33",
-        "for_code_hash": "a9d296582a809659231af51dba8c86d8e5ae9176c364b1437f78788529a3613f"
+        "for_code_hash": "dfcdba4cfc149411d59081171b439737e81d27a2a6de0cb8e103dbb1d36e12b8"
       }
     },
-    "Compiler.Extractor.handle_line_numbers": {
-      "file": "Compiler/Extractor.py",
+    "llmlang.extractor.handle_line_numbers": {
+      "file": "llmlang/extractor.py",
       "text": "+ finds the source line of every comment handle in a file, for coverage checking\naccepts a file path\nfinds the source line of every comment handle in a file, for coverage checking\nreturns the set of line numbers",
       "text_hash": "cfd49872979966b7290a3230865f3eb77ba8da0878632708786d170762be7514",
-      "code_hash": "8bc09dcf49fe3d8bce668bc8dd9ac7a3b11b7f774728935371a109179d0d6f34",
+      "code_hash": "a8a0c66867dfcd947939f1fcb294d6dcf4c7ba9f023eee420eed15d64cb29162",
       "last_change": {
-        "disposition": "unrelated ripple: inline [llm-exempt] comments above _clean_comment_text/_repo_root/_relative_path now sit inside handle_line_numbers's own tracked code_hash region - handle_line_numbers's own logic is unchanged",
+        "disposition": "unrelated ripple: renamed the Compiler package to llmlang (matching standard Python packaging convention - the importable package now matches the pip distribution name), with each module file renamed to snake_case (Parser.py -> parser.py, LockfileBuilder.py -> lockfile_builder.py, etc.). Tracking key changed because it's built from the folder/file path; no behavior changed.",
         "for_spec_hash": "cfd49872979966b7290a3230865f3eb77ba8da0878632708786d170762be7514",
-        "for_code_hash": "8bc09dcf49fe3d8bce668bc8dd9ac7a3b11b7f774728935371a109179d0d6f34"
+        "for_code_hash": "a8a0c66867dfcd947939f1fcb294d6dcf4c7ba9f023eee420eed15d64cb29162"
       }
     },
-    "Compiler.Extractor.test_comment_roots": {
-      "file": "Compiler/Extractor.py",
+    "llmlang.extractor.test_comment_roots": {
+      "file": "llmlang/extractor.py",
       "text": "+ chooses where llm-test comments are scanned\naccepts an llmlang file path\nreturns the llmlang file directory and the repository tests directory when a repository root is found",
       "text_hash": "555eff9210bda9dbfdca0093fd62ad021685bc5bb139635b3e2759a17dbd05d1",
-      "code_hash": "1f2f2b24d0579d384e596cc9358d022369371918a68b98a18659b6ce9a9f4ba8",
+      "code_hash": "a5f8d3e17803833fdb889815cca435072ced6f724a6d9f7e84250b8ef53d28a6",
       "last_change": {
-        "disposition": "unrelated ripple from the extract_by_handle fix (comment line now included in code_hash) - this entry own code is untouched, only the hash computation changed",
+        "disposition": "unrelated ripple: renamed the Compiler package to llmlang (matching standard Python packaging convention - the importable package now matches the pip distribution name), with each module file renamed to snake_case (Parser.py -> parser.py, LockfileBuilder.py -> lockfile_builder.py, etc.). Tracking key changed because it's built from the folder/file path; no behavior changed.",
         "for_spec_hash": "555eff9210bda9dbfdca0093fd62ad021685bc5bb139635b3e2759a17dbd05d1",
-        "for_code_hash": "1f2f2b24d0579d384e596cc9358d022369371918a68b98a18659b6ce9a9f4ba8"
+        "for_code_hash": "a5f8d3e17803833fdb889815cca435072ced6f724a6d9f7e84250b8ef53d28a6"
       }
     },
-    "Compiler.Extractor.test_comment_base": {
-      "file": "Compiler/Extractor.py",
+    "llmlang.extractor.test_comment_base": {
+      "file": "llmlang/extractor.py",
       "text": "+ chooses the stable base path for test trace paths\naccepts an llmlang file path\nreturns the repository root when one is found, otherwise the llmlang file directory",
       "text_hash": "036a14bad4f6f52675b6e1fd6f661121e5f761196c3f673ff68c3f2d1d18d7e1",
-      "code_hash": "e6249db05279296c82a0b3f7b878c4041da6d1e7bf167ad0af5c6191a4bd51f5",
+      "code_hash": "d793db1688af8a0ed0bb89e3a7ab548f643da46f32e700ade39ae1bd4c13cc40",
       "last_change": {
-        "disposition": "unrelated ripple: inline [llm-exempt] comments above _python_block_for_line/_fallback_block_end/_test_code_for_comment now sit inside test_comment_base's own tracked code_hash region - test_comment_base's own logic is unchanged",
+        "disposition": "unrelated ripple: renamed the Compiler package to llmlang (matching standard Python packaging convention - the importable package now matches the pip distribution name), with each module file renamed to snake_case (Parser.py -> parser.py, LockfileBuilder.py -> lockfile_builder.py, etc.). Tracking key changed because it's built from the folder/file path; no behavior changed.",
         "for_spec_hash": "036a14bad4f6f52675b6e1fd6f661121e5f761196c3f673ff68c3f2d1d18d7e1",
-        "for_code_hash": "e6249db05279296c82a0b3f7b878c4041da6d1e7bf167ad0af5c6191a4bd51f5"
+        "for_code_hash": "d793db1688af8a0ed0bb89e3a7ab548f643da46f32e700ade39ae1bd4c13cc40"
       }
     },
-    "Compiler.Extractor.test_comments_by_node": {
-      "file": "Compiler/Extractor.py",
+    "llmlang.extractor.test_comments_by_node": {
+      "file": "llmlang/extractor.py",
       "text": "+ collects llm-test comments by canonical node name\naccepts one or more root paths\nscans source-like text files under the root paths for llm-test handles\nrecords each llm-test comment's canonical node, exact explanation text, relative path, source line, and backing test code\nreturns a mapping of canonical node name to linked test comment records",
       "text_hash": "e95b81b2ad50c83236d2c2e96feae4996d51fb52766584b082adb91434adfb7f",
-      "code_hash": "3b4103fe90b8b761f064aa16b7f7a99a1597ff7643870c1b5bbcc8b7a1ebfdcf",
+      "code_hash": "c261257f3b95803cb4f10ca2113cad3345e0d0fae2857f55dafa5118f38b5a10",
       "last_change": {
-        "disposition": "real change: now passes the comment's own source line into the TestComment record it builds (ripple from TestComment's new line field, used for test-trace location reporting).",
+        "disposition": "unrelated ripple: renamed the Compiler package to llmlang (matching standard Python packaging convention - the importable package now matches the pip distribution name), with each module file renamed to snake_case (Parser.py -> parser.py, LockfileBuilder.py -> lockfile_builder.py, etc.). Tracking key changed because it's built from the folder/file path; no behavior changed.",
         "for_spec_hash": "e95b81b2ad50c83236d2c2e96feae4996d51fb52766584b082adb91434adfb7f",
-        "for_code_hash": "3b4103fe90b8b761f064aa16b7f7a99a1597ff7643870c1b5bbcc8b7a1ebfdcf"
+        "for_code_hash": "c261257f3b95803cb4f10ca2113cad3345e0d0fae2857f55dafa5118f38b5a10"
       }
     },
-    "Compiler.LockfileBuilder.build": {
-      "file": "Compiler/LockfileBuilder.py",
+    "llmlang.lockfile_builder.build": {
+      "file": "llmlang/lockfile_builder.py",
       "text": "+ builds a lockfile by using Parser to read llmlang, Extractor to locate each entry's code, and Lockfile to record a text and code hash per entry\naccepts an llmlang file path and a lockfile output path\nbuilds a lockfile by using Parser to read llmlang, Extractor to locate each source-handled entry's code, and Lockfile to record a text and code hash per entry\nwrites test trace records with the llm-test explanation text, relative path, and backing code hash\nrefuses to write the lockfile when any test bullet lacks a matching llm-test comment or any llm-test comment lacks a matching test bullet\nhas no notion of dispositions or a change manifest at all; never reads or writes anything but the lockfile itself\nshould reproduce the same hashes when run again against an unchanged codebase\nreturns the built lock data",
       "text_hash": "e1461a1fa6d2acf40cb3894662ebca547b9e78f72a94931b6f8a180ca4b952f8",
-      "code_hash": "376b998d4521ac079c75412fc8d4864474f77d025a5ee8d3033f4dc49af9895a",
+      "code_hash": "32511fb95941aaa6ca8c3b65e16fdcddbf6a72288e29a4f0364ec4cd71aa1eba",
       "last_change": {
-        "disposition": "real fix: lockfile/changes-file read_text()/write_text() calls now pin encoding=\"utf-8\", so the JSON round-trips identically regardless of the host's locale default",
+        "disposition": "unrelated ripple: renamed the Compiler package to llmlang (matching standard Python packaging convention - the importable package now matches the pip distribution name), with each module file renamed to snake_case (Parser.py -> parser.py, LockfileBuilder.py -> lockfile_builder.py, etc.). Tracking key changed because it's built from the folder/file path; no behavior changed.",
         "for_spec_hash": "e1461a1fa6d2acf40cb3894662ebca547b9e78f72a94931b6f8a180ca4b952f8",
-        "for_code_hash": "376b998d4521ac079c75412fc8d4864474f77d025a5ee8d3033f4dc49af9895a"
+        "for_code_hash": "32511fb95941aaa6ca8c3b65e16fdcddbf6a72288e29a4f0364ec4cd71aa1eba"
       }
     },
-    "Compiler.LockfileBuilder.finalize": {
-      "file": "Compiler/LockfileBuilder.py",
+    "llmlang.lockfile_builder.finalize": {
+      "file": "llmlang/lockfile_builder.py",
       "text": "+ guards an incremental rebuild against silently skipping a flagged entry, reading and updating a change manifest bound to the exact spec and code hashes it describes\naccepts an llmlang file path, a lockfile output path, and a change manifest file path\nuses Checker to find every named entry currently flagged against the existing lockfile, and refuses to write anything unless the change manifest covers every one of them with a non-empty disposition\naccepts a fresh disposition in the manifest as a plain string, and stamps it with the entry's current spec hash and code hash\na spec hash combines the entry's own text with every policy currently covering it, so a disposition goes stale whether the entry's own text changed or an applicable policy did\nfor a manifest entry that's already stamped, keeps it only if both hashes still match the entry's current state; otherwise drops it as stale, along with any entry whose key no longer exists in the llmlang tree at all\nbuilds every hash and disposition fresh from the current llmlang text, current code, current policies, and current manifest only; never carries anything forward from the lockfile's own prior content\nwrites both the new lockfile and the updated (stamped and pruned) manifest file, but never alters a disposition's own text\nreturns the built lock data",
       "text_hash": "a2ae9afba0e5e4aeb1babdf4611893990774fd787fa86d8dca3e8718f2689e6f",
-      "code_hash": "a81a9a1a2b8d0f33dba5ce2e7fc1df5aca88fdf4f4d5760c0668c4935a862ae0",
+      "code_hash": "16143a5b0b82e3c4ba654d9735ca28f2031f2a0699cc12562625862a61a9ca4a",
       "last_change": {
-        "disposition": "unrelated ripple: prints finding.message instead of finding (findings are now Finding records, not strings) - finalize's own logic (coverage gate, hash stamping) is unchanged",
+        "disposition": "unrelated ripple: renamed the Compiler package to llmlang (matching standard Python packaging convention - the importable package now matches the pip distribution name), with each module file renamed to snake_case (Parser.py -> parser.py, LockfileBuilder.py -> lockfile_builder.py, etc.). Tracking key changed because it's built from the folder/file path; no behavior changed.",
         "for_spec_hash": "a2ae9afba0e5e4aeb1babdf4611893990774fd787fa86d8dca3e8718f2689e6f",
-        "for_code_hash": "a81a9a1a2b8d0f33dba5ce2e7fc1df5aca88fdf4f4d5760c0668c4935a862ae0"
+        "for_code_hash": "16143a5b0b82e3c4ba654d9735ca28f2031f2a0699cc12562625862a61a9ca4a"
       }
     },
-    "Compiler.CoverageChecker.check_coverage": {
-      "file": "Compiler/CoverageChecker.py",
+    "llmlang.coverage_checker.check_coverage": {
+      "file": "llmlang/coverage_checker.py",
       "text": "+ checks every module- and class-level Python function against comment handles and inline llm-exempt markers, reporting each uncovered one as UNMAPPED_CODE\naccepts an llmlang file path\nchecks every module- and class-level Python function against comment handles and inline llm-exempt markers, reporting each uncovered one as UNMAPPED_CODE\nonly checks files with a Python extension; files in other languages are silently skipped, not flagged\na function is covered if a comment handle sits on the line directly above it, or above its first decorator\na function nested inside another function is never checked on its own; it has no stable qualified name to report or exempt, and its enclosing function's own handle (if any) already sweeps its code into that handle's region\na function is exempt if a bare \"[llm-exempt]\" comment sits on the line directly above it, or above its first decorator - a reason may be written before the tag on the same line but isn't required, and there is no built-in exemption for dunder methods, private helpers, or anything else\nreturns the list of findings, each a Finding record",
       "text_hash": "fce995bc4afb7df1e534e3449ba1e5dddfa30bc6e66917a2869b74e7676f7cbc",
-      "code_hash": "e558290e0fa0cbbab786698fa41aab96d367effae2b1049cb956cf9bfd80bd0c",
+      "code_hash": "6f50f5b8a4bc58f99ac84ca6e6b9a992ae653c5db5f515164e565212f538fe76",
       "last_change": {
-        "disposition": "real change: returns a list of Finding records instead of formatted strings - same information (category, message, file, line), now as separate fields instead of one joined string",
+        "disposition": "unrelated ripple: renamed the Compiler package to llmlang (matching standard Python packaging convention - the importable package now matches the pip distribution name), with each module file renamed to snake_case (Parser.py -> parser.py, LockfileBuilder.py -> lockfile_builder.py, etc.). Tracking key changed because it's built from the folder/file path; no behavior changed.",
         "for_spec_hash": "fce995bc4afb7df1e534e3449ba1e5dddfa30bc6e66917a2869b74e7676f7cbc",
-        "for_code_hash": "e558290e0fa0cbbab786698fa41aab96d367effae2b1049cb956cf9bfd80bd0c"
+        "for_code_hash": "6f50f5b8a4bc58f99ac84ca6e6b9a992ae653c5db5f515164e565212f538fe76"
       }
     },
-    "Compiler.LockfileChecker.check": {
-      "file": "Compiler/LockfileChecker.py",
+    "llmlang.lockfile_checker.check": {
+      "file": "llmlang/lockfile_checker.py",
       "text": "+ checks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as SPEC_DIVERGED, CODE_DIVERGED, or unchanged, alongside its file and line\naccepts an llmlang file path and a lockfile path\nchecks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as SPEC_DIVERGED, CODE_DIVERGED, or unchanged, alongside its file and line\nreports TEST_LINK_MISSING when any test bullet lacks a matching llm-test comment with the same text and canonical node name\nreports TEST_TRACE_STALE when any llm-test comment lacks a matching test bullet with the same text and canonical node name\nreports TEST_CODE_DIVERGED when a linked test's backing code hash differs from the lockfile\nshould report an entry as SPEC_DIVERGED when its own llmlang text changed, it's brand new, or an upstream policy covering it changed\nshould report an entry as CODE_DIVERGED when its handle is missing from the code or its code changed unexpectedly\nshould report an unmodified codebase as fully clean\nnever prints anything itself; every finding is returned as a Finding record in a list, so a caller can present every failure from a run together instead of relying on interleaved prints, or render them as structured data instead of text\neach finding names a file and line where known: entry-level findings point at the entry's header line in the llmlang file, code-level findings point at the handle's own comment line in the source file\nreturns whether everything checked out clean, the set of named-entry tracking keys currently flagged for any reason, and the list of findings",
       "text_hash": "f31b3fd5d36ee28a9552bed3bb5c0b8140d608cf3edfae73b42b1d9da0ec4363",
-      "code_hash": "c07b9c9dfa3fb95b92d3f21627bf79c83f1fb25443749771e084de5dc96fcb8f",
+      "code_hash": "0255708e78b57fe862ce348bd1d703dd140cc9222df46a19be8fcf89321e14e7",
       "last_change": {
-        "disposition": "real change: every finding is now a Finding record (category, message, file, line) instead of a formatted string - the exact same message text is still there as one field, so human-readable output is byte-for-byte unchanged, but file/line are now real fields a caller can use directly (e.g. for JSON output) instead of parsing them back out of the string",
+        "disposition": "unrelated ripple: renamed the Compiler package to llmlang (matching standard Python packaging convention - the importable package now matches the pip distribution name), with each module file renamed to snake_case (Parser.py -> parser.py, LockfileBuilder.py -> lockfile_builder.py, etc.). Tracking key changed because it's built from the folder/file path; no behavior changed.",
         "for_spec_hash": "f31b3fd5d36ee28a9552bed3bb5c0b8140d608cf3edfae73b42b1d9da0ec4363",
-        "for_code_hash": "c07b9c9dfa3fb95b92d3f21627bf79c83f1fb25443749771e084de5dc96fcb8f"
+        "for_code_hash": "0255708e78b57fe862ce348bd1d703dd140cc9222df46a19be8fcf89321e14e7"
       }
     }
   },

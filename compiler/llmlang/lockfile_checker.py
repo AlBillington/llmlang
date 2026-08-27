@@ -25,14 +25,14 @@ import hashlib
 import json
 from pathlib import Path
 
-from Compiler.Extractor import (
+from llmlang.extractor import (
     extract_by_handle,
     test_comment_base,
     test_comment_roots,
     test_comments_by_node,
 )
-from Compiler.Lockfile import Finding, LOCKFILE_SCHEMA_VERSION, RULESET_VERSION
-from Compiler.Parser import (
+from llmlang.lockfile import Finding, LOCKFILE_SCHEMA_VERSION, RULESET_VERSION
+from llmlang.parser import (
     parse,
     policy_in_scope,
     walk_class_bullet_groups,
@@ -173,7 +173,7 @@ def _check_test_traces(llmlang_path: Path, root, lock: dict) -> tuple[bool, set,
     return ok, flagged, findings
 
 
-# checks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as SPEC_DIVERGED, CODE_DIVERGED, or unchanged, alongside its file and line [llm:Compiler.LockfileChecker.check]
+# checks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as SPEC_DIVERGED, CODE_DIVERGED, or unchanged, alongside its file and line [llm:llmlang.lockfile_checker.check]
 def check(llmlang_path: Path, lockfile_path: Path) -> tuple:
     if not lockfile_path.exists():
         return False, set(), [Finding(category="NO_LOCKFILE", message="No lockfile found.", file=str(lockfile_path))]

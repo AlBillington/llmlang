@@ -14,15 +14,15 @@ import hashlib
 import json
 from pathlib import Path
 
-from Compiler.Extractor import (
+from llmlang.extractor import (
     extract_by_handle,
     test_comment_base,
     test_comment_roots,
     test_comments_by_node,
 )
-from Compiler.Lockfile import LOCKFILE_SCHEMA_VERSION, RULESET_VERSION
-from Compiler.LockfileChecker import check
-from Compiler.Parser import (
+from llmlang.lockfile import LOCKFILE_SCHEMA_VERSION, RULESET_VERSION
+from llmlang.lockfile_checker import check
+from llmlang.parser import (
     applicable_policy_text,
     parse,
     walk_class_bullet_groups,
@@ -142,7 +142,7 @@ def _test_traces(llmlang_path: Path, root) -> dict:
     return traces
 
 
-# builds a lockfile by using Parser to read llmlang, Extractor to locate each entry's code, and Lockfile to record a text and code hash per entry [llm:Compiler.LockfileBuilder.build]
+# builds a lockfile by using Parser to read llmlang, Extractor to locate each entry's code, and Lockfile to record a text and code hash per entry [llm:llmlang.lockfile_builder.build]
 def build(llmlang_path: Path, lockfile_path: Path):
     root = parse(llmlang_path)
     test_traces = _test_traces(llmlang_path, root)
@@ -164,7 +164,7 @@ def build(llmlang_path: Path, lockfile_path: Path):
     return lock
 
 
-# guards an incremental rebuild against silently skipping a flagged entry, reading and updating a change manifest bound to the exact spec and code hashes it describes [llm:Compiler.LockfileBuilder.finalize]
+# guards an incremental rebuild against silently skipping a flagged entry, reading and updating a change manifest bound to the exact spec and code hashes it describes [llm:llmlang.lockfile_builder.finalize]
 def finalize(llmlang_path: Path, lockfile_path: Path, changes_path: Path):
     ok, flagged_entries, findings = check(llmlang_path, lockfile_path)
     if not ok and not flagged_entries:

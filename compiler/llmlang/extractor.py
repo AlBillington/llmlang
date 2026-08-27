@@ -49,7 +49,7 @@ _SOURCE_COMMENT_SUFFIXES = {
 }
 
 
-# stores a linked llm-test comment and the backing code it anchors [llm:Compiler.Extractor.TestComment]
+# stores a linked llm-test comment and the backing code it anchors [llm:llmlang.extractor.TestComment]
 @dataclass(frozen=True)
 class TestComment:
     node: str
@@ -73,7 +73,7 @@ def _all_handles(text: str):
     return handles
 
 
-# extracts the code implementing an entry by locating its comment handle and taking everything from the handle's own comment line up to the next handle [llm:Compiler.Extractor.extract_by_handle]
+# extracts the code implementing an entry by locating its comment handle and taking everything from the handle's own comment line up to the next handle [llm:llmlang.extractor.extract_by_handle]
 def extract_by_handle(file_path: Path, key: str):
     # code_start begins at the handle's own comment line (not after it),
     # so the summary comment is part of code_hash - otherwise a comment
@@ -93,7 +93,7 @@ def extract_by_handle(file_path: Path, key: str):
     return None
 
 
-# finds the source line of every comment handle in a file, for coverage checking [llm:Compiler.Extractor.handle_line_numbers]
+# finds the source line of every comment handle in a file, for coverage checking [llm:llmlang.extractor.handle_line_numbers]
 def handle_line_numbers(file_path: Path) -> set:
     text = file_path.read_text(encoding="utf-8")
     return {text.count("\n", 0, line_start) + 1 for _key, line_start in _all_handles(text)}
@@ -128,7 +128,7 @@ def _relative_path(path: Path, base_path: Path) -> str:
         return path.as_posix()
 
 
-# chooses where llm-test comments are scanned [llm:Compiler.Extractor.test_comment_roots]
+# chooses where llm-test comments are scanned [llm:llmlang.extractor.test_comment_roots]
 def test_comment_roots(llmlang_path: Path):
     # resolved up front so this gives the same answer regardless of
     # whether llmlang_path was relative or absolute, or what the
@@ -143,7 +143,7 @@ def test_comment_roots(llmlang_path: Path):
     return roots
 
 
-# chooses the stable base path for test trace paths [llm:Compiler.Extractor.test_comment_base]
+# chooses the stable base path for test trace paths [llm:llmlang.extractor.test_comment_base]
 def test_comment_base(llmlang_path: Path):
     llm_dir = llmlang_path.resolve().parent
     return _repo_root(llm_dir) or llm_dir
@@ -194,7 +194,7 @@ def _test_code_for_comment(path: Path, text: str, line_index: int) -> str:
     return "\n".join(lines[line_index:end_index]).strip("\n")
 
 
-# collects llm-test comments by canonical node name [llm:Compiler.Extractor.test_comments_by_node]
+# collects llm-test comments by canonical node name [llm:llmlang.extractor.test_comments_by_node]
 def test_comments_by_node(root_paths, base_path: Path | None = None):
     comments = {}
     if isinstance(root_paths, Path):

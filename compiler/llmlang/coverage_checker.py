@@ -29,9 +29,9 @@ import ast
 import re
 from pathlib import Path
 
-from Compiler.Extractor import handle_line_numbers
-from Compiler.Lockfile import Finding
-from Compiler.Parser import parse, walk_files
+from llmlang.extractor import handle_line_numbers
+from llmlang.lockfile import Finding
+from llmlang.parser import parse, walk_files
 
 _EXEMPT_RE = re.compile(r"\[llm-exempt\]")
 
@@ -59,7 +59,7 @@ def _exempt_line_numbers(text: str) -> set:
     return {i + 1 for i, line in enumerate(text.splitlines()) if _EXEMPT_RE.search(line)}
 
 
-# checks every module- and class-level Python function against comment handles and inline [llm-exempt] markers, reporting each uncovered one as UNMAPPED_CODE [llm:Compiler.CoverageChecker.check_coverage]
+# checks every module- and class-level Python function against comment handles and inline [llm-exempt] markers, reporting each uncovered one as UNMAPPED_CODE [llm:llmlang.coverage_checker.check_coverage]
 def check_coverage(llmlang_path: Path) -> list:
     root = parse(llmlang_path)
     findings = []

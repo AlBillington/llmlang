@@ -1,5 +1,5 @@
-Compiler:
-	Lockfile.py:
+llmlang:
+	lockfile.py:
 		LockEntry (stores, per source-handled entry, its file, text hash, and code hash):
 			- stores, per source-handled entry, its file, text hash, and code hash
 			- may also store a last-change disposition, bound to the entry's spec hash (its own text combined with every currently applicable policy's text) and code hash it was recorded against
@@ -19,7 +19,7 @@ Compiler:
 		RULESET_VERSION (the ruleset version every entry in a lockfile is built under together):
 			- the ruleset version every entry in a lockfile is built under together
 
-	Parser.py:
+	parser.py:
 		parse (parses a tab-indented llmlang file into a tree of folders, files, classes, and entries):
 			- accepts a file path
 			- parses a tab-indented llmlang file into a tree of folders, files, classes, named entries, and data entries
@@ -31,7 +31,7 @@ Compiler:
 			- records the source line number of each folder, file, class, named entry, and data entry header, and of each test bullet
 			- returns the parsed tree
 
-	Extractor.py:
+	extractor.py:
 		TestComment (stores a linked llm-test comment and the backing code it anchors):
 			- stores a linked llm-test comment's canonical node, explanation text, relative path, source line, and backing code
 			- exposes a code hash derived from the backing code
@@ -61,7 +61,7 @@ Compiler:
 			- records each llm-test comment's canonical node, exact explanation text, relative path, source line, and backing test code
 			- returns a mapping of canonical node name to linked test comment records
 
-	LockfileBuilder.py:
+	lockfile_builder.py:
 		build (builds a lockfile by using Parser to read llmlang, Extractor to locate each entry's code, and Lockfile to record a text and code hash per entry):
 			- accepts an llmlang file path and a lockfile output path
 			- builds a lockfile by using Parser to read llmlang, Extractor to locate each source-handled entry's code, and Lockfile to record a text and code hash per entry
@@ -81,7 +81,7 @@ Compiler:
 			- writes both the new lockfile and the updated (stamped and pruned) manifest file, but never alters a disposition's own text
 			- returns the built lock data
 
-	CoverageChecker.py:
+	coverage_checker.py:
 		check_coverage (checks every module- and class-level Python function against comment handles and inline llm-exempt markers, reporting each uncovered one as UNMAPPED_CODE):
 			- accepts an llmlang file path
 			- checks every module- and class-level Python function against comment handles and inline llm-exempt markers, reporting each uncovered one as UNMAPPED_CODE
@@ -91,7 +91,7 @@ Compiler:
 			- a function is exempt if a bare "[llm-exempt]" comment sits on the line directly above it, or above its first decorator - a reason may be written before the tag on the same line but isn't required, and there is no built-in exemption for dunder methods, private helpers, or anything else
 			- returns the list of findings, each a Finding record
 
-	LockfileChecker.py:
+	lockfile_checker.py:
 		check (checks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as SPEC_DIVERGED, CODE_DIVERGED, or unchanged, alongside its file and line):
 			- accepts an llmlang file path and a lockfile path
 			- checks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as SPEC_DIVERGED, CODE_DIVERGED, or unchanged, alongside its file and line
