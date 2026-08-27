@@ -172,7 +172,17 @@ repos:
 
 This collapses to `pip install llmlang && llmlang check` once packaging exists — the two-checkout form above is a stopgap, not the intended long-term shape.
 
-**Still open**: real packaging (`pyproject.toml` + a console-script entry point). Nothing above depends on it, but it's what turns `language: script` into `language: python` and the two-checkout CI snippet into a one-line install.
+**Config.** [`pyproject.toml`](pyproject.toml)'s `[tool.llmlang]` table sets project-level defaults, same convention as `ruff`/`black`/`mypy` — found by walking up from the target directory (or the target file's directory in single-file mode) until a `pyproject.toml` turns up. A CLI flag always overrides the config in either direction:
+
+```toml
+[tool.llmlang]
+coverage = true       # same as always passing --coverage; --no-coverage still forces it off
+exclude = ["vendor"]  # extends, never replaces, the built-in excluded-directory set
+```
+
+This repo's own `pyproject.toml` sets `coverage = true`, which is why the CI workflow above can invoke plain `build.py --check .` without spelling out `--coverage` — the config is doing that, not a hardcoded flag. `tomllib` (stdlib since 3.11) is loaded defensively: if it's missing, `--coverage`/`--no-coverage`/`--check` still all work, `[tool.llmlang]` is just ignored with a warning naming why. The local pre-commit hook keeps `--coverage` spelled out explicitly rather than relying on this, though — `language: script` has no way to pin which Python actually runs it, so it shouldn't assume `tomllib` is there; CI's `setup-python@v5` pins 3.11 explicitly, so the config path is reliable there.
+
+**Still open**: a `[build-system]`/`[project]` table and console-script entry point — `pyproject.toml` exists now, but only for `[tool.llmlang]` config, not packaging yet. Nothing above depends on it, but it's what turns `language: script` into `language: python` and the two-checkout CI snippet into a one-line install.
 
 **Coverage checking (`--coverage`).** `--check` alone verifies that entries llmlang already knows about still match the code; it says nothing about a function that was never declared in llmlang at all. `--coverage` closes that gap for Python: every module- and class-level function must have a comment handle immediately above it (or above its first decorator), or must be listed in `<stem>.llmchanges.json`'s `"exempt"` section — `{"exempt": {"path/to/file.py::Qualified.Name": "reason"}}`. Deliberately opt-in and strict: there's no built-in exemption for dunder methods, private helpers, or anything else — every exemption is a real decision recorded the same reviewable way a disposition is, and unlike a disposition it's permanent and not hash-bound, since it's a standing "this will never need a handle" claim rather than an explanation for a particular drift. A function nested inside another function is never checked on its own — it has no stable qualified name to report, and it's already swept into its enclosing function's own tracked code region by §4.1's "next handle or EOF" rule. Files in languages other than Python are silently skipped, not flagged, since enumerating "every function that exists" needs a real parser for that language, unlike hash checking (which only ever searches for a comment it already expects to find).
 
