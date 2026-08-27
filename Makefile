@@ -1,4 +1,7 @@
-.PHONY: lint
+.PHONY: install lint
+
+install:
+	pip install -e .
 
 lint:
-	python compiler/build.py check .
+	llmlang check .

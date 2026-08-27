@@ -1,5 +1,5 @@
-Compiler:
-	Lockfile.py:
+llmlang:
+	lockfile.py:
 		LockEntry (stores, per source-handled entry, its file, text hash, and code hash):
 			- stores, per source-handled entry, its file, text hash, and code hash
 			- may also store a last-change disposition, bound to the entry's spec hash (its own text combined with every currently applicable policy's text) and code hash it was recorded against
@@ -19,7 +19,7 @@ Compiler:
 		RULESET_VERSION (the ruleset version every entry in a lockfile is built under together):
 			- the ruleset version every entry in a lockfile is built under together
 
-	Parser.py:
+	parser.py:
 		parse (parses a tab-indented llmlang file into a tree of folders, files, classes, and entries):
 			- accepts a file path
 			- parses a tab-indented llmlang file into a tree of folders, files, classes, named entries, and data entries
@@ -31,7 +31,7 @@ Compiler:
 			- records the source line number of each folder, file, class, named entry, and data entry header, and of each test bullet
 			- returns the parsed tree
 
-	Extractor.py:
+	extractor.py:
 		TestComment (stores a linked llm-test comment and the backing code it anchors):
 			- stores a linked llm-test comment's canonical node, explanation text, relative path, source line, and backing code
 			- exposes a code hash derived from the backing code
@@ -61,7 +61,7 @@ Compiler:
 			- records each llm-test comment's canonical node, exact explanation text, relative path, source line, and backing test code
 			- returns a mapping of canonical node name to linked test comment records
 
-	LockfileBuilder.py:
+	lockfile_builder.py:
 		build (builds a lockfile by using Parser to read llmlang, Extractor to locate each entry's code, and Lockfile to record a text and code hash per entry):
 			- accepts an llmlang file path and a lockfile output path
 			- builds a lockfile by using Parser to read llmlang, Extractor to locate each source-handled entry's code, and Lockfile to record a text and code hash per entry
@@ -81,7 +81,7 @@ Compiler:
 			- writes both the new lockfile and the updated (stamped and pruned) manifest file, but never alters a disposition's own text
 			- returns the built lock data
 
-	CoverageChecker.py:
+	coverage_checker.py:
 		check_coverage (checks every module- and class-level Python function against comment handles and inline llm-exempt markers, reporting each uncovered one as UNMAPPED_CODE):
 			- accepts an llmlang file path
 			- checks every module- and class-level Python function against comment handles and inline llm-exempt markers, reporting each uncovered one as UNMAPPED_CODE
@@ -91,7 +91,7 @@ Compiler:
 			- a function is exempt if a bare "[llm-exempt]" comment sits on the line directly above it, or above its first decorator - a reason may be written before the tag on the same line but isn't required, and there is no built-in exemption for dunder methods, private helpers, or anything else
 			- returns the list of findings, each a Finding record
 
-	LockfileChecker.py:
+	lockfile_checker.py:
 		check (checks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as SPEC_DIVERGED, CODE_DIVERGED, or unchanged, alongside its file and line):
 			- accepts an llmlang file path and a lockfile path
 			- checks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as SPEC_DIVERGED, CODE_DIVERGED, or unchanged, alongside its file and line
@@ -104,3 +104,73 @@ Compiler:
 			- never prints anything itself; every finding is returned as a Finding record in a list, so a caller can present every failure from a run together instead of relying on interleaved prints, or render them as structured data instead of text
 			- each finding names a file and line where known: entry-level findings point at the entry's header line in the llmlang file, code-level findings point at the handle's own comment line in the source file
 			- returns whether everything checked out clean, the set of named-entry tracking keys currently flagged for any reason, and the list of findings
+
+	cli.py:
+		find_pyproject (finds the nearest pyproject.toml by walking up from a starting directory):
+			- accepts a starting directory
+			- finds the nearest pyproject.toml by walking up from a starting directory, all the way to the filesystem root
+			- returns the first pyproject.toml found, or nothing
+
+		load_config (loads the [tool.llmlang] table from pyproject.toml, degrading gracefully when it can't be read):
+			- accepts a starting directory and an optional explicit config path override
+			- loads the [tool.llmlang] table from pyproject.toml, degrading gracefully when it can't be read
+			- uses the override path directly when given, otherwise finds the nearest pyproject.toml from the starting directory
+			- warns to stderr and returns an empty config, rather than crashing, when the override path doesn't exist or when this Python has no tomllib (needs 3.11+)
+			- returns an empty config when no pyproject.toml is found at all
+			- returns the [tool.llmlang] table
+
+		resolve_coverage (decides whether --coverage is active, letting a CLI flag override the config either way):
+			- accepts the parsed flags and the loaded config
+			- decides whether --coverage is active, letting a CLI flag override the config either way
+			- --no-coverage always forces it off, then --coverage always forces it on, then the config's own coverage value is the default
+			- returns whether coverage checking is active
+
+		discover_llm_files (finds every *.llm file under a directory, honoring the built-in and config-configured exclusions):
+			- accepts a root directory and an extra set of directory names to exclude
+			- finds every *.llm file under a directory, honoring the built-in and config-configured exclusions
+			- excludes .git, __pycache__, node_modules, venv, and .venv by default, plus anything the config's exclude list adds
+			- returns the sorted list of discovered files
+
+		check_one (checks a single llmlang file, adding coverage findings when coverage is active):
+			- accepts an llmlang file path and whether coverage checking is active
+			- checks a single llmlang file, adding coverage findings when coverage is active
+			- returns whether it checked out clean and the combined list of findings
+
+		print_report_text (prints every finding across every checked file in one delineated FAILURES section, or a bare OK line when nothing was flagged):
+			- accepts every checked file's findings, keyed by file
+			- prints every finding across every checked file in one delineated FAILURES section, or a bare OK line when nothing was flagged
+			- reports the total failure and file count at the end, correctly pluralized
+
+		print_report_json (prints every finding as JSON, structured identically to what the text report renders from):
+			- accepts every checked file's findings, keyed by file
+			- prints every finding as JSON, structured identically to what the text report renders from
+			- the JSON shape is {"ok": bool, "results": {file: [{category, message, file, line}, ...]}}
+
+		run_check (checks every path given, applying config-resolved coverage and exclusions, and reports every failure together):
+			- accepts a list of file or directory paths, the parsed flags, an optional config path override, and the output format
+			- checks every path given, applying config-resolved coverage and exclusions, and reports every failure together
+			- accepts any number of file or directory paths, auto-discovering every *.llm file under a directory and checking a .llm file directly
+			- warns to stderr and skips a path that doesn't exist, rather than failing the whole run
+			- exits with an error if no .llm files are found under any given path
+			- prints "checking X" progress and any warnings to stderr, so stdout stays clean for the report in either format
+			- exits 0 if every checked file was clean, 1 otherwise
+
+		run_build (builds a fresh lockfile for exactly one llmlang file, unguarded):
+			- accepts a single llmlang file path
+			- builds a fresh lockfile for exactly one llmlang file, unguarded
+			- refuses more than one file argument, since build is always scoped to one project
+			- exits 1 and prints the error on failure
+
+		run_finalize (finalizes exactly one llmlang file's lockfile and change manifest, guarded by Checker):
+			- accepts a single llmlang file path
+			- finalizes exactly one llmlang file's lockfile and change manifest, guarded by Checker
+			- refuses more than one file argument, since finalize is always scoped to one project
+			- exits 1 and prints the error on failure
+
+		main (parses argv into a command and validated flags, then dispatches to check, build, or finalize):
+			- accepts no arguments; reads argv directly
+			- parses argv into a command and validated flags, then dispatches to check, build, or finalize
+			- --help or -h anywhere in argv, or no arguments at all, prints usage
+			- --version prints the installed package version, falling back to a bundled version string when llmlang isn't actually installed
+			- rejects a command outside {check, build, finalize}, and rejects any flag that isn't valid for the given command (--coverage on build, say, or --config on finalize) - nothing is silently ignored
+			- --config and --output-format each consume the next argument as their value

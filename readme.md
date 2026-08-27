@@ -98,9 +98,9 @@ A hash mismatch is not a verdict, it's a prompt: "go look at what changed in thi
 
 ### 4.4 Finalize — a guarded rebuild that can't silently skip an entry
 
-`Compiler/LockfileBuilder.py` has two entry points, deliberately different in what they trust. `build()` (`build.py build <file>.llm`) is unguarded: it hashes whatever code currently sits at each handle and stamps it as correct, with no comparison to any prior state and no notion of dispositions at all. That's fine for bootstrapping a brand new lockfile, or for a human directly supervising their own paired edit — but it's a real gap for a multi-entry LLM-driven pass: if 4 of 5 flagged entries get fixed and one is forgotten, `build()` will happily hash the forgotten entry's *stale* code alongside its *new* bullets and record that pair as consistent, and the next `check` reports clean even though that entry no longer matches its spec.
+`llmlang/lockfile_builder.py` has two entry points, deliberately different in what they trust. `build()` (`llmlang build <file>.llm`) is unguarded: it hashes whatever code currently sits at each handle and stamps it as correct, with no comparison to any prior state and no notion of dispositions at all. That's fine for bootstrapping a brand new lockfile, or for a human directly supervising their own paired edit — but it's a real gap for a multi-entry LLM-driven pass: if 4 of 5 flagged entries get fixed and one is forgotten, `build()` will happily hash the forgotten entry's *stale* code alongside its *new* bullets and record that pair as consistent, and the next `check` reports clean even though that entry no longer matches its spec.
 
-`finalize()` (`build.py finalize <file>.llm`) closes that gap. It reads and updates `<stem>.llmchanges.json` — a real, git-tracked sibling file next to the `.llm` and `.llmlock`. A fresh entry is authored the same way the `.llm` file itself is (by hand or by an LLM, reviewed via its own git diff) — just `{tracking_key: "free text describing what changed, or why nothing needed to"}`. There's no fixed vocabulary for the text (same "not a fixed vocabulary" stance as Hints), and the tool never writes or edits the text itself.
+`finalize()` (`llmlang finalize <file>.llm`) closes that gap. It reads and updates `<stem>.llmchanges.json` — a real, git-tracked sibling file next to the `.llm` and `.llmlock`. A fresh entry is authored the same way the `.llm` file itself is (by hand or by an LLM, reviewed via its own git diff) — just `{tracking_key: "free text describing what changed, or why nothing needed to"}`. There's no fixed vocabulary for the text (same "not a fixed vocabulary" stance as Hints), and the tool never writes or edits the text itself.
 
 Before writing anything, `finalize()` compares the current `.llm`/code against the *existing* lockfile to find what's currently flagged, then refuses outright — writing neither file — unless every flagged key has a non-empty entry in the changes file. Once that gate passes, both the new lockfile and the changes file are computed *purely* from the current `.llm` text, the current code, the current policies, and the current changes file — nothing is copied forward from the lockfile's own prior content. A fresh (bare-string) changes-file entry gets upgraded in place into `{disposition, for_spec_hash, for_code_hash}`, bound to the exact hashes it was just accepted against. `for_spec_hash` isn't just the entry's own text hashed alone — it folds in the text of every `@policy:` currently covering that entry too, so a disposition goes stale if *either* the entry's own bullets change *or* an applicable policy does (when nothing covers the entry, this reduces to exactly its own text hash). An already-stamped entry is kept only if both hashes still match the entry's *current* state — otherwise it's dropped as stale, along with any entry whose key no longer exists in the `.llm` tree at all (orphaned). Since "stale" and "the entry moved on" are the same signal, an entry that changes again without ever going through `finalize` — including a policy above it changing — loses its old disposition automatically rather than having it silently reused against unrelated new state; an entry that never changes keeps its disposition indefinitely, re-affirmed on every successful run, with no separate cleanup step or accumulating changelog needed.
 
@@ -131,25 +131,28 @@ Two-layer trust:
 
 Built and verified end-to-end (in [`compiler/`](compiler/)):
 
-- `Compiler/Parser.py` — the grammar in [the format spec](llmlang-format.md), stack-based (item depth varies by context, so a fixed-depth parser doesn't work).
-- `Compiler/Extractor.py` — handle-based code lookup (§4.1).
-- `Compiler/LockfileBuilder.py` / `LockfileChecker.py` — the lockfile, all three cascades in §4, and the guarded `finalize` path (§4.4).
-- `Compiler/CoverageChecker.py` — opt-in `--coverage` check (§8) that every module- and class-level Python function has a comment handle or an inline `[llm-exempt]` marker; Python-only for now.
-- `build.py` — generic CLI, works on any llmlang file, self-hosts (compiles its own `compiler.llm`). Three subcommands, split the way ruff splits `check`/`format`: `check [path...]` is the read-only linter surface (§8); `build <file>.llm` and `finalize <file>.llm` are the two write paths, each always scoped to exactly one project's own lockfile (and, for `finalize`, its own change manifest) — never something auto-discovery should apply indiscriminately across. `--version`/`--help` are recognized, and an unrecognized command or a flag that doesn't apply to the given command (`--coverage` on `build`, say) is a hard error, not a silent no-op.
+- `llmlang/parser.py` — the grammar in [the format spec](llmlang-format.md), stack-based (item depth varies by context, so a fixed-depth parser doesn't work).
+- `llmlang/extractor.py` — handle-based code lookup (§4.1).
+- `llmlang/lockfile_builder.py` / `lockfile_checker.py` — the lockfile, all three cascades in §4, and the guarded `finalize` path (§4.4).
+- `llmlang/coverage_checker.py` — opt-in `--coverage` check (§8) that every module- and class-level Python function has a comment handle or an inline `[llm-exempt]` marker; Python-only for now.
+- `llmlang/cli.py` — the CLI, self-hosted like everything else in the package (compiles its own `compiler.llm`, same as the rest). Three subcommands, split the way ruff splits `check`/`format`: `check [path...]` is the read-only linter surface (§8); `build <file>.llm` and `finalize <file>.llm` are the two write paths, each always scoped to exactly one project's own lockfile (and, for `finalize`, its own change manifest) — never something auto-discovery should apply indiscriminately across. `--version`/`--help` are recognized, and an unrecognized command or a flag that doesn't apply to the given command (`--coverage` on `build`, say) is a hard error, not a silent no-op. It wasn't always tracked this way — `build.py` was originally excluded from self-hosting as "just the CLI wrapper," but that exemption turned out to be weaker than the ones used elsewhere (this code encodes real, user-facing contracts: flag-vs-config precedence, the JSON output shape, how multiple paths merge into one report) — so it moved into the package as `cli.py` with real entries, and the only things still exempt (`_plural`, `_usage`) are marked with the same `[llm-exempt]` every other trivial helper uses, not an unwritten convention.
+- `compiler/build.py` — a thin, untracked shim (not part of the `llmlang` package) that puts the package on `sys.path` and delegates to `llmlang.cli.main()`, for running this tool directly out of a checkout without a full `pip install` — pre-commit's `language: script` mode needs exactly this, since it executes a repo-relative file directly rather than invoking an installed command.
 
 Compiling (llmlang → code) still isn't automated, but that's not missing software — it's an LLM given the format spec, this doc, and the target `.llm` file, writing code that satisfies every bullet. That's exactly what happened, by hand, for every example in this repo, and it doesn't need a separate portable instructions document restating rules the format spec and this doc already state in full — that would just be the duplication §3.5's single-sourcing discipline exists to avoid. What `finalize` actually adds is narrower and more useful: a mechanical guarantee that whoever does the compiling, human or LLM, can't silently skip an entry while doing it.
 
 ## 8. Installing llmlang as a linter
 
-The goal: add llmlang's check to a project the same way you'd add ruff or eslint — a pre-commit hook, a CI step — without every consumer hand-rolling the invocation.
+The goal: add llmlang's check to a project the same way you'd add ruff or eslint — a pre-commit hook, a CI step, a plain `pip install` — without every consumer hand-rolling the invocation.
 
-**Auto-discovery.** `build.py check` accepts any number of file or directory paths (default: the current directory), auto-discovering every `*.llm` file under a directory argument and checking a `.llm` file argument directly — reporting every failure across every path in one pass rather than stopping at the first. This is what makes a single project-wide hook possible instead of one hook per `.llm` file:
+**Installing.** `pyproject.toml` has real `[build-system]`/`[project]` metadata (setuptools) and a console-script entry point, so `pip install .` (from a checkout) or `pip install git+https://github.com/AlBillington/llmlang.git` (directly, no local checkout needed) both give you a real `llmlang` command anywhere on `PATH` — not published to PyPI yet, so `pip install llmlang` alone doesn't resolve, but everything else works exactly like an installed tool. The importable package is `llmlang`, living under `compiler/llmlang/` in this repo (`[tool.setuptools.packages.find]` points setuptools at `compiler/` for discovery) — the location doesn't affect what you get from installing it.
+
+**Auto-discovery.** `llmlang check` accepts any number of file or directory paths (default: the current directory), auto-discovering every `*.llm` file under a directory argument and checking a `.llm` file argument directly — reporting every failure across every path in one pass rather than stopping at the first. This is what makes a single project-wide hook possible instead of one hook per `.llm` file:
 
 ```
-python compiler/build.py check .
+llmlang check .
 ```
 
-**Pre-commit.** [`.pre-commit-hooks.yaml`](.pre-commit-hooks.yaml) at the repo root defines an `llmlang-check` hook using `language: script` — pre-commit runs `compiler/build.py` directly out of this repo's own checkout, with no install step. That's a deliberate interim choice: `language: python` (the more typical shape for a pre-commit hook, e.g. how `ruff-pre-commit` works) has pre-commit pip-install the hook repo into an isolated venv, which requires a real `pyproject.toml`/entry point — packaging that doesn't exist yet. `language: script` sidesteps that dependency entirely and upgrades cleanly to `language: python` later, with no change to how consumers reference the hook. `pass_filenames: false` matters here too: pre-commit's default behavior is to append the list of staged files as trailing arguments, which would collide with `check`'s own path arguments. A consumer wires it up the usual way:
+**Pre-commit.** [`.pre-commit-hooks.yaml`](.pre-commit-hooks.yaml) at the repo root defines an `llmlang-check` hook using `language: python` — pre-commit pip-installs the hook repo into an isolated venv and invokes the `llmlang` console script, the standard shape (e.g. how `ruff-pre-commit` works), now that real packaging exists to support it. `pass_filenames: false` matters here too: pre-commit's default behavior is to append the list of staged files as trailing arguments, which would collide with `check`'s own path arguments. A consumer wires it up the usual way:
 
 ```yaml
 repos:
@@ -159,18 +162,20 @@ repos:
       - id: llmlang-check
 ```
 
-**CI.** Without a published package, a CI job checks out llmlang alongside the target repo and invokes `build.py` directly:
+This repo's own [`.pre-commit-config.yaml`](.pre-commit-config.yaml) dogfoods the hook differently, though: `repo: local` doesn't reliably resolve a local-path `additional_dependencies` entry the way installing an *external* repo does (confirmed by testing, not assumed), so it uses `language: script` pointing at the `compiler/build.py` shim (§7) instead of a real install — a repo checking *itself* has a different constraint than a repo consuming this one as a dependency.
+
+**CI.** With real packaging, a CI job just installs and runs:
 
 ```yaml
 - uses: actions/checkout@v4
-- uses: actions/checkout@v4
+- uses: actions/setup-python@v5
   with:
-    repository: AlBillington/llmlang
-    path: .llmlang-tool
-- run: python .llmlang-tool/compiler/build.py check .
+    python-version: "3.11"
+- run: pip install git+https://github.com/AlBillington/llmlang.git
+- run: llmlang check .
 ```
 
-This collapses to `pip install llmlang && llmlang check` once packaging exists — the two-checkout form above is a stopgap, not the intended long-term shape.
+This repo's own [workflow](.github/workflows/llmlang-check.yml) uses `pip install .` instead of the git URL, since it's installing and checking itself in the same job — a consumer repo would use the git URL form above.
 
 **Config.** [`pyproject.toml`](pyproject.toml)'s `[tool.llmlang]` table sets project-level defaults, same convention as `ruff`/`black`/`mypy` — found by walking up from the current directory until a `pyproject.toml` turns up, or pass `--config PATH` to use a specific file instead of auto-discovery (also matching that convention). A CLI flag always overrides the config in either direction:
 
@@ -180,13 +185,13 @@ coverage = true       # same as always passing --coverage; --no-coverage still f
 exclude = ["vendor"]  # extends, never replaces, the built-in excluded-directory set
 ```
 
-This repo's own `pyproject.toml` sets `coverage = true`, which is why the CI workflow above can invoke plain `build.py check .` without spelling out `--coverage` — the config is doing that, not a hardcoded flag. `tomllib` (stdlib since 3.11) is loaded defensively: if it's missing, `--coverage`/`--no-coverage`/`check` still all work, `[tool.llmlang]` is just ignored with a warning naming why. The local pre-commit hook keeps `--coverage` spelled out explicitly rather than relying on this, though — `language: script` has no way to pin which Python actually runs it, so it shouldn't assume `tomllib` is there; CI's `setup-python@v5` pins 3.11 explicitly, so the config path is reliable there.
+This repo's own `pyproject.toml` sets `coverage = true`, which is why the CI workflow above can invoke plain `llmlang check .` without spelling out `--coverage` — the config is doing that, not a hardcoded flag. `tomllib` (stdlib since 3.11) is loaded defensively: if it's missing, `--coverage`/`--no-coverage`/`check` still all work, `[tool.llmlang]` is just ignored with a warning naming why. The local pre-commit hook (§8, above) keeps `--coverage` spelled out explicitly rather than relying on this, though — `language: script` has no way to pin which Python actually runs it, so it shouldn't assume `tomllib` is there; CI's `setup-python@v5` pins 3.11 explicitly, so the config path is reliable there.
 
 **Coverage exemptions.** A function `--coverage` would otherwise flag can be marked with a bare `[llm-exempt]` comment on the line directly above it (or above its first decorator) — same positional rule a handle already follows, and a reason can be written before the tag but isn't required. This lives inline rather than in a side file on purpose: every other traceability concept here (`[llm:name]`, `[llm-test:name]`) is already a comment sitting next to the code it's about, and an exemption moves with the function if it's renamed or relocated, unlike a separate lookup key that can silently go stale.
 
-**Machine-readable output.** `check --output-format json` prints `{"ok": bool, "results": {file: [finding, ...]}}`, each finding a `{category, message, file, line}` object — the same `Finding` records (§4, `Compiler/Lockfile.py`) the text report renders, not a separate parse of it, so the two can never drift apart. `message` carries the exact same text the human report shows; `category`/`file`/`line` are there for a caller that wants to act on a finding programmatically instead of reading prose (a GitHub Actions annotation renderer would be the natural next thing built on top of this, though it doesn't exist yet). Progress lines ("checking X") and warnings always go to stderr in either format, so stdout is safe to pipe straight into `jq` or a file.
+**Machine-readable output.** `check --output-format json` prints `{"ok": bool, "results": {file: [finding, ...]}}`, each finding a `{category, message, file, line}` object — the same `Finding` records (§4, `llmlang/lockfile.py`) the text report renders, not a separate parse of it, so the two can never drift apart. `message` carries the exact same text the human report shows; `category`/`file`/`line` are there for a caller that wants to act on a finding programmatically instead of reading prose (a GitHub Actions annotation renderer would be the natural next thing built on top of this, though it doesn't exist yet). Progress lines ("checking X") and warnings always go to stderr in either format, so stdout is safe to pipe straight into `jq` or a file.
 
-**Still open**: a `[build-system]`/`[project]` table and console-script entry point — `pyproject.toml` exists now, but only for `[tool.llmlang]` config, not packaging yet. Nothing above depends on it, but it's what turns `language: script` into `language: python` and the two-checkout CI snippet into a one-line install.
+**Still open**: publishing to PyPI, so `pip install llmlang` alone resolves instead of needing a git URL. Deliberately deferred — this tool's shape has changed multiple times in short order (the exemption mechanism, the CLI structure, the output format), and a published package implies a stability commitment this isn't ready to make yet.
 
 ## 9. Summary of open questions
 
@@ -194,3 +199,5 @@ This repo's own `pyproject.toml` sets `coverage = true`, which is why the CI wor
 - §6 — no mitigation for correct-but-flawed generated code that hasn't triggered a bug report yet.
 - §4.4 — `finalize` guarantees coverage (nothing silently skipped), not correctness (whether a disposition is true); a fabricated disposition is still possible, and still ultimately a human-review problem, same as generated code always has been.
 - Not yet touched: what compile-time LLM context looks like in practice (how much of the rest of the codebase a given entry's compile step sees), what language(s) beyond Python/HTML/JS the tooling has been proven against, the split-a-method direction of the 1:1 rule (only the merge-bullets direction has come up in practice so far).
+- §8 `--coverage` is Python-only — enumerating "every function that exists" needs a real per-language parser, which only exists for Python right now; other languages are silently skipped, not flagged.
+- §8 `--coverage` only checks files an `.llm` file already declares (via `walk_files`) — it can't catch a whole file nobody ever mentioned in llmlang at all. Same "missing file" gap the 3dprinter-tycoon onboarding stress test surfaced originally, still unaddressed by any mechanical check.

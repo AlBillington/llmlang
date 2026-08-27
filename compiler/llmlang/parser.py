@@ -83,7 +83,7 @@ def _bullet_text(content: str, relative_depth: int) -> str:
     return "\t" * relative_depth + "- " + content[2:]
 
 
-# parses a tab-indented llmlang file into a tree of folders, files, classes, and entries [llm:Compiler.Parser.parse]
+# parses a tab-indented llmlang file into a tree of folders, files, classes, and entries [llm:llmlang.parser.parse]
 def parse(path):
     raw_lines = Path(path).read_text(encoding="utf-8").splitlines()
     root = _new_node("", None)
