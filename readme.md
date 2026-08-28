@@ -2,6 +2,17 @@
 
 Status: initial release. Three example projects verified end-to-end: `shortener.llm` (greenfield), `compiler.llm` (self-hosted, the compiler's own tooling described in its own language), `notes.llm` (onboarded legacy code). See §8 for known limitations. For the concrete syntax and writing conventions, see the [format spec](llmlang-format.md).
 
+## Quick start
+
+1. Install: `pip install git+https://github.com/AlBillington/llmlang.git` (§7 covers other install options).
+2. Write a `.llm` file describing one file or class: a folder header, a file header, and one named entry per method, each with a parenthesized summary and a few plain-English bullets. See [the format spec](llmlang-format.md) for the grammar, or `examples/shortener/shortener.llm` for a complete worked example.
+3. Give an LLM coding tool the format spec, this document, and the `.llm` file, and have it write the code. Each entry becomes a comment handle followed by the code that satisfies its bullets (§3.1).
+4. Build the lockfile: `llmlang build myproject.llm`.
+5. Check it: `llmlang check myproject.llm`. A clean run prints `OK`.
+6. Edit the code without touching the `.llm` file, then run `llmlang check myproject.llm` again. It reports `CODE_DIVERGED` at the exact line that changed.
+
+For an existing codebase instead of a new one, see §4. For wiring `check` into pre-commit or CI so this happens on every change automatically, see §7.
+
 ## 1. What llmlang is
 
 llmlang is a plain-text architecture-description language that sits between a prose spec and real code. A human (or human+AI) describes a system as files, classes, and named entries: their responsibilities, dependencies, and expected behavior, at the level an engineer would use to review a design, not implement one. llmlang is intended to be read and written by an LLM coding tool operating on the repository, given the format spec, this document, and a target `.llm` file as context. llmlang, not the generated code, is the primary artifact of human review and PR discussion.
