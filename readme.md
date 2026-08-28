@@ -1,6 +1,6 @@
 # llmlang: Concept & Design (v0.2)
 
-Status: initial release. Three example projects verified end-to-end: `shortener.llm` (greenfield), `compiler.llm` (self-hosted, the compiler's own tooling described in its own language), `notes.llm` (onboarded legacy code). See §8 for known limitations. For the concrete syntax and writing conventions, see the [format spec](llmlang-format.md). For the separate execution-map artifact, see the [flow format spec](flow-format.md).
+Status: initial release. Three example projects verified end-to-end: `shortener.llm` (greenfield), `compiler.llm` (self-hosted, the compiler's own tooling described in its own language), `notes.llm` (onboarded legacy code). Two of them also have a verified `.llmflow` file (`compiler.llmflow`, `shortener.llmflow`); see §8 for what that hasn't covered yet. See §8 for known limitations. For the concrete syntax and writing conventions, see the [format spec](llmlang-format.md). For the separate execution-map artifact, see the [flow format spec](flow-format.md).
 
 ## Quick start
 
@@ -199,3 +199,4 @@ Not yet published to PyPI, so `pip install llmlang` alone doesn't resolve, only 
 - **`--coverage` is Python-only** (§7). Enumerating every function that exists needs a parser per language; other languages are silently skipped, not flagged.
 - **`--coverage` can't detect a whole unmapped file** (§7). It only checks functions inside files an `.llm` file already declares via `walk_files`, so a file nobody ever mentioned in llmlang goes unchecked entirely. Buildable as an `UNMAPPED_FILE` check with the same shape as the existing function-level one, just not built yet.
 - **Not published to PyPI** (§7). `pip install .` or a git URL both work; `pip install llmlang` alone doesn't resolve.
+- **`.llmflow` is a draft with narrow proven scope.** Verified against a CLI's command dispatch and one HTTP service's two handlers; not yet tried against a queue consumer, a UI journey, or an onboarded/legacy codebase. There's no way to require a flow file exists for a given entry point, only to check one if it's present - an entry point can go without a flow file indefinitely with no warning.

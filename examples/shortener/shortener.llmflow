@@ -1,0 +1,22 @@
+main.py:
+
+POST /api/shorten: creates a short code for a submitted URL
+	→ call Backend.UrlShortener.create_short_code
+		- checks whether a code already exists for the submitted URL:
+			- if yes, returns the existing code
+			- if no, continues processing
+		- repeats generating a code until one that isn't already in use is found:
+			→ call Backend.CodeGenerator.generate
+				- generates a random 6-character alphanumeric code
+			← return a candidate code
+		- stores the code and URL in both lookup mappings
+	← return the short code
+	- responds with the short code as JSON
+
+GET /{code}: redirects to the original URL for a short code
+	→ call Backend.UrlShortener.get_url
+		- looks up the original URL for the submitted short code
+	← return the original URL, or nothing if not found
+	- checks whether a URL was found:
+		- if no, responds not found
+		- if yes, redirects to the original URL

@@ -1,0 +1,169 @@
+cli.py:
+
+llmlang check [paths...]: checks llmlang files against their lockfiles and code
+	→ call llmlang.cli.main
+		- parses command-line arguments into a command and its flags
+		- checks whether the command is check, build, or finalize:
+			- if not, prints an unknown-command error and exits
+			- if check, continues processing
+		- validates that every flag given is allowed for check, exiting if not
+	→ call llmlang.cli.run_check
+		→ call llmlang.cli.load_config
+			- reads the [tool.llmlang] table from the nearest pyproject.toml, or a --config override
+		← return the resolved config table, or an empty one if none was found or usable
+		→ call llmlang.cli.resolve_coverage
+			- lets a --coverage/--no-coverage flag override the config's coverage setting either way
+		← return whether coverage checking is active
+		- repeats for each given path that is a directory:
+			→ call llmlang.cli.discover_llm_files
+				- finds every *.llm file under the directory, honoring built-in and config exclusions
+			← return the sorted list of discovered files
+		- repeats checking for each discovered or directly given llmlang file:
+			→ call llmlang.cli.check_one
+				→ call llmlang.lockfile_checker.check
+					→ call llmlang.parser.parse
+						- parses the llmlang file into a tree of folders, files, classes, and entries
+					← return the parsed tree
+					- checks that every ~ test bullet and every llm-test source comment agree, by name and code hash:
+						→ call llmlang.extractor.test_comment_roots
+							- chooses where llm-test comments are scanned from
+						← return the root paths to scan
+						→ call llmlang.extractor.test_comment_base
+							- chooses the stable base path for test trace paths
+						← return the base path
+						→ call llmlang.extractor.test_comments_by_node
+							- scans the root paths for llm-test comments, keyed by canonical node name
+						← return the linked test comment records
+					- compares every @policy: item's text against the lockfile, tracking which scopes changed
+					- repeats comparison for each named entry in the llmlang tree:
+						→ call llmlang.extractor.extract_by_handle
+							- locates the code implementing the entry by its comment handle
+						← return the code and its line, or nothing if the handle is missing
+						- compares the entry's llmlang text hash and code hash against the lockfile, reporting SPEC_DIVERGED or CODE_DIVERGED
+						- checks whether a changed policy now covers this entry, even though its own text and code are unchanged:
+							- if yes, reports SPEC_DIVERGED anyway
+							- if no, leaves it unflagged
+					- repeats comparison for each class-level bullet group, cascading SPEC_DIVERGED to any group whose depended-on entry was just flagged
+					→ call llmlang.flow.flow_refs
+						- resolves internal flow call targets against the current entries, by exact name or unique suffix match
+					← return the current flow reference records, and any unresolved or ambiguous call-target errors
+					- reports each flow call-target error as FLOW_ERROR, with its source line
+					- compares the resolvable flow references against the lockfile, reporting FLOW_DIVERGED for anything new, removed, or stale
+				← return whether everything checked out clean, the flagged tracking keys, and the findings
+				- checks whether checking raised an error:
+					- if yes, reports it as a single ERROR finding instead of crashing
+					- if no, continues processing
+				- checks whether coverage checking is active:
+					- if no, skips coverage checking
+					- if yes, continues processing
+				→ call llmlang.coverage_checker.check_coverage
+					- checks every module- and class-level Python function against comment handles and inline llm-exempt markers
+				← return the coverage findings, each an UNMAPPED_CODE finding
+			← return whether the file checked out clean, and its combined findings
+		- checks the requested output format:
+			- for json case:
+				→ call llmlang.cli.print_report_json
+					- serializes every finding as JSON, keyed by file
+				← return nothing
+			- for text case:
+				→ call llmlang.cli.print_report_text
+					- prints every finding in one delineated FAILURES section, or a bare OK line when nothing was flagged
+				← return nothing
+		- exits with a failure code if any file had findings, otherwise a success code
+
+llmlang build <file>: writes a fresh lockfile for one llmlang file, unguarded
+	→ call llmlang.cli.main
+		- parses command-line arguments into a command and its flags
+		- checks whether the command is check, build, or finalize:
+			- if not, prints an unknown-command error and exits
+			- if build, continues processing
+		- validates that no flags were given, since build allows none, exiting if any were
+	→ call llmlang.cli.run_build
+		- checks whether exactly one file path was given:
+			- if no, prints usage and exits
+			- if yes, continues processing
+		→ call llmlang.lockfile_builder.build
+			→ call llmlang.parser.parse
+				- parses the llmlang file into a tree of folders, files, classes, and entries
+			← return the parsed tree
+			- repeats hashing for each named entry in the llmlang tree:
+				→ call llmlang.extractor.extract_by_handle
+					- locates the code implementing the entry by its comment handle
+				← return the code and its line, or nothing if the handle is missing
+			- hashes every policy and every class-level bullet group's own text
+			- gathers every llm-test comment for the file's test bullets:
+				→ call llmlang.extractor.test_comment_roots
+					- chooses where llm-test comments are scanned from
+				← return the root paths to scan
+				→ call llmlang.extractor.test_comment_base
+					- chooses the stable base path for test trace paths
+				← return the base path
+				→ call llmlang.extractor.test_comments_by_node
+					- scans the root paths for llm-test comments, keyed by canonical node name
+				← return the linked test comment records
+			- refuses to write anything if any test bullet lacks a matching llm-test comment, or the reverse
+			→ call llmlang.flow.flow_refs
+				- resolves internal flow call targets against the current entries, by exact name or unique suffix match
+			← return the current flow reference records, and any unresolved or ambiguous call-target errors
+			- refuses to write anything if any flow call target is unresolved or ambiguous
+			- writes the lockfile as JSON
+		← return the built lock data
+		- checks whether building raised an error:
+			- if yes, prints the error and exits with failure
+			- if no, prints the written lockfile path
+
+llmlang finalize <file>: guards an incremental rebuild against silently skipping a flagged entry
+	→ call llmlang.cli.main
+		- parses command-line arguments into a command and its flags
+		- checks whether the command is check, build, or finalize:
+			- if not, prints an unknown-command error and exits
+			- if finalize, continues processing
+		- validates that no flags were given, since finalize allows none, exiting if any were
+	→ call llmlang.cli.run_finalize
+		- checks whether exactly one file path was given:
+			- if no, prints usage and exits
+			- if yes, continues processing
+		→ call llmlang.lockfile_builder.finalize
+			→ call llmlang.lockfile_checker.check
+				- compares the current llmlang, code, and flow state against the existing lockfile to find what's currently flagged
+			← return whether everything checked out clean, the flagged tracking keys, and the findings
+			- checks whether there is no valid lockfile to check against:
+				- if yes, prints every finding and refuses to write anything
+				- if no, continues processing
+			- prints every currently flagged finding, since each needs a disposition to proceed
+			- reads the change manifest file, or starts from an empty one if it doesn't exist
+			→ call llmlang.parser.parse
+				- parses the llmlang file into a tree of folders, files, classes, and entries
+			← return the parsed tree
+			- repeats hashing for each named entry in the llmlang tree:
+				→ call llmlang.extractor.extract_by_handle
+					- locates the code implementing the entry by its comment handle
+				← return the code and its line, or nothing if the handle is missing
+			- gathers every llm-test comment for the file's test bullets:
+				→ call llmlang.extractor.test_comment_roots
+					- chooses where llm-test comments are scanned from
+				← return the root paths to scan
+				→ call llmlang.extractor.test_comment_base
+					- chooses the stable base path for test trace paths
+				← return the base path
+				→ call llmlang.extractor.test_comments_by_node
+					- scans the root paths for llm-test comments, keyed by canonical node name
+				← return the linked test comment records
+			→ call llmlang.flow.flow_refs
+				- resolves internal flow call targets against the current entries, by exact name or unique suffix match
+			← return the current flow reference records, and any unresolved or ambiguous call-target errors
+			- refuses to write anything if any flow call target is unresolved or ambiguous
+			- hashes every policy and every class-level bullet group's own text
+			- repeats disposition resolution for each entry or flow reference in the change manifest:
+				- checks whether it's a fresh (plain-string) or already-stamped (dict) disposition:
+					- if fresh, stamps it against the entry or flow reference's current hashes
+					- if already stamped, keeps it only if every recorded hash still matches current state, otherwise drops it as stale
+			- checks whether every currently flagged key now has a resolved disposition:
+				- if no, refuses to write anything, naming exactly which keys are missing
+				- if yes, continues processing
+			- writes the lockfile as JSON
+			- writes the updated (stamped and pruned) change manifest file
+		← return the built lock data
+		- checks whether finalizing raised an error:
+			- if yes, prints the error and exits with failure
+			- if no, prints the written lockfile path

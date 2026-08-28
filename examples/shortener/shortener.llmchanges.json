@@ -1,4 +1,22 @@
 {
+  "flow:shortener.llmflow::Backend.UrlShortener.create_short_code": {
+    "disposition": "new flow file: added shortener.llmflow, a real execution-map for the two HTTP-triggered entry points (POST /api/shorten, GET /{code}). main.py itself is explicitly out of scope for llmlang (harness/wiring only), so the flow starts at the conceptual HTTP trigger and shows the first tracked call it reaches.",
+    "for_entry_spec_hash": "a61e7c53ce8dc3988e6b6a733ac8d82b144ef968340d2b23b4d36098ca3a3781",
+    "for_code_hash": "3654c44419a515e0d8bdf58413f6ee4c39257d8c82f0dbdfda03a5b2960c98b8",
+    "for_flow_ref_hash": "17c3a20dbdbc2827a6d9583ce3fa28bb6bd9158b97d5dac3f1574d35b8a43835"
+  },
+  "flow:shortener.llmflow::Backend.CodeGenerator.generate": {
+    "disposition": "new flow file, same as create_short_code - see shortener.llmflow.",
+    "for_entry_spec_hash": "00619d344561ce68c9b1a71a43252da5af9e32356090fc4950f505ae66c5f42f",
+    "for_code_hash": "6f2f7ff60ef7f18227ed4ab42bb52b0ff1b0002754ecd3d8002ed91411e455c4",
+    "for_flow_ref_hash": "864a0d21217b377ce91dbeabbeedf6ae7339351d98997343c1a8676ee2c74404"
+  },
+  "flow:shortener.llmflow::Backend.UrlShortener.get_url": {
+    "disposition": "new flow file, same as create_short_code - see shortener.llmflow.",
+    "for_entry_spec_hash": "d6ad17bdfe6d543cdfbfbfa1053e30125193b965a0fc7b1aff3e7efa83a39b5e",
+    "for_code_hash": "674b400bd7767b69f30da237e680d96f77b713c321d4fd01a0c7676618b0cd61",
+    "for_flow_ref_hash": "3aa2a61625263a5148495a556eaea731f17c91834ebc42fefdc55870e9e7b349"
+  },
   "Backend.UrlShortener.create_short_code": {
     "disposition": "extract_by_handle now includes the handle comment line in code_hash (bug fix, closes a real gap where the source comment could drift from the llmlang summary undetected) - no actual code change",
     "for_spec_hash": "a61e7c53ce8dc3988e6b6a733ac8d82b144ef968340d2b23b4d36098ca3a3781",

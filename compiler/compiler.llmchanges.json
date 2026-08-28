@@ -1,4 +1,124 @@
 {
+  "flow:compiler.llmflow::llmlang.cli.main": {
+    "disposition": "new flow file: added compiler.llmflow, a real execution-map for the CLI's own three commands (check/build/finalize), to validate the flow-tracking mechanism against genuine content instead of a throwaway test file. Traced against the real source, not from memory - every arrow was verified to resolve cleanly on the first llmlang check run.",
+    "for_entry_spec_hash": "7a38d673d1cc1f50ada5c46f3a6a434c50f4f986ab2656a8d2d2cff2569b5fc9",
+    "for_code_hash": "16aa05d4a37c0918ff196505518d96256b12ab046eef83ddd0883e112cefa25c",
+    "for_flow_ref_hash": "6f2bebab06e69cf369e6441e41579b0a28b67163ef8c6e40772ddbc61877e12b"
+  },
+  "flow:compiler.llmflow::llmlang.cli.run_check": {
+    "disposition": "new flow file, same as main - see compiler.llmflow.",
+    "for_entry_spec_hash": "abc8a57646f8242cba719f6610569a55b6bfc7f99d30dec108b5e6361c00f3ab",
+    "for_code_hash": "b9ddca013f67caa8582c768a4cb5db37069e3792041a245943b71e9e10ebfeb3",
+    "for_flow_ref_hash": "5a3f07e08cd54df343c4275908bcaedadb1d0b2956e16eef59a77290db0ffb89"
+  },
+  "flow:compiler.llmflow::llmlang.cli.load_config": {
+    "disposition": "new flow file, same as main - see compiler.llmflow.",
+    "for_entry_spec_hash": "9521deb303a7b48284dd128dc8d415298b2757ee22b4b542399d9dd7333cebe8",
+    "for_code_hash": "eead4c5defe4756cf7edbb8e76631471c4dba01e7674e043861594c6ed0b2430",
+    "for_flow_ref_hash": "4968daf203334b7393bf6e5aaf6a6b3662625438f5aa6477a6f5021d0b928576"
+  },
+  "flow:compiler.llmflow::llmlang.cli.resolve_coverage": {
+    "disposition": "new flow file, same as main - see compiler.llmflow.",
+    "for_entry_spec_hash": "908c23420b23d97f16310ae384b4405e508da6e57d6cfe441cb99c98dd92a6b1",
+    "for_code_hash": "afbd41ca3373ec7c9cfb5abfd1d8b1806c3a3f2a2602b9dd679c56a140139516",
+    "for_flow_ref_hash": "098a3fc16784ba1649308a945eb11f59b04475379bb611ee1ff9aae9866d8398"
+  },
+  "flow:compiler.llmflow::llmlang.cli.discover_llm_files": {
+    "disposition": "new flow file, same as main - see compiler.llmflow.",
+    "for_entry_spec_hash": "03612a38c9fe5f039b3bf015df81b76bfaa2356fd78c490458ec1a8e189797bf",
+    "for_code_hash": "42e41f3981306840366d52afd7c74df6661231e5bb03cce58a5b7b85c5d3781a",
+    "for_flow_ref_hash": "ba41f7870b208f58c0bcbd693274d6418a5f886d3f5005acb9ea7076d64422df"
+  },
+  "flow:compiler.llmflow::llmlang.cli.check_one": {
+    "disposition": "new flow file, same as main - see compiler.llmflow.",
+    "for_entry_spec_hash": "aeaf0709ce0ae7d0b6909cb30dd4276fbeb08e1c203828dc87bbc6308c63fdf4",
+    "for_code_hash": "e293003177cc9082719c4fbb4d4f41ad02e02f2b41ade4ce914dbf49d2c501db",
+    "for_flow_ref_hash": "4e788dfe853bb246ee96ccc94f4d838f28a155bdaf28a6d4a99709e450b95a1e"
+  },
+  "flow:compiler.llmflow::llmlang.lockfile_checker.check": {
+    "disposition": "new flow file, same as main - see compiler.llmflow.",
+    "for_entry_spec_hash": "fe6250467c6033b06bdb6018fb46e0b8f1b4c85722996c466f7e45edc7435fee",
+    "for_code_hash": "de1e89eb4672e22b1d22c8d47de8f37be9cd46b512afddea7e2f78fffd7206e4",
+    "for_flow_ref_hash": "8ca505fb3493c2d8ffcb5ad4576810727e8232f9d299750c4fd5b58f6955f95c"
+  },
+  "flow:compiler.llmflow::llmlang.parser.parse": {
+    "disposition": "new flow file, same as main - see compiler.llmflow.",
+    "for_entry_spec_hash": "9a98858def2a139268c1793698fc3f22b318fa0e622a2155a0c26c8d19656322",
+    "for_code_hash": "d88810d703486a29a73db5cd0cba55e5ab5e508a646a5ef3f34ed14ac1f994f4",
+    "for_flow_ref_hash": "03dd166035dd3dc6569f56698744d99edb364c27fcc437a2430b35100b7f5d8f"
+  },
+  "flow:compiler.llmflow::llmlang.extractor.test_comment_roots": {
+    "disposition": "new flow file, same as main - see compiler.llmflow.",
+    "for_entry_spec_hash": "555eff9210bda9dbfdca0093fd62ad021685bc5bb139635b3e2759a17dbd05d1",
+    "for_code_hash": "a5f8d3e17803833fdb889815cca435072ced6f724a6d9f7e84250b8ef53d28a6",
+    "for_flow_ref_hash": "2d94bae60679e09ae24145351af6aff3d354b7d6ff5f8a8847bf6a251a0b04f1"
+  },
+  "flow:compiler.llmflow::llmlang.extractor.test_comment_base": {
+    "disposition": "new flow file, same as main - see compiler.llmflow.",
+    "for_entry_spec_hash": "036a14bad4f6f52675b6e1fd6f661121e5f761196c3f673ff68c3f2d1d18d7e1",
+    "for_code_hash": "d793db1688af8a0ed0bb89e3a7ab548f643da46f32e700ade39ae1bd4c13cc40",
+    "for_flow_ref_hash": "7db20dca1efbab57d4fff0de41b398a7ba8aaa61ea07cbbbf6ae38e2e7b7ce3c"
+  },
+  "flow:compiler.llmflow::llmlang.extractor.test_comments_by_node": {
+    "disposition": "new flow file, same as main - see compiler.llmflow.",
+    "for_entry_spec_hash": "e95b81b2ad50c83236d2c2e96feae4996d51fb52766584b082adb91434adfb7f",
+    "for_code_hash": "c261257f3b95803cb4f10ca2113cad3345e0d0fae2857f55dafa5118f38b5a10",
+    "for_flow_ref_hash": "6003624f3512fe65e775aff413d31c53299065913a765850c6bc205999d6f088"
+  },
+  "flow:compiler.llmflow::llmlang.extractor.extract_by_handle": {
+    "disposition": "new flow file, same as main - see compiler.llmflow.",
+    "for_entry_spec_hash": "8452197c555ea937c30520b03ce03b84a7bd8b0c2916b7b36517f2657cdc4f33",
+    "for_code_hash": "dfcdba4cfc149411d59081171b439737e81d27a2a6de0cb8e103dbb1d36e12b8",
+    "for_flow_ref_hash": "9d939261f1b79d30013dd285298b04d3050e8f9974192d9d8c7ee0ec5a863f6c"
+  },
+  "flow:compiler.llmflow::llmlang.flow.flow_refs": {
+    "disposition": "new flow file, same as main - see compiler.llmflow.",
+    "for_entry_spec_hash": "01012dfa3895f5c24ed1dbffc58ece3cf70facc125c297afcf624afa92c9e0fb",
+    "for_code_hash": "c22a79a7384af3d4b7fb3870dfdf651889922479f87c9baca6f81e09d43c860f",
+    "for_flow_ref_hash": "43fd5324a848dc913e0852605cedb3e9870161ab9b8826d8e486179ece6f47c6"
+  },
+  "flow:compiler.llmflow::llmlang.coverage_checker.check_coverage": {
+    "disposition": "new flow file, same as main - see compiler.llmflow.",
+    "for_entry_spec_hash": "fce995bc4afb7df1e534e3449ba1e5dddfa30bc6e66917a2869b74e7676f7cbc",
+    "for_code_hash": "6f50f5b8a4bc58f99ac84ca6e6b9a992ae653c5db5f515164e565212f538fe76",
+    "for_flow_ref_hash": "f9d29500b201ccc9c3e83c716db9cef2925917076acf4b5824dd9052dd2524bf"
+  },
+  "flow:compiler.llmflow::llmlang.cli.print_report_json": {
+    "disposition": "new flow file, same as main - see compiler.llmflow.",
+    "for_entry_spec_hash": "a2cc0ba041db817943474655a28f25c3ba5c3d607ae3d44570801cf66f8ffd55",
+    "for_code_hash": "15c9add003438a83f16ca07265a23e9f8fcaabbd3014cbb2bacde624c87986bf",
+    "for_flow_ref_hash": "4c934488af40ed2890d129f6bc732f274cef850094077e10557bf7e1f69ccbad"
+  },
+  "flow:compiler.llmflow::llmlang.cli.print_report_text": {
+    "disposition": "new flow file, same as main - see compiler.llmflow.",
+    "for_entry_spec_hash": "8d86537d2968bdfd31a908c13767d42f42b42b6a8f84cbf1162bcd9f7ac85aff",
+    "for_code_hash": "d7be1bc93658c964c4a2fb9945aeeb26bd445aa478354e4bf08e1f1f8c39a43b",
+    "for_flow_ref_hash": "e18d1d82ba8df769c13d0124e9cb4d778cd990385de7a79b1b7c814e8ad93d1b"
+  },
+  "flow:compiler.llmflow::llmlang.cli.run_build": {
+    "disposition": "new flow file, same as main - see compiler.llmflow.",
+    "for_entry_spec_hash": "d89e9b1d2cccb3c678caf13b337dc9050d1d77ce8bf879e8dc4558447cc64d97",
+    "for_code_hash": "918dc67e1b7d875a2d7251e5065e448e21cee8f97d301fd4106ad3ea5eec7ede",
+    "for_flow_ref_hash": "85f7f456e1e6657eddc47bfb5bf2b086b11d4bfa12ceaf22d7fd2892a89aa063"
+  },
+  "flow:compiler.llmflow::llmlang.lockfile_builder.build": {
+    "disposition": "new flow file, same as main - see compiler.llmflow.",
+    "for_entry_spec_hash": "887be05cf438d4a355d80ee1a9e62f90c198118ee9896e005947ce046da1419e",
+    "for_code_hash": "123fcc50c936501a05279d03403481f6078b6f4f7b501a2048c970d0bdc34068",
+    "for_flow_ref_hash": "9060b9148609149e7b54a8d93e7bf566dfcdfbf9af787c1d68cfdfdc58fd8ee4"
+  },
+  "flow:compiler.llmflow::llmlang.cli.run_finalize": {
+    "disposition": "new flow file, same as main - see compiler.llmflow.",
+    "for_entry_spec_hash": "a54850aa25fbf1aab18ba12688057413de4c7a9e3854d7518e534ea31c7d9a22",
+    "for_code_hash": "e8dd6bca6270f057a55e1b5d22c7a51c4078eae2e7c5c7f6bcf0ece93e18288b",
+    "for_flow_ref_hash": "b371640d2f0db4b35fbdd5886843459df97f2ab55b986208c7192621441aaa16"
+  },
+  "flow:compiler.llmflow::llmlang.lockfile_builder.finalize": {
+    "disposition": "new flow file, same as main - see compiler.llmflow.",
+    "for_entry_spec_hash": "d77ecfb10e323bb6064c7a16bcffdcb3ac8c13ab281a6e55347823cd3b124ade",
+    "for_code_hash": "95b33e571741e6d311122102076e89888f67446842668f06d80d47598d357e00",
+    "for_flow_ref_hash": "2c0a0a20afec93ef797a54d4a2d027b1f1a8f830bba61855351f7424062a0824"
+  },
   "llmlang.flow.flow_refs": {
     "disposition": "fixed a crash: an unresolved or ambiguous flow call target used to raise a bare ValueError out of flow_refs, which check_one() caught into a list of plain strings instead of Finding objects, and print_report_text/print_report_json both crashed trying to read .message/serialize it - collapsing the whole file's report into an unhandled exception on any single bad flow reference. flow_refs now returns (refs, errors) instead of raising: resolvable call targets are still returned, and each unresolved/ambiguous target becomes a structured error record with its 1-based source line, letting the caller decide how to report it.",
     "for_spec_hash": "01012dfa3895f5c24ed1dbffc58ece3cf70facc125c297afcf624afa92c9e0fb",
