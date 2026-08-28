@@ -31,6 +31,7 @@ from llmlang.extractor import (
     test_comment_roots,
     test_comments_by_node,
 )
+from llmlang.flow import flow_path_for_llmlang, generate_flow_for_tree
 from llmlang.lockfile import Finding, LOCKFILE_SCHEMA_VERSION, RULESET_VERSION
 from llmlang.parser import (
     parse,
@@ -244,6 +245,8 @@ def check(llmlang_path: Path, lockfile_path: Path) -> tuple:
         text = _combined(bullets)
         entry = lock.get("entries", {}).get(tracking_key)
         llm_loc = f"{llmlang_path}:{entry_line}"
+        file_path = llmlang_path.parent / file_rel
+        found = extract_by_handle(file_path, handle_key)
 
         if entry is None:
             findings.append(Finding(
@@ -273,8 +276,6 @@ def check(llmlang_path: Path, lockfile_path: Path) -> tuple:
             flagged_entries.add(tracking_key)
             continue
 
-        file_path = llmlang_path.parent / file_rel
-        found = extract_by_handle(file_path, handle_key)
         if found is None:
             findings.append(Finding(
                 category="CODE_DIVERGED",
@@ -356,6 +357,32 @@ def check(llmlang_path: Path, lockfile_path: Path) -> tuple:
                 ),
                 file=str(llmlang_path),
                 line=class_line,
+            ))
+            ok = False
+
+    generated_flow_text, flow_errors = generate_flow_for_tree(root)
+    if flow_errors:
+        for error in flow_errors:
+            findings.append(Finding(
+                category="FLOW_ERROR",
+                message=(
+                    f"FLOW_ERROR (a call line in {error['source']}'s own bullets doesn't "
+                    f"resolve): {error['message']}"
+                ),
+                file=str(llmlang_path),
+            ))
+        ok = False
+    else:
+        flow_path = flow_path_for_llmlang(llmlang_path)
+        on_disk = flow_path.read_text(encoding="utf-8") if flow_path.exists() else ""
+        if on_disk != generated_flow_text:
+            findings.append(Finding(
+                category="FLOW_FILE_STALE",
+                message=(
+                    "FLOW_FILE_STALE (the checked-in .llmflow doesn't match what generation "
+                    f"currently produces from the .llm and code - rebuild to refresh it): {flow_path.name}"
+                ),
+                file=str(flow_path),
             ))
             ok = False
 

@@ -11,7 +11,7 @@ Status: the concrete syntax and writing conventions for llmlang source files (`.
 - **Data entry** — a source-handled entry, inside a file or class, written `identifier data (one-line summary):`. It maps to a concrete named data shape or state field in source with the same `[llm:<canonical-name>]` handle rule as a named entry. Its bullets describe the contained data shape, not behavior; see §4d.
 - **Behavior bullet** — one plain-English sentence, `- ` prefixed. Any number of behavior bullets under one named entry all describe that entry together — no one-bullet-per-entry limit. A bare behavior bullet sitting directly on a file or class (not under any entry) is a class/file-level bullet. A behavior bullet may have nested `- ` bullets under it when the nested lines are part of that same behavior statement, most often for decisions and repeats (§4c); nested bullets are not separate entries.
 - **Test bullet** — one plain-English sentence, `~ ` prefixed, nested under a named entry, file, or class. The text is the exact source test comment text before `[llm-test:<canonical-node>]`; see §4.
-- **Reference** — a plain-English mention of another entry or Component's exact name inside a bullet (`uses CredentialHasher for password verification`). Not special syntax.
+- **Reference** — a plain-English mention of another entry or Component's exact name inside a bullet (`uses CredentialHasher for password verification`). Not special syntax. When a behavior depends on another local entry being called, the bullet must name that entry instead of only describing the effect (`generates the report using buildReportRows`, not `generates the report`).
 - **Hint** — optional freetext after a folder/file/class header's name, before its colon (`Printer.js class:`). A header's real name is always its first word; a hint is everything after it. Not enforced, not tracked, not hashed, not a fixed vocabulary — the parser discards it the moment the name's extracted. It exists purely for whoever's reading the raw file, human or compiler, as a clarifying note — a hint states something explicitly that was already true, it never changes what a header is. Named entries and data entries use the required parenthesized summary form instead of hints.
 
   Shape-inference (§1's Class/Named entry split) already resolves *tree* shape correctly on its own, but it can't distinguish one case that comes up constantly: a File whose direct entries are one implicit class's methods (the common single-class-per-file case, no separate Class node needed) produces the exact same tree shape as a File whose direct entries are a flat module of unrelated standalone functions. The hint convention exists specifically to close that one gap:
@@ -87,20 +87,40 @@ Never state the return value twice. If a regular behavioral bullet already says 
 When a behavior needs visible branching, make the parent bullet only the thing being checked or chosen; put outcomes on nested bullets. For a yes/no branch, use `checks whether ...` and nest `if yes` / `if no` outcomes:
 
 ```
-- checks whether the ticket has a stored original assignee
-	- if yes, uses that original assignee
-	- if no, keeps the current eligible assignee
+- checks whether the task has a stored original owner
+	- if yes, uses that original owner
+	- if no, keeps the current eligible owner
 ```
 
-For a multi-way choice, use `chooses ... by ...` and put each outcome underneath. Keep result detail out of the parent so the branch axis remains obvious.
+Use `if yes` / `if no` for if/then logic: a condition is evaluated and the nested bullets describe the outcomes of that condition.
+
+For a multi-way choice where selecting an option is meaningful behavior, use `chooses ... by ...` and put each outcome underneath. Keep result detail out of the parent so the branch axis remains obvious.
+
+For case-style grouping inside an already-described flow, put one nested branch per case without adding a separate `chooses` bullet. Use `for X case:` labels so the branch context is explicit even without a separate choice parent:
+
+```
+- repeats result handling for each record
+	- for create case:
+		- writes the created-record report
+		- marks successful creation complete
+	- for update case:
+		- writes the updated-record report
+		- marks validation failures for review
+	- for otherwise case:
+		- marks the record not eligible
+```
+
+Use `for X case:` for case-type logic: the code is routing within a known flow by a discrete type, mode, state, status, or enum value. Use `chooses` when the code is selecting a strategy, value, destination, or outcome that should be visible as its own behavior.
 
 For loops, prefer `repeats`. The parent bullet states what is repeated and the boundary (`for each ...`, `until ...`, or `at most ...`); nested bullets state the repeated body:
 
 ```
-- repeats assignment selection for each ticket in due-time order
-	- filters agents to the ticket's eligible segment
+- repeats assignment selection for each task in due-time order
+	- filters agents to the task's eligible segment
 	- chooses the eligible agent with the lowest total load
 ```
+
+Do not make a bullet into a list of separate side effects joined by `and`. If multiple actions share the same condition or loop, put the condition or loop in the parent bullet and split the actions into sibling bullets underneath. A bullet may still use `and` when the combined phrase is one concept, but separate writes, calls, state changes, or branches should be separate bullets.
 
 ## 4d. Data entries
 
@@ -128,6 +148,63 @@ CustomerProfile data (stores customer profile data):
 		- text ("support-team-a"): lookup key is the support team slug
 		- number (5): value is the open ticket count for that team
 ```
+
+## 4e. Cross-entry calls, external calls, and orchestration entries
+
+When an entry coordinates other entries, describe the observable orchestration by naming the concrete entries it calls, using a `→ call CanonicalName` bullet. A bullet should not hide a call behind only its downstream effect. This is especially important for `main`, cron handlers, controllers, batch processors, and other top-level flow entries where the main behavior is delegation.
+
+Good:
+
+```
+main (processes nightly imports):
+	→ call create_import_job
+	→ call fetch_pending_records
+	→ call transform_records
+	→ call write_import_results
+```
+
+Too vague:
+
+```
+main (processes nightly imports):
+	- creates an import job
+	- fetches records
+	- transforms records
+	- writes import results
+```
+
+This is still not a request for procedural pseudocode. Do not add a `→ call` line for a private implementation step merely because it's adjacent in source. Name another entry when that entry is part of the architecture-level contract: the current entry delegates meaningful behavior to it, a reader would need the dependency to reconstruct or review the flow, or omitting the name would make the call graph invisible.
+
+A `→ call` bullet names its target only — never repeat what the target does in nested bullets under it. That description lives in exactly one place: the target entry's own bullets (§5). An optional `← return conceptual result` bullet, at the same nesting level as its `→ call`, states what came back when that clarifies data flow; state it once, immediately after the call it belongs to.
+
+`→ call` and `← return` are content lines, valid anywhere a regular `- ` bullet is valid — top-level under an entry, or nested under a decision (`if yes`/`if no`), a case (`for X case:`), or a repeat, exactly like any other bullet (§4c).
+
+External API calls follow the same reconstructability rule, using `via` to name the boundary instead of a canonical entry name: a bullet that makes an external HTTP, gRPC, SDK, database, queue, or logging call should name the external service and operation with enough detail for the compiler to recreate the same integration.
+
+```
+→ call remove the cached record via CacheStore.Delete with record_id
+
+→ call Partner API via HTTP GET /records/{id}
+	- signs with build_partner_api_headers
+```
+
+Use request and response field names when they determine behavior: `with record_id`, `reads changed record IDs`, `reads the partner record ID`, `writes import status fields`, or `uses record_id and import_reason`. Do not transcribe details that belong in the external API definition, such as generated schema field paths or ordinary transport status handling. Include error or idempotency behavior only when it changes this code's domain behavior, such as counting already-processed records separately or continuing a multi-record run after a recoverable lookup failure. Do not hide an external side effect behind a vague local effect like `deletes the record`, `fetches related records`, or `writes logs` when the code actually depends on a specific service method or endpoint.
+
+## 4f. Entry points and the generated flow view
+
+A named entry immediately preceded by a bare `@entry-point` or a labeled `@entry-point(label)` line, at the same depth as its own header, is an externally triggered starting point — a job `main`, an exposed API/RPC handler, a queue consumer, a CLI command, or a comparable trigger boundary. `@entry-point` is invalid before anything other than a named entry.
+
+```
+@entry-point(POST /api/shorten: creates a short code for a submitted URL)
+create_short_code (creates a unique short code for a given long URL, using CodeGenerator to generate the code):
+	- accepts a long URL
+	→ call Backend.CodeGenerator.generate
+	- returns the short code
+```
+
+Use the labeled form when the real external trigger isn't a canonical entry itself (an HTTP route in wiring code that's out of scope for llmlang, say) and the label needs to say what that trigger is. Use the bare form when the entry's own summary already says it plainly enough.
+
+A sibling `<stem>.llmflow` file is a generated, human-readable execution map, composed by walking every `@entry-point` entry and inlining each `→ call` target's own bullets, recursively — the same bullets already described here, rendered as one flattened, order-following trace instead of scattered across the `.llm` tree's folder/file/class structure. It is never hand-edited; see [flow-format.md](flow-format.md) for how it's generated and what a mismatch means.
 
 ## 5. Single-sourcing discipline
 

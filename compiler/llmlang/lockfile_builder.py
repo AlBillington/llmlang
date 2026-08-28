@@ -20,6 +20,7 @@ from llmlang.extractor import (
     test_comment_roots,
     test_comments_by_node,
 )
+from llmlang.flow import flow_path_for_llmlang, generate_flow_for_tree
 from llmlang.lockfile import LOCKFILE_SCHEMA_VERSION, RULESET_VERSION
 from llmlang.lockfile_checker import check
 from llmlang.parser import (
@@ -27,8 +28,8 @@ from llmlang.parser import (
     parse,
     walk_class_bullet_groups,
     walk_entries,
-    walk_tests,
     walk_policies,
+    walk_tests,
 )
 
 
@@ -142,12 +143,27 @@ def _test_traces(llmlang_path: Path, root) -> dict:
     return traces
 
 
+# refuses to write a lockfile or flow file when an entry's own → call line doesn't resolve [llm-exempt]
+def _write_flow_or_raise(llmlang_path: Path, root):
+    text, errors = generate_flow_for_tree(root)
+    if errors:
+        flow_name = flow_path_for_llmlang(llmlang_path).name
+        details = "\n".join(f"- {e['source']}: {e['message']}" for e in errors)
+        raise ValueError(f"flow call errors while generating {flow_name}:\n{details}")
+    flow_path = flow_path_for_llmlang(llmlang_path)
+    if text:
+        flow_path.write_text(text, encoding="utf-8")
+    elif flow_path.exists():
+        flow_path.unlink()
+
+
 # builds a lockfile by using Parser to read llmlang, Extractor to locate each entry's code, and Lockfile to record a text and code hash per entry [llm:llmlang.lockfile_builder.build]
 def build(llmlang_path: Path, lockfile_path: Path):
     root = parse(llmlang_path)
     test_traces = _test_traces(llmlang_path, root)
     hashed = _hash_all_entries(llmlang_path, root)
     policies, class_bullets = _policies_and_class_bullets(root)
+    _write_flow_or_raise(llmlang_path, root)
 
     lock = {
         "lockfile_schema_version": LOCKFILE_SCHEMA_VERSION,
@@ -155,7 +171,7 @@ def build(llmlang_path: Path, lockfile_path: Path):
         "policies": policies,
         "entries": {
             key: {"file": file_rel, "text": text, "text_hash": text_hash, "code_hash": code_hash}
-            for key, (file_rel, text, text_hash, code_hash, spec_hash) in hashed.items()
+            for key, (file_rel, text, text_hash, code_hash, _spec_hash) in hashed.items()
         },
         "class_bullets": class_bullets,
         "test_traces": test_traces,
@@ -185,25 +201,27 @@ def finalize(llmlang_path: Path, lockfile_path: Path, changes_path: Path):
     test_traces = _test_traces(llmlang_path, root)
     hashed = _hash_all_entries(llmlang_path, root)
     policies, class_bullets = _policies_and_class_bullets(root)
+    _write_flow_or_raise(llmlang_path, root)
 
     new_changes = {}
     resolved = {}
     for key, value in changes.items():
-        if key not in hashed:
-            continue  # orphaned - this entry no longer exists in the llmlang tree
-        _, _, _, code_hash, spec_hash = hashed[key]
-        if isinstance(value, dict):
-            if value.get("for_spec_hash") == spec_hash and value.get("for_code_hash") == code_hash:
-                # still describes exactly the current state - keep it
-                new_changes[key] = value
-                resolved[key] = value
-            # else: stale - the entry or an applicable policy moved on since this was recorded, drop it
-        elif isinstance(value, str) and value:
-            # fresh submission - stamp it against the current state
-            stamped = {"disposition": value, "for_spec_hash": spec_hash, "for_code_hash": code_hash}
-            new_changes[key] = stamped
-            resolved[key] = stamped
-        # else: empty or malformed value, drop it
+        if key in hashed:
+            _, _, _, code_hash, spec_hash = hashed[key]
+            if isinstance(value, dict):
+                if value.get("for_spec_hash") == spec_hash and value.get("for_code_hash") == code_hash:
+                    # still describes exactly the current state - keep it
+                    new_changes[key] = value
+                    resolved[key] = value
+                # else: stale - the entry or an applicable policy moved on since this was recorded, drop it
+            elif isinstance(value, str) and value:
+                # fresh submission - stamp it against the current state
+                stamped = {"disposition": value, "for_spec_hash": spec_hash, "for_code_hash": code_hash}
+                new_changes[key] = stamped
+                resolved[key] = stamped
+            # else: empty or malformed value, drop it
+            continue
+        # orphaned - this entry no longer exists
 
     missing = flagged_entries - resolved.keys()
     if missing:
@@ -219,7 +237,7 @@ def finalize(llmlang_path: Path, lockfile_path: Path, changes_path: Path):
         "class_bullets": class_bullets,
         "test_traces": test_traces,
     }
-    for key, (file_rel, text, text_hash, code_hash, spec_hash) in hashed.items():
+    for key, (file_rel, text, text_hash, code_hash, _spec_hash) in hashed.items():
         entry_record = {"file": file_rel, "text": text, "text_hash": text_hash, "code_hash": code_hash}
         if key in resolved:
             entry_record["last_change"] = resolved[key]

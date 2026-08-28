@@ -1,137 +1,57 @@
 {
-  "llmlang.cli.find_pyproject": {
-    "disposition": "new entry: moved build.py's CLI logic into the llmlang package as cli.py, as part of packaging this as a real pip-installable tool with a console-script entry point. Previously build.py was explicitly excluded from self-hosting (treated as \"just the CLI wrapper\"); on reflection that exemption was weaker than the ones used elsewhere (e.g. for one-line private helpers) since this code encodes real, user-facing behavioral contracts - flag-vs-config precedence, what --output-format json's shape actually is, how multiple paths merge into one report. Rather than carry forward an informal, unconfigured exemption, every function here now has either a real handle+entry or an explicit [llm-exempt] marker (_plural, _usage) - the same rule everything else in this codebase already follows. No behavior changed from the pre-move build.py, only usage/help text (build.py -> llmlang) and the leading underscore dropped from functions that now have real entries, reserving it for the two that stayed exempt.",
-    "for_spec_hash": "b4fee237a6dfa2d1f35366284bc10c3f01c07f4b4b4cac307e6e011218d7bb19",
-    "for_code_hash": "49a96116014d7a521d9449bc5e33c5da16876dbe4735a6bb812fa978d077eb17"
+  "llmlang.parser.parse": {
+    "disposition": "added @entry-point/@entry-point(label) recognition (immediately before a named entry header, rejected anywhere else) and \u2192 call X / \u2190 return X as content lines valid anywhere a regular - bullet is valid, including nested under decisions/cases/repeats. This is the redesign of the flow feature: flow content now lives directly in ordinary llmlang bullets instead of a separately hand-authored .llmflow file, so there is exactly one place to describe what an entry calls, and nothing to keep in sync by hand.",
+    "for_spec_hash": "50549f0e870f10af4ffba8cfccf115d97b9b2cb4d65ce6778ebf60f2e42d7a4a",
+    "for_code_hash": "ae6f8882f17b128a636a8164e064da585701fba4ea6829a847228a4d5ffd042b"
   },
-  "llmlang.cli.load_config": {
-    "disposition": "new entry: moved build.py's CLI logic into the llmlang package as cli.py, as part of packaging this as a real pip-installable tool with a console-script entry point. Previously build.py was explicitly excluded from self-hosting (treated as \"just the CLI wrapper\"); on reflection that exemption was weaker than the ones used elsewhere (e.g. for one-line private helpers) since this code encodes real, user-facing behavioral contracts - flag-vs-config precedence, what --output-format json's shape actually is, how multiple paths merge into one report. Rather than carry forward an informal, unconfigured exemption, every function here now has either a real handle+entry or an explicit [llm-exempt] marker (_plural, _usage) - the same rule everything else in this codebase already follows. No behavior changed from the pre-move build.py, only usage/help text (build.py -> llmlang) and the leading underscore dropped from functions that now have real entries, reserving it for the two that stayed exempt.",
-    "for_spec_hash": "9521deb303a7b48284dd128dc8d415298b2757ee22b4b542399d9dd7333cebe8",
-    "for_code_hash": "eead4c5defe4756cf7edbb8e76631471c4dba01e7674e043861594c6ed0b2430"
+  "llmlang.flow.generate_flow": {
+    "disposition": "new entry, replacing the deleted flow_refs()/FlowRef hash-triple system entirely. Composes a .llmflow view purely by walking @entry-point entries and inlining each \u2192 call target's own bullets recursively (expanding a given entry only once per trace, so a frequently-called or cyclic function doesn't blow up the render or need re-authoring at every call site). No hashing happens here at all - a \u2192 call bullet is just more of its owning entry's text, already covered by that entry's existing text_hash/code_hash.",
+    "for_spec_hash": "9843f02df4960b98b0e98ab404fe5b76d3733b4dacee6091dc436420e7107dba",
+    "for_code_hash": "0397dae0c714300c103c9cdb114e779ed7e6f3cf079528267f00c61ed6e0f9d7"
   },
-  "llmlang.cli.resolve_coverage": {
-    "disposition": "new entry: moved build.py's CLI logic into the llmlang package as cli.py, as part of packaging this as a real pip-installable tool with a console-script entry point. Previously build.py was explicitly excluded from self-hosting (treated as \"just the CLI wrapper\"); on reflection that exemption was weaker than the ones used elsewhere (e.g. for one-line private helpers) since this code encodes real, user-facing behavioral contracts - flag-vs-config precedence, what --output-format json's shape actually is, how multiple paths merge into one report. Rather than carry forward an informal, unconfigured exemption, every function here now has either a real handle+entry or an explicit [llm-exempt] marker (_plural, _usage) - the same rule everything else in this codebase already follows. No behavior changed from the pre-move build.py, only usage/help text (build.py -> llmlang) and the leading underscore dropped from functions that now have real entries, reserving it for the two that stayed exempt.",
-    "for_spec_hash": "908c23420b23d97f16310ae384b4405e508da6e57d6cfe441cb99c98dd92a6b1",
-    "for_code_hash": "afbd41ca3373ec7c9cfb5abfd1d8b1806c3a3f2a2602b9dd679c56a140139516"
+  "llmlang.flow.generate_flow_for_tree": {
+    "disposition": "new entry, the tree-walking adapter around generate_flow - builds the entry-point list and per-entry bullet content from a parsed llmlang tree.",
+    "for_spec_hash": "b72a0812a6ed634563090ee0d9a658efddb1caf215c5fa0510e87361870f4f19",
+    "for_code_hash": "2eb4849ff28584d38e49c1952304111530e2d4ef47e6329e185449e4acc8e6fe"
   },
-  "llmlang.cli.discover_llm_files": {
-    "disposition": "new entry: moved build.py's CLI logic into the llmlang package as cli.py, as part of packaging this as a real pip-installable tool with a console-script entry point. Previously build.py was explicitly excluded from self-hosting (treated as \"just the CLI wrapper\"); on reflection that exemption was weaker than the ones used elsewhere (e.g. for one-line private helpers) since this code encodes real, user-facing behavioral contracts - flag-vs-config precedence, what --output-format json's shape actually is, how multiple paths merge into one report. Rather than carry forward an informal, unconfigured exemption, every function here now has either a real handle+entry or an explicit [llm-exempt] marker (_plural, _usage) - the same rule everything else in this codebase already follows. No behavior changed from the pre-move build.py, only usage/help text (build.py -> llmlang) and the leading underscore dropped from functions that now have real entries, reserving it for the two that stayed exempt.",
-    "for_spec_hash": "03612a38c9fe5f039b3bf015df81b76bfaa2356fd78c490458ec1a8e189797bf",
-    "for_code_hash": "42e41f3981306840366d52afd7c74df6661231e5bb03cce58a5b7b85c5d3781a"
+  "llmlang.lockfile_builder.build": {
+    "disposition": "removed all flow-reference hashing/writing; build() now calls the new flow generator and overwrites the sibling .llmflow file unconditionally (same treatment as the lockfile itself), refusing to write anything if a \u2192 call target reachable from an @entry-point doesn't resolve.",
+    "for_spec_hash": "5e3a926dd7e02c60544154131eec7a08888b9d0bc232a7f4f0e3bdbcd2db5b14",
+    "for_code_hash": "395647527734dee36d8b9e2922beaca0069d6e9019c1af8c7c093420569ff8dc"
+  },
+  "llmlang.lockfile_builder.finalize": {
+    "disposition": "same change as build() - generates and overwrites .llmflow directly. No flow-specific disposition branch exists anymore: a \u2192 call line only ever exists inside some entry's own bullets, so editing one already flags that entry's ordinary SPEC_DIVERGED and goes through the same disposition gate every other bullet edit does.",
+    "for_spec_hash": "c241e9dc48563c6dbb1e9010013c643042d4a5de406f6745e5b46fa49bb91134",
+    "for_code_hash": "f581668bf2be64d6d75abcf5f3bcbdbc40c850950ce5c0c57926a45a604dfa65"
+  },
+  "llmlang.lockfile_checker.check": {
+    "disposition": "removed the flow_refs hash-triple comparison (FLOW_DIVERGED) entirely. check() now regenerates the flow view fresh from the current tree and compares it byte-for-byte against the checked-in .llmflow, reporting FLOW_FILE_STALE on a mismatch - this also catches someone hand-editing the generated file directly, which the old design never could. FLOW_ERROR is kept, now naming the source entry a bad \u2192 call line was found in rather than a flow-file line number, since the call now lives in the .llm file, not a separate file.",
+    "for_spec_hash": "e9b9fd3f0a07884f64c487273c60fece0fadb0e3dbd1804c5ff9f9278e17a413",
+    "for_code_hash": "5ef6fee0620bf9f2d0c9fed5b57fd2ae0791b75dd8ce5880c88238852848bd7b"
   },
   "llmlang.cli.check_one": {
-    "disposition": "new entry: moved build.py's CLI logic into the llmlang package as cli.py, as part of packaging this as a real pip-installable tool with a console-script entry point. Previously build.py was explicitly excluded from self-hosting (treated as \"just the CLI wrapper\"); on reflection that exemption was weaker than the ones used elsewhere (e.g. for one-line private helpers) since this code encodes real, user-facing behavioral contracts - flag-vs-config precedence, what --output-format json's shape actually is, how multiple paths merge into one report. Rather than carry forward an informal, unconfigured exemption, every function here now has either a real handle+entry or an explicit [llm-exempt] marker (_plural, _usage) - the same rule everything else in this codebase already follows. No behavior changed from the pre-move build.py, only usage/help text (build.py -> llmlang) and the leading underscore dropped from functions that now have real entries, reserving it for the two that stayed exempt.",
-    "for_spec_hash": "3a32cd80f715ddbd18a063a0c61879171097ee2fa149de23a08acf1158ce59a8",
-    "for_code_hash": "2836eeea573ff7edb9dd77dfe1c593d45d95cd79334ecb03ee12b388868efefb"
-  },
-  "llmlang.cli.print_report_text": {
-    "disposition": "new entry: moved build.py's CLI logic into the llmlang package as cli.py, as part of packaging this as a real pip-installable tool with a console-script entry point. Previously build.py was explicitly excluded from self-hosting (treated as \"just the CLI wrapper\"); on reflection that exemption was weaker than the ones used elsewhere (e.g. for one-line private helpers) since this code encodes real, user-facing behavioral contracts - flag-vs-config precedence, what --output-format json's shape actually is, how multiple paths merge into one report. Rather than carry forward an informal, unconfigured exemption, every function here now has either a real handle+entry or an explicit [llm-exempt] marker (_plural, _usage) - the same rule everything else in this codebase already follows. No behavior changed from the pre-move build.py, only usage/help text (build.py -> llmlang) and the leading underscore dropped from functions that now have real entries, reserving it for the two that stayed exempt.",
-    "for_spec_hash": "8d86537d2968bdfd31a908c13767d42f42b42b6a8f84cbf1162bcd9f7ac85aff",
-    "for_code_hash": "d7be1bc93658c964c4a2fb9945aeeb26bd445aa478354e4bf08e1f1f8c39a43b"
-  },
-  "llmlang.cli.print_report_json": {
-    "disposition": "new entry: moved build.py's CLI logic into the llmlang package as cli.py, as part of packaging this as a real pip-installable tool with a console-script entry point. Previously build.py was explicitly excluded from self-hosting (treated as \"just the CLI wrapper\"); on reflection that exemption was weaker than the ones used elsewhere (e.g. for one-line private helpers) since this code encodes real, user-facing behavioral contracts - flag-vs-config precedence, what --output-format json's shape actually is, how multiple paths merge into one report. Rather than carry forward an informal, unconfigured exemption, every function here now has either a real handle+entry or an explicit [llm-exempt] marker (_plural, _usage) - the same rule everything else in this codebase already follows. No behavior changed from the pre-move build.py, only usage/help text (build.py -> llmlang) and the leading underscore dropped from functions that now have real entries, reserving it for the two that stayed exempt.",
-    "for_spec_hash": "a2cc0ba041db817943474655a28f25c3ba5c3d607ae3d44570801cf66f8ffd55",
-    "for_code_hash": "15c9add003438a83f16ca07265a23e9f8fcaabbd3014cbb2bacde624c87986bf"
+    "disposition": "bullets now show its two real calls (lockfile_checker.check, and coverage_checker.check_coverage when coverage is active) as \u2192 call lines instead of leaving them undescribed.",
+    "for_spec_hash": "f0d5602275343980884f3652522db376a746e94ca37db1272b3f0d4c565d962e",
+    "for_code_hash": "e293003177cc9082719c4fbb4d4f41ad02e02f2b41ade4ce914dbf49d2c501db"
   },
   "llmlang.cli.run_check": {
-    "disposition": "new entry: moved build.py's CLI logic into the llmlang package as cli.py, as part of packaging this as a real pip-installable tool with a console-script entry point. Previously build.py was explicitly excluded from self-hosting (treated as \"just the CLI wrapper\"); on reflection that exemption was weaker than the ones used elsewhere (e.g. for one-line private helpers) since this code encodes real, user-facing behavioral contracts - flag-vs-config precedence, what --output-format json's shape actually is, how multiple paths merge into one report. Rather than carry forward an informal, unconfigured exemption, every function here now has either a real handle+entry or an explicit [llm-exempt] marker (_plural, _usage) - the same rule everything else in this codebase already follows. No behavior changed from the pre-move build.py, only usage/help text (build.py -> llmlang) and the leading underscore dropped from functions that now have real entries, reserving it for the two that stayed exempt.",
-    "for_spec_hash": "abc8a57646f8242cba719f6610569a55b6bfc7f99d30dec108b5e6361c00f3ab",
+    "disposition": "bullets now name its real calls (load_config, resolve_coverage, discover_llm_files, check_one, and the text/json report printers) as \u2192 call lines instead of leaving the orchestration implicit.",
+    "for_spec_hash": "8b8077e96d1f490963fe0b827a5d62a1470d9fe229529eb194f3896710eb5e0e",
     "for_code_hash": "b9ddca013f67caa8582c768a4cb5db37069e3792041a245943b71e9e10ebfeb3"
   },
   "llmlang.cli.run_build": {
-    "disposition": "new entry: moved build.py's CLI logic into the llmlang package as cli.py, as part of packaging this as a real pip-installable tool with a console-script entry point. Previously build.py was explicitly excluded from self-hosting (treated as \"just the CLI wrapper\"); on reflection that exemption was weaker than the ones used elsewhere (e.g. for one-line private helpers) since this code encodes real, user-facing behavioral contracts - flag-vs-config precedence, what --output-format json's shape actually is, how multiple paths merge into one report. Rather than carry forward an informal, unconfigured exemption, every function here now has either a real handle+entry or an explicit [llm-exempt] marker (_plural, _usage) - the same rule everything else in this codebase already follows. No behavior changed from the pre-move build.py, only usage/help text (build.py -> llmlang) and the leading underscore dropped from functions that now have real entries, reserving it for the two that stayed exempt.",
-    "for_spec_hash": "d89e9b1d2cccb3c678caf13b337dc9050d1d77ce8bf879e8dc4558447cc64d97",
+    "disposition": "adds a \u2192 call to lockfile_builder.build, naming the delegation that was already true.",
+    "for_spec_hash": "47bdc138c70eb419fd2f14f1e8b3453c0e7d9dea7e0f29b6985376ba688d08e2",
     "for_code_hash": "918dc67e1b7d875a2d7251e5065e448e21cee8f97d301fd4106ad3ea5eec7ede"
   },
   "llmlang.cli.run_finalize": {
-    "disposition": "new entry: moved build.py's CLI logic into the llmlang package as cli.py, as part of packaging this as a real pip-installable tool with a console-script entry point. Previously build.py was explicitly excluded from self-hosting (treated as \"just the CLI wrapper\"); on reflection that exemption was weaker than the ones used elsewhere (e.g. for one-line private helpers) since this code encodes real, user-facing behavioral contracts - flag-vs-config precedence, what --output-format json's shape actually is, how multiple paths merge into one report. Rather than carry forward an informal, unconfigured exemption, every function here now has either a real handle+entry or an explicit [llm-exempt] marker (_plural, _usage) - the same rule everything else in this codebase already follows. No behavior changed from the pre-move build.py, only usage/help text (build.py -> llmlang) and the leading underscore dropped from functions that now have real entries, reserving it for the two that stayed exempt.",
-    "for_spec_hash": "a54850aa25fbf1aab18ba12688057413de4c7a9e3854d7518e534ea31c7d9a22",
+    "disposition": "adds a \u2192 call to lockfile_builder.finalize, naming the delegation that was already true.",
+    "for_spec_hash": "264d53f3514c7cfcd5d92f497e5ef07b4cdb7c81eca64f0799737f02ae56b662",
     "for_code_hash": "e8dd6bca6270f057a55e1b5d22c7a51c4078eae2e7c5c7f6bcf0ece93e18288b"
   },
   "llmlang.cli.main": {
-    "disposition": "new entry: moved build.py's CLI logic into the llmlang package as cli.py, as part of packaging this as a real pip-installable tool with a console-script entry point. Previously build.py was explicitly excluded from self-hosting (treated as \"just the CLI wrapper\"); on reflection that exemption was weaker than the ones used elsewhere (e.g. for one-line private helpers) since this code encodes real, user-facing behavioral contracts - flag-vs-config precedence, what --output-format json's shape actually is, how multiple paths merge into one report. Rather than carry forward an informal, unconfigured exemption, every function here now has either a real handle+entry or an explicit [llm-exempt] marker (_plural, _usage) - the same rule everything else in this codebase already follows. No behavior changed from the pre-move build.py, only usage/help text (build.py -> llmlang) and the leading underscore dropped from functions that now have real entries, reserving it for the two that stayed exempt.",
-    "for_spec_hash": "7a38d673d1cc1f50ada5c46f3a6a434c50f4f986ab2656a8d2d2cff2569b5fc9",
+    "disposition": "marked @entry-point (the CLI's own real entry point) and its command dispatch now uses for X case: with a \u2192 call to run_check/run_build/run_finalize per case, instead of prose describing the dispatch generically. This entry point is what compiler.llmflow is generated from.",
+    "for_spec_hash": "c860d0c6119ee627350fd92bd101827b81657ed1f7c86f856ef71a8e8e167a72",
     "for_code_hash": "16aa05d4a37c0918ff196505518d96256b12ab046eef83ddd0883e112cefa25c"
-  },
-  "llmlang.lockfile.LockEntry": {
-    "disposition": "unrelated ripple: renamed the Compiler package to llmlang (matching standard Python packaging convention - the importable package now matches the pip distribution name), with each module file renamed to snake_case (Parser.py -> parser.py, LockfileBuilder.py -> lockfile_builder.py, etc.). Tracking key changed because it's built from the folder/file path; no behavior changed.",
-    "for_spec_hash": "95f5b971fdc8b3d65888be804121d90e9437ec153f98bd013a71c009d5ce5c38",
-    "for_code_hash": "8b6f67e1b5389c40fbd5ab5c7c7d712d2ed15763c3c573e79779623c7a80085e"
-  },
-  "llmlang.lockfile.TestTrace": {
-    "disposition": "unrelated ripple: renamed the Compiler package to llmlang (matching standard Python packaging convention - the importable package now matches the pip distribution name), with each module file renamed to snake_case (Parser.py -> parser.py, LockfileBuilder.py -> lockfile_builder.py, etc.). Tracking key changed because it's built from the folder/file path; no behavior changed.",
-    "for_spec_hash": "92fb8019738001b932631290f55fe676729bd0d531afb6b9378dfe8b1734c9ef",
-    "for_code_hash": "edd2e7db796eeea2c7699b48f12186b0afffb77f0da55d05d2a5b4e1231b59fb"
-  },
-  "llmlang.lockfile.Finding": {
-    "disposition": "unrelated ripple: renamed the Compiler package to llmlang (matching standard Python packaging convention - the importable package now matches the pip distribution name), with each module file renamed to snake_case (Parser.py -> parser.py, LockfileBuilder.py -> lockfile_builder.py, etc.). Tracking key changed because it's built from the folder/file path; no behavior changed.",
-    "for_spec_hash": "1a1b6fb664f66c038a6013ef840c5774b1495b855e7df339b46c1ae9722c5e90",
-    "for_code_hash": "927de630cc8f3b58e7cd7baf1577212d1ee00c4a185d803cfc745b2deab82a29"
-  },
-  "llmlang.lockfile.LOCKFILE_SCHEMA_VERSION": {
-    "disposition": "unrelated ripple: renamed the Compiler package to llmlang (matching standard Python packaging convention - the importable package now matches the pip distribution name), with each module file renamed to snake_case (Parser.py -> parser.py, LockfileBuilder.py -> lockfile_builder.py, etc.). Tracking key changed because it's built from the folder/file path; no behavior changed.",
-    "for_spec_hash": "b9f92471aa22fd03ab91f3b557549276034892eb0e1f302621a907dde3363810",
-    "for_code_hash": "79e9f5a60ef01affae330444ac1f2a9737029d3d19d9ceda6412c2f7eb030bda"
-  },
-  "llmlang.lockfile.RULESET_VERSION": {
-    "disposition": "unrelated ripple: renamed the Compiler package to llmlang (matching standard Python packaging convention - the importable package now matches the pip distribution name), with each module file renamed to snake_case (Parser.py -> parser.py, LockfileBuilder.py -> lockfile_builder.py, etc.). Tracking key changed because it's built from the folder/file path; no behavior changed.",
-    "for_spec_hash": "e601f7998dd91fd4a4749025f2de0e57027e38c9c95c0c412f4fb5df430aacda",
-    "for_code_hash": "80cea8f0a184907fef622befa1135fdc45c381deb19b485a1585c062923532ef"
-  },
-  "llmlang.parser.parse": {
-    "disposition": "unrelated ripple: renamed the Compiler package to llmlang (matching standard Python packaging convention - the importable package now matches the pip distribution name), with each module file renamed to snake_case (Parser.py -> parser.py, LockfileBuilder.py -> lockfile_builder.py, etc.). Tracking key changed because it's built from the folder/file path; no behavior changed.",
-    "for_spec_hash": "9a98858def2a139268c1793698fc3f22b318fa0e622a2155a0c26c8d19656322",
-    "for_code_hash": "d88810d703486a29a73db5cd0cba55e5ab5e508a646a5ef3f34ed14ac1f994f4"
-  },
-  "llmlang.extractor.TestComment": {
-    "disposition": "unrelated ripple: renamed the Compiler package to llmlang (matching standard Python packaging convention - the importable package now matches the pip distribution name), with each module file renamed to snake_case (Parser.py -> parser.py, LockfileBuilder.py -> lockfile_builder.py, etc.). Tracking key changed because it's built from the folder/file path; no behavior changed.",
-    "for_spec_hash": "20d5152dab70806917f28be31a0954855463ca98f78bef00159892c8c28c2ec5",
-    "for_code_hash": "bb0d62379359f5992eef51dd16f666e25afdf22208176cc7add48059cd17aba4"
-  },
-  "llmlang.extractor.extract_by_handle": {
-    "disposition": "unrelated ripple: renamed the Compiler package to llmlang (matching standard Python packaging convention - the importable package now matches the pip distribution name), with each module file renamed to snake_case (Parser.py -> parser.py, LockfileBuilder.py -> lockfile_builder.py, etc.). Tracking key changed because it's built from the folder/file path; no behavior changed.",
-    "for_spec_hash": "8452197c555ea937c30520b03ce03b84a7bd8b0c2916b7b36517f2657cdc4f33",
-    "for_code_hash": "dfcdba4cfc149411d59081171b439737e81d27a2a6de0cb8e103dbb1d36e12b8"
-  },
-  "llmlang.extractor.handle_line_numbers": {
-    "disposition": "unrelated ripple: renamed the Compiler package to llmlang (matching standard Python packaging convention - the importable package now matches the pip distribution name), with each module file renamed to snake_case (Parser.py -> parser.py, LockfileBuilder.py -> lockfile_builder.py, etc.). Tracking key changed because it's built from the folder/file path; no behavior changed.",
-    "for_spec_hash": "cfd49872979966b7290a3230865f3eb77ba8da0878632708786d170762be7514",
-    "for_code_hash": "a8a0c66867dfcd947939f1fcb294d6dcf4c7ba9f023eee420eed15d64cb29162"
-  },
-  "llmlang.extractor.test_comment_roots": {
-    "disposition": "unrelated ripple: renamed the Compiler package to llmlang (matching standard Python packaging convention - the importable package now matches the pip distribution name), with each module file renamed to snake_case (Parser.py -> parser.py, LockfileBuilder.py -> lockfile_builder.py, etc.). Tracking key changed because it's built from the folder/file path; no behavior changed.",
-    "for_spec_hash": "555eff9210bda9dbfdca0093fd62ad021685bc5bb139635b3e2759a17dbd05d1",
-    "for_code_hash": "a5f8d3e17803833fdb889815cca435072ced6f724a6d9f7e84250b8ef53d28a6"
-  },
-  "llmlang.extractor.test_comment_base": {
-    "disposition": "unrelated ripple: renamed the Compiler package to llmlang (matching standard Python packaging convention - the importable package now matches the pip distribution name), with each module file renamed to snake_case (Parser.py -> parser.py, LockfileBuilder.py -> lockfile_builder.py, etc.). Tracking key changed because it's built from the folder/file path; no behavior changed.",
-    "for_spec_hash": "036a14bad4f6f52675b6e1fd6f661121e5f761196c3f673ff68c3f2d1d18d7e1",
-    "for_code_hash": "d793db1688af8a0ed0bb89e3a7ab548f643da46f32e700ade39ae1bd4c13cc40"
-  },
-  "llmlang.extractor.test_comments_by_node": {
-    "disposition": "unrelated ripple: renamed the Compiler package to llmlang (matching standard Python packaging convention - the importable package now matches the pip distribution name), with each module file renamed to snake_case (Parser.py -> parser.py, LockfileBuilder.py -> lockfile_builder.py, etc.). Tracking key changed because it's built from the folder/file path; no behavior changed.",
-    "for_spec_hash": "e95b81b2ad50c83236d2c2e96feae4996d51fb52766584b082adb91434adfb7f",
-    "for_code_hash": "c261257f3b95803cb4f10ca2113cad3345e0d0fae2857f55dafa5118f38b5a10"
-  },
-  "llmlang.lockfile_builder.build": {
-    "disposition": "unrelated ripple: renamed the Compiler package to llmlang (matching standard Python packaging convention - the importable package now matches the pip distribution name), with each module file renamed to snake_case (Parser.py -> parser.py, LockfileBuilder.py -> lockfile_builder.py, etc.). Tracking key changed because it's built from the folder/file path; no behavior changed.",
-    "for_spec_hash": "e1461a1fa6d2acf40cb3894662ebca547b9e78f72a94931b6f8a180ca4b952f8",
-    "for_code_hash": "32511fb95941aaa6ca8c3b65e16fdcddbf6a72288e29a4f0364ec4cd71aa1eba"
-  },
-  "llmlang.lockfile_builder.finalize": {
-    "disposition": "unrelated ripple: renamed the Compiler package to llmlang (matching standard Python packaging convention - the importable package now matches the pip distribution name), with each module file renamed to snake_case (Parser.py -> parser.py, LockfileBuilder.py -> lockfile_builder.py, etc.). Tracking key changed because it's built from the folder/file path; no behavior changed.",
-    "for_spec_hash": "a2ae9afba0e5e4aeb1babdf4611893990774fd787fa86d8dca3e8718f2689e6f",
-    "for_code_hash": "16143a5b0b82e3c4ba654d9735ca28f2031f2a0699cc12562625862a61a9ca4a"
-  },
-  "llmlang.coverage_checker.check_coverage": {
-    "disposition": "unrelated ripple: renamed the Compiler package to llmlang (matching standard Python packaging convention - the importable package now matches the pip distribution name), with each module file renamed to snake_case (Parser.py -> parser.py, LockfileBuilder.py -> lockfile_builder.py, etc.). Tracking key changed because it's built from the folder/file path; no behavior changed.",
-    "for_spec_hash": "fce995bc4afb7df1e534e3449ba1e5dddfa30bc6e66917a2869b74e7676f7cbc",
-    "for_code_hash": "6f50f5b8a4bc58f99ac84ca6e6b9a992ae653c5db5f515164e565212f538fe76"
-  },
-  "llmlang.lockfile_checker.check": {
-    "disposition": "unrelated ripple: renamed the Compiler package to llmlang (matching standard Python packaging convention - the importable package now matches the pip distribution name), with each module file renamed to snake_case (Parser.py -> parser.py, LockfileBuilder.py -> lockfile_builder.py, etc.). Tracking key changed because it's built from the folder/file path; no behavior changed.",
-    "for_spec_hash": "f31b3fd5d36ee28a9552bed3bb5c0b8140d608cf3edfae73b42b1d9da0ec4363",
-    "for_code_hash": "0255708e78b57fe862ce348bd1d703dd140cc9222df46a19be8fcf89321e14e7"
   }
 }
