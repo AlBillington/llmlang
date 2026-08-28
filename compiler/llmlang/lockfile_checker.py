@@ -31,10 +31,9 @@ from llmlang.extractor import (
     test_comment_roots,
     test_comments_by_node,
 )
-from llmlang.flow import flow_path_for_llmlang, flow_refs
+from llmlang.flow import flow_path_for_llmlang, generate_flow_for_tree
 from llmlang.lockfile import Finding, LOCKFILE_SCHEMA_VERSION, RULESET_VERSION
 from llmlang.parser import (
-    applicable_policy_text,
     parse,
     policy_in_scope,
     walk_class_bullet_groups,
@@ -198,7 +197,6 @@ def check(llmlang_path: Path, lockfile_path: Path) -> tuple:
     findings = []
     changed_policy_scopes = []
     flagged_entries = set()
-    current_entries = {}
     test_traces_ok, flagged_test_traces, test_trace_findings = _check_test_traces(llmlang_path, root, lock)
     if not test_traces_ok:
         ok = False
@@ -247,19 +245,8 @@ def check(llmlang_path: Path, lockfile_path: Path) -> tuple:
         text = _combined(bullets)
         entry = lock.get("entries", {}).get(tracking_key)
         llm_loc = f"{llmlang_path}:{entry_line}"
-        policy_texts = applicable_policy_text(root, file_rel)
-        spec_hash = _sha256("\n".join([text] + policy_texts))
         file_path = llmlang_path.parent / file_rel
         found = extract_by_handle(file_path, handle_key)
-        if found is not None:
-            code, _code_line = found
-            current_entries[tracking_key] = {
-                "file": file_rel,
-                "text": text,
-                "text_hash": _sha256(text),
-                "code_hash": _sha256(code),
-                "spec_hash": spec_hash,
-            }
 
         if entry is None:
             findings.append(Finding(
@@ -373,82 +360,30 @@ def check(llmlang_path: Path, lockfile_path: Path) -> tuple:
             ))
             ok = False
 
-    current_flow_refs, flow_errors = flow_refs(llmlang_path, current_entries)
+    generated_flow_text, flow_errors = generate_flow_for_tree(root)
     if flow_errors:
-        flow_file = str(flow_path_for_llmlang(llmlang_path))
         for error in flow_errors:
             findings.append(Finding(
                 category="FLOW_ERROR",
-                message=f"FLOW_ERROR ({error['message']})",
-                file=flow_file,
-                line=error["line"],
+                message=(
+                    f"FLOW_ERROR (a call line in {error['source']}'s own bullets doesn't "
+                    f"resolve): {error['message']}"
+                ),
+                file=str(llmlang_path),
             ))
         ok = False
-    locked_flow_refs = lock.get("flow_refs", {})
-    for key, current in current_flow_refs.items():
-        locked = locked_flow_refs.get(key)
-        location = f"{current['flow']} — {current['entry']}"
-        if locked is None:
+    else:
+        flow_path = flow_path_for_llmlang(llmlang_path)
+        on_disk = flow_path.read_text(encoding="utf-8") if flow_path.exists() else ""
+        if on_disk != generated_flow_text:
             findings.append(Finding(
-                category="FLOW_DIVERGED",
+                category="FLOW_FILE_STALE",
                 message=(
-                    "FLOW_DIVERGED (this internal flow reference is new - it has no record in "
-                    f"the lockfile yet, so the flow/spec/code relationship needs review): {location}"
+                    "FLOW_FILE_STALE (the checked-in .llmflow doesn't match what generation "
+                    f"currently produces from the .llm and code - rebuild to refresh it): {flow_path.name}"
                 ),
-                file=current["flow"],
+                file=str(flow_path),
             ))
             ok = False
-            flagged_entries.add(key)
-            continue
-        if current["entry_spec_hash"] != locked.get("entry_spec_hash"):
-            findings.append(Finding(
-                category="FLOW_DIVERGED",
-                message=(
-                    "FLOW_DIVERGED (the llmlang entry referenced by this flow changed since "
-                    f"the last build): {location}"
-                ),
-                file=current["flow"],
-            ))
-            ok = False
-            flagged_entries.add(key)
-            continue
-        if current["code_hash"] != locked.get("code_hash"):
-            findings.append(Finding(
-                category="FLOW_DIVERGED",
-                message=(
-                    "FLOW_DIVERGED (the backing code referenced by this flow changed since "
-                    f"the last build): {location}"
-                ),
-                file=current["flow"],
-            ))
-            ok = False
-            flagged_entries.add(key)
-            continue
-        if current["flow_ref_hash"] != locked.get("flow_ref_hash"):
-            findings.append(Finding(
-                category="FLOW_DIVERGED",
-                message=(
-                    "FLOW_DIVERGED (the flow call block changed since the last build): "
-                    f"{location}"
-                ),
-                file=current["flow"],
-            ))
-            ok = False
-            flagged_entries.add(key)
-
-    for key, locked in locked_flow_refs.items():
-        if key in current_flow_refs:
-            continue
-        findings.append(Finding(
-            category="FLOW_DIVERGED",
-            message=(
-                "FLOW_DIVERGED (a locked flow reference is missing from the current flow file - "
-                f"review whether it was intentionally removed): {locked.get('flow')} — "
-                f"{locked.get('entry')}"
-            ),
-            file=locked.get("flow"),
-        ))
-        ok = False
-        flagged_entries.add(key)
 
     return ok, flagged_entries, findings

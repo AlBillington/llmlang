@@ -1,114 +1,133 @@
-"""Flow-file parsing and hash records for lockfile verification."""
-import hashlib
+"""Generates a sibling .llmflow view from @entry-point entries in an llmlang
+tree. The flow file is a build output, never hand-edited: every → call /
+← return line already lives in the referenced entry's own llmlang bullets
+(llmlang-format.md §4f), so there is nothing left to author here - only to
+compose and render.
+"""
 from pathlib import Path
 
+from llmlang.parser import walk_entries, walk_entry_points
 
-# private helper of flow_refs(), not independent architecture [llm-exempt]
-def _sha256(text: str) -> str:
-    return hashlib.sha256(text.encode()).hexdigest()
+_ARROW_PREFIXES = ("→ call ", "← return ")
 
 
-# private helper of flow_refs(), not independent architecture [llm-exempt]
+# private helper of generate_flow(), not independent architecture [llm-exempt]
 def flow_path_for_llmlang(llmlang_path: Path) -> Path:
     return llmlang_path.parent / (llmlang_path.stem + ".llmflow")
 
 
-# private helper of flow_refs(), not independent architecture [llm-exempt]
-def _line_depth(line: str) -> int:
-    return len(line) - len(line.lstrip("\t"))
+# private helper of generate_flow(), not independent architecture [llm-exempt]
+def _line_depth_and_text(bullet: str) -> tuple[int, str]:
+    depth = len(bullet) - len(bullet.lstrip("\t"))
+    return depth, bullet.lstrip("\t")
 
 
-# private helper of flow_refs(), not independent architecture [llm-exempt]
-def _call_target(line: str) -> str | None:
-    stripped = line.strip()
-    marker = "→ call "
-    if stripped.startswith(marker):
-        return stripped[len(marker) :].strip()
-    return None
+# private helper of generate_flow(), not independent architecture [llm-exempt]
+def _render_line(text: str, abs_depth: int) -> str:
+    if text.startswith(_ARROW_PREFIXES) or text.startswith("- "):
+        return "\t" * abs_depth + text
+    return "\t" * abs_depth + "- " + text
 
 
-# private helper of flow_refs(), not independent architecture [llm-exempt]
-def _is_external_target(target: str) -> bool:
-    return " via " in target
-
-
-# private helper of flow_refs(), not independent architecture [llm-exempt]
-def _match_targets(target: str, entry_keys: set[str]) -> list[str]:
+# private helper of generate_flow(), not independent architecture [llm-exempt]
+def _match_targets(target: str, entry_keys: set) -> list:
     if target in entry_keys:
         return [target]
     return [key for key in entry_keys if key.endswith("." + target)]
 
 
-# private helper of flow_refs(), not independent architecture [llm-exempt]
-def _call_block(lines: list[str], start_index: int) -> str:
-    start_depth = _line_depth(lines[start_index])
-    end_index = start_index + 1
-    while end_index < len(lines):
-        if lines[end_index].strip() and _line_depth(lines[end_index]) <= start_depth:
-            break
-        end_index += 1
-    return "\n".join(lines[start_index:end_index])
-
-
-# returns hash records for internal function references in the sibling flow file, plus any unresolved/ambiguous call targets [llm:llmlang.flow.flow_refs]
-def flow_refs(llmlang_path: Path, entries: dict) -> tuple[dict, list[dict]]:
-    """Return (refs, errors) for the sibling .llmflow file, if present.
-
-    A flow reference is keyed by flow file and canonical llmlang entry.
-    When an entry appears multiple times in one flow file, its flow hash
-    combines every call block in source order so the disposition reviews
-    the function-flow relationship once.
-
-    A call target that can't be resolved to exactly one entry (missing or
-    ambiguous) does not raise: it's reported as an error record with the
-    1-based source line, so a caller can surface it as a normal finding
-    without losing every other finding for the file. Resolvable refs are
-    still returned alongside any errors.
-    """
-    flow_path = flow_path_for_llmlang(llmlang_path)
-    if not flow_path.exists():
-        return {}, []
-
-    lines = flow_path.read_text(encoding="utf-8").splitlines()
-    entry_keys = set(entries)
-    blocks_by_entry = {}
-    call_names_by_entry = {}
-    errors = []
-
-    for i, line in enumerate(lines):
-        target = _call_target(line)
-        if target is None:
+# private helper of generate_flow(), not independent architecture [llm-exempt]
+def _render_bullets(bullets, base_indent, entry_keys, bullets_by_key, visited, errors, source_key):
+    out = []
+    for bullet in bullets:
+        depth, text = _line_depth_and_text(bullet)
+        abs_depth = base_indent + depth
+        out.append(_render_line(text, abs_depth))
+        if not text.startswith("→ call "):
+            continue
+        target = text[len("→ call "):].strip()
+        if " via " in target:
             continue
         matches = _match_targets(target, entry_keys)
-        if len(matches) == 1:
-            resolved = matches[0]
-        elif len(matches) == 0:
-            if not _is_external_target(target):
-                errors.append({
-                    "line": i + 1,
-                    "message": f"unresolved flow call target {target!r}: no matching llmlang entry",
-                })
-            continue
-        else:
+        if len(matches) == 0:
             errors.append({
-                "line": i + 1,
+                "source": source_key,
+                "message": f"unresolved flow call target {target!r}: no matching llmlang entry",
+            })
+            continue
+        if len(matches) > 1:
+            errors.append({
+                "source": source_key,
                 "message": f"ambiguous flow call target {target!r}: matches {sorted(matches)}",
             })
             continue
-        blocks_by_entry.setdefault(resolved, []).append(_call_block(lines, i))
-        call_names_by_entry.setdefault(resolved, set()).add(target)
+        resolved = matches[0]
+        if resolved in visited:
+            continue
+        visited.add(resolved)
+        out.extend(_render_bullets(
+            bullets_by_key.get(resolved, []), abs_depth + 1, entry_keys,
+            bullets_by_key, visited, errors, resolved,
+        ))
+    return out
 
-    rel_flow = flow_path.relative_to(llmlang_path.parent).as_posix()
-    refs = {}
-    for entry_key, blocks in blocks_by_entry.items():
-        entry = entries[entry_key]
-        key = f"flow:{rel_flow}::{entry_key}"
-        refs[key] = {
-            "flow": rel_flow,
-            "entry": entry_key,
-            "call_names": sorted(call_names_by_entry[entry_key]),
-            "entry_spec_hash": entry["spec_hash"],
-            "code_hash": entry["code_hash"],
-            "flow_ref_hash": _sha256("\n\n---\n\n".join(blocks)),
-        }
-    return refs, errors
+
+# private helper of generate_flow(), not independent architecture [llm-exempt]
+def _entry_point_header(tracking_key: str, label, summary: str) -> str:
+    if isinstance(label, str) and label:
+        return label
+    return f"{tracking_key} ({summary}):"
+
+
+# composes a .llmflow view by walking every @entry-point entry and inlining each → call target's own bullets, recursively, expanding each referenced entry only the first time it's reached in a given trace [llm:llmlang.flow.generate_flow]
+def generate_flow(entry_points: list, all_entries: dict) -> tuple[str, list]:
+    """entry_points: [(tracking_key, label), ...] from walk_entry_points().
+    all_entries: tracking_key -> {"summary": str, "bullets": [str, ...]} for
+    every named entry, bullets already filtered to real content (no "+
+    summary" or "~ test" lines - those aren't part of the call/behavior
+    trace). Returns (rendered_text, errors); errors is a list of
+    {"source": tracking_key, "message": str} for every call target that
+    didn't resolve to exactly one known entry."""
+    if not entry_points:
+        return "", []
+
+    entry_keys = set(all_entries)
+    errors = []
+    sections = []
+    for tracking_key, label in entry_points:
+        entry = all_entries.get(tracking_key)
+        if entry is None:
+            continue
+        header = _entry_point_header(tracking_key, label, entry["summary"])
+        visited = {tracking_key}
+        rendered = _render_bullets(
+            entry["bullets"], 1, entry_keys, {k: v["bullets"] for k, v in all_entries.items()},
+            visited, errors, tracking_key,
+        )
+        sections.append(header + "\n" + "\n".join(rendered))
+
+    return "\n\n".join(sections) + "\n", errors
+
+
+# private helper of generate_flow_for_tree(), not independent architecture [llm-exempt]
+def _entries_for_flow(root) -> dict:
+    result = {}
+    for _file_rel, _handle_key, tracking_key, bullets, _line in walk_entries(root):
+        summary = ""
+        content = []
+        for bullet in bullets:
+            if bullet.startswith("+ "):
+                summary = bullet[2:]
+            elif bullet.startswith("~ "):
+                continue
+            else:
+                content.append(bullet)
+        result[tracking_key] = {"summary": summary, "bullets": content}
+    return result
+
+
+# builds the entry-point list and entry content from a parsed llmlang tree, then composes the flow view [llm:llmlang.flow.generate_flow_for_tree]
+def generate_flow_for_tree(root) -> tuple[str, list]:
+    entry_points = list(walk_entry_points(root))
+    all_entries = _entries_for_flow(root)
+    return generate_flow(entry_points, all_entries)

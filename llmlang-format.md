@@ -151,16 +151,16 @@ CustomerProfile data (stores customer profile data):
 
 ## 4e. Cross-entry calls, external calls, and orchestration entries
 
-When an entry coordinates other entries, describe the observable orchestration by naming the concrete entries it uses. A bullet should not hide a call behind only its downstream effect. This is especially important for `main`, cron handlers, controllers, batch processors, and other top-level flow entries where the main behavior is delegation.
+When an entry coordinates other entries, describe the observable orchestration by naming the concrete entries it calls, using a `→ call CanonicalName` bullet. A bullet should not hide a call behind only its downstream effect. This is especially important for `main`, cron handlers, controllers, batch processors, and other top-level flow entries where the main behavior is delegation.
 
 Good:
 
 ```
 main (processes nightly imports):
-	- creates an import job using create_import_job
-	- fetches records using fetch_pending_records
-	- transforms records using transform_records
-	- writes import results using write_import_results
+	→ call create_import_job
+	→ call fetch_pending_records
+	→ call transform_records
+	→ call write_import_results
 ```
 
 Too vague:
@@ -173,18 +173,38 @@ main (processes nightly imports):
 	- writes import results
 ```
 
-This is still not a request for procedural pseudocode. Do not list private implementation steps merely because they are adjacent in source. Name another entry when that entry is part of the architecture-level contract: the current entry delegates meaningful behavior to it, a reader would need the dependency to reconstruct or review the flow, or omitting the name would make the call graph invisible.
+This is still not a request for procedural pseudocode. Do not add a `→ call` line for a private implementation step merely because it's adjacent in source. Name another entry when that entry is part of the architecture-level contract: the current entry delegates meaningful behavior to it, a reader would need the dependency to reconstruct or review the flow, or omitting the name would make the call graph invisible.
 
-External API calls follow the same reconstructability rule. A bullet that makes an external HTTP, gRPC, SDK, database, queue, or logging call should name the external service and operation with enough detail for the compiler to recreate the same integration. Prefer `via` for external calls:
+A `→ call` bullet names its target only — never repeat what the target does in nested bullets under it. That description lives in exactly one place: the target entry's own bullets (§5). An optional `← return conceptual result` bullet, at the same nesting level as its `→ call`, states what came back when that clarifies data flow; state it once, immediately after the call it belongs to.
+
+`→ call` and `← return` are content lines, valid anywhere a regular `- ` bullet is valid — top-level under an entry, or nested under a decision (`if yes`/`if no`), a case (`for X case:`), or a repeat, exactly like any other bullet (§4c).
+
+External API calls follow the same reconstructability rule, using `via` to name the boundary instead of a canonical entry name: a bullet that makes an external HTTP, gRPC, SDK, database, queue, or logging call should name the external service and operation with enough detail for the compiler to recreate the same integration.
 
 ```
-- removes the cached record via CacheStore.Delete with record_id
+→ call remove the cached record via CacheStore.Delete with record_id
 
-- calls Partner API via HTTP GET /records/{id}
+→ call Partner API via HTTP GET /records/{id}
 	- signs with build_partner_api_headers
 ```
 
 Use request and response field names when they determine behavior: `with record_id`, `reads changed record IDs`, `reads the partner record ID`, `writes import status fields`, or `uses record_id and import_reason`. Do not transcribe details that belong in the external API definition, such as generated schema field paths or ordinary transport status handling. Include error or idempotency behavior only when it changes this code's domain behavior, such as counting already-processed records separately or continuing a multi-record run after a recoverable lookup failure. Do not hide an external side effect behind a vague local effect like `deletes the record`, `fetches related records`, or `writes logs` when the code actually depends on a specific service method or endpoint.
+
+## 4f. Entry points and the generated flow view
+
+A named entry immediately preceded by a bare `@entry-point` or a labeled `@entry-point(label)` line, at the same depth as its own header, is an externally triggered starting point — a job `main`, an exposed API/RPC handler, a queue consumer, a CLI command, or a comparable trigger boundary. `@entry-point` is invalid before anything other than a named entry.
+
+```
+@entry-point(POST /api/shorten: creates a short code for a submitted URL)
+create_short_code (creates a unique short code for a given long URL, using CodeGenerator to generate the code):
+	- accepts a long URL
+	→ call Backend.CodeGenerator.generate
+	- returns the short code
+```
+
+Use the labeled form when the real external trigger isn't a canonical entry itself (an HTTP route in wiring code that's out of scope for llmlang, say) and the label needs to say what that trigger is. Use the bare form when the entry's own summary already says it plainly enough.
+
+A sibling `<stem>.llmflow` file is a generated, human-readable execution map, composed by walking every `@entry-point` entry and inlining each `→ call` target's own bullets, recursively — the same bullets already described here, rendered as one flattened, order-following trace instead of scattered across the `.llm` tree's folder/file/class structure. It is never hand-edited; see [flow-format.md](flow-format.md) for how it's generated and what a mismatch means.
 
 ## 5. Single-sourcing discipline
 

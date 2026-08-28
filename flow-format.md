@@ -1,158 +1,57 @@
-# llmlang Flow — Format Spec (draft)
+# llmlang Flow — Generated View (draft)
 
-Status: draft syntax for a second, non-canonical `.llmflow` artifact. Flow files are readable execution maps for externally meaningful entry points. They do not replace `.llm` or define code ownership. When a sibling `.llmflow` file exists, the lockfile tracks each internal function reference against the referenced llmlang entry hash, backing code hash, and flow block hash.
+Status: `.llmflow` is a generated, non-canonical companion artifact to a `.llm` file. There is nothing to author here directly — every `→ call` / `← return` line lives in an entry's own llmlang bullets (see [llmlang-format.md](llmlang-format.md) §4e/§4f for that syntax), and a flow file is composed from them. It exists purely to give a human a flattened, order-following trace of one entry point's execution, instead of following the call graph by hand across the `.llm` tree's folder/file/class structure.
 
-For canonical `.llm` syntax and behavior specs, see [llmlang-format.md](llmlang-format.md). For the manual drafting checklist, see [onboarding-spec.md](onboarding-spec.md) Part C.
+For the concrete syntax that produces this file (`@entry-point`, `→ call`, `← return`), see [llmlang-format.md](llmlang-format.md) §4e and §4f.
 
-## 1. Purpose
+## 1. What generates a flow file
 
-A flow file explains how an entry point runs end to end. It is optimized for following execution and data movement across function calls and external boundaries.
+`llmlang build` and `llmlang finalize` regenerate `<stem>.llmflow` from `<stem>.llm` every time they run, unconditionally overwriting whatever was checked in — the same treatment `<stem>.llmlock` already gets. If a `.llm` file has no `@entry-point` entries at all, no `.llmflow` file is written (and any stale one from a removed `@entry-point` is deleted).
 
-The key invariant is: **arrows are the complete call map for the covered flow**. A reader should be able to trust that a missing arrow means no call happens at that point in the covered path.
+The algorithm, per `@entry-point` entry found:
 
-## 2. Line Types
+1. Start a new section headed by the entry's label — its own text after `@entry-point(...)`, or `<canonical name> (<summary>):` when the bare form was used.
+2. Render the entry's own bullets in order, at one level of indentation.
+3. For every `→ call CanonicalName` bullet encountered, resolve the target to exactly one llmlang entry (by exact canonical name or unique suffix match) and, the *first* time that entry is reached anywhere in this section's trace, inline its own bullets recursively, one level deeper. A repeat reference to an already-expanded entry — including a direct or indirect cycle — renders as a bare `→ call` line with nothing nested under it.
+4. A `→ call ... via ExternalService` bullet is left as-is; there's no local entry to resolve or expand.
 
-### Entry Point
+Every `@entry-point` entry across the whole `.llm` file becomes its own section in the one `.llmflow` file, in tree order — the same one-`.llmflow`-per-`.llm` convention as before, just generated instead of hand-assembled.
 
-An entry point starts with the externally meaningful trigger and a short description:
+## 2. What `check` verifies
 
-```text
-main: runs the nightly import job
+Two independent things, both surfaced as ordinary findings alongside everything else `check` reports for the file:
+
+- **`FLOW_ERROR`** — some `→ call` target reachable from an `@entry-point` entry doesn't resolve to exactly one known entry (missing, or ambiguous). Named by the entry whose own bullets contain the bad line, since that's where the fix belongs. This is the only way flow generation can fail; a single bad line doesn't take down the rest of the file's report.
+- **`FLOW_FILE_STALE`** — regenerating from the current `.llm` and code produces text that doesn't match what's checked in. This covers both an entry's bullets or code moving on without a rebuild (already independently caught as that entry's own `SPEC_DIVERGED`/`CODE_DIVERGED`) and the case those can't catch: someone hand-editing the generated `.llmflow` file directly, against convention.
+
+Neither finding requires a disposition of its own in `<stem>.llmchanges.json`. A `→ call` line is just part of its owning entry's text, so editing one already flags that entry's ordinary `SPEC_DIVERGED` and goes through the same disposition gate every other bullet edit does — there's nothing flow-specific left to separately account for. `FLOW_FILE_STALE` is resolved by rebuilding, not by a human judgment call.
+
+## 3. Worked example
+
+Given, in the `.llm` file:
+
+```
+@entry-point(GET /users/{id}: returns one user)
+find_user (looks up a user by id):
+	→ call UserRepository.load
+	- returns the user, or nothing if no user has that id
+
+UserRepository.py:
+	load (reads a user record by id):
+		→ call read a row via UserRepository table with user_id
+		- returns the row mapped to a user, or nothing
+```
+
+The generated `.llmflow`:
+
+```
 GET /users/{id}: returns one user
+	→ call UserRepository.load
+		→ call read a row via UserRepository table with user_id
+		- returns the row mapped to a user, or nothing
+	- returns the user, or nothing if no user has that id
 ```
 
-Use one entry point per externally triggered path, such as a job `main`, exposed API/RPC handler, queue consumer, CLI command, or UI journey. Do not create flow entries for every helper function.
+`find_user` itself is the `@entry-point`, so its own bullets render directly under the header — there's no `→ call find_user` wrapper, since the header line already means "execution starts here."
 
-### Internal Calls
-
-Internal function or method calls use `→ call` followed by the canonical `.llm` entry name:
-
-```text
-→ call ImportJob.fetch_pending_records
-	- builds the pending-record query
-← return records ready to import
-```
-
-The call line names the target only. Put the reason, effect, or important local context in nested dash bullets below the call.
-
-### External Calls
-
-External HTTP, gRPC, SDK, database, queue, logging, or storage boundaries also use `→ call`, with `via` naming the integration boundary:
-
-```text
-→ call fetch records via Partner Records API
-	- finds records updated since the last import
-← return matching partner records
-```
-
-Keep the operation conceptual. Include the service, method, endpoint, or boundary only as far as needed to identify what leaves the codebase.
-
-### Returns
-
-Returns use `← return` at the same indentation level as the matching call:
-
-```text
-→ call UserService.find_user
-	- looks up the user for the submitted identifier
-← return matching user, or no user
-```
-
-Return lines are optional. Include them when they clarify data flow. Return text should be conceptual, not local variable names.
-
-### Local Behavior
-
-Dash bullets describe behavior happening in the current function scope:
-
-```text
-- sorts deduplicated records by creation time
-- keeps only valid records
-```
-
-Dash bullets must not hide calls. If the behavior is performed by an internal function or external service, use an arrow line.
-
-## 3. Flow Control
-
-Flow control uses normal dash bullets and nested dash bullets. Arrows remain reserved for calls.
-
-```text
-- checks whether any records were fetched:
-	- if no, exits early
-	- if yes, continues processing
-
-- for update case:
-	- writes the changed fields
-	→ call RecordService.update_record
-		- applies changes to the existing record
-	← return write outcome
-```
-
-Use `if yes` / `if no` for if/then logic. Use `for X case:` for routing by request type, mode, status, enum, or state.
-
-## 4. Indentation
-
-Indentation shows the current execution context:
-
-- Lines nested under `→ call ...` explain what happens inside that called entry.
-- Lines nested under `- ` control bullets explain that control block's body.
-- `← return ...` appears at the same indentation level as the matching `→ call ...`.
-- Behavior/control bullets with children end with `:`.
-- Call arrows do not need `:` even when they have explanation bullets.
-
-## 5. Completeness Rules
-
-- Every internal call in the covered flow is represented as `→ call CanonicalEntryName`.
-- Every external boundary call in the covered flow is represented as `→ call operation via ExternalServiceOrEndpoint`.
-- Calls are never intentionally omitted.
-- Plain dash bullets never summarize work done by an omitted call.
-- If the flow becomes too noisy, narrow the flow scope or improve the real code abstraction; do not curate calls out of the flow file.
-
-## 6. Lockfile Verification
-
-For every internal function reference in a sibling flow file, the lockfile records a triple:
-
-- the referenced llmlang entry hash, including applicable policies
-- the backing code hash for that entry's source handle
-- the hash of every flow call block for that entry, combined in source order
-
-If any member of the triple changes, `--check` reports `FLOW_DIVERGED`. `--finalize` refuses to refresh the lockfile until the changes file includes a disposition for that flow reference. A fresh flow disposition is stamped against the new triple. A removed flow reference also requires a one-time disposition before it is pruned.
-
-## 7. Worked Example
-
-```text
-import_job.py:
-
-main: runs the nightly import job
-	→ call ImportJob.create
-		- creates the import job with configured clients
-		→ call load configuration via Config Store
-			- loads service configuration
-		← return import configuration
-		→ call open connection via Database
-			- connects to the import database
-		← return database connection
-	← return configured import job
-
-	→ call ImportJob.fetch_pending_records
-		- builds the pending-record query
-		→ call fetch records via Partner Records API
-			- finds records updated since the last import
-		← return partner records
-		- filters out records that were already imported
-		→ call ImportJob.parse_record
-			- parses one partner record into an import record
-		← return parsed import record
-	← return import records ready to process
-
-	→ call ImportJob.process_records
-		- repeats processing for each import record:
-			→ call ImportJob.validate_record
-				- validates required fields
-			← return validation result
-			- checks whether the record is valid:
-				- if no, records a validation failure
-				- if yes, continues processing
-			→ call ImportJob.write_record
-				- writes the valid record
-			← return write outcome
-	← return import summary
-```
+Note there is nothing here that isn't also true reading the `.llm` file directly — the flow file adds no information, only a different, execution-ordered arrangement of the same facts.

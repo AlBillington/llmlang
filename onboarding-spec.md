@@ -65,31 +65,15 @@ Status: this is a procedure for an LLM to follow, not a script. There is no auto
 
 4a. **Name the entry, don't just describe its effect, whenever a bullet crosses into another entry.** "Redraws every print bay's appearance" is true but hides that it works by calling `updatePrintBays` - without the name, the dependency graph between entries stops being readable at a glance, which was the entire point of the `uses X` convention. This is easy to lose specifically during *later* editing passes (tightening for completeness, stripping should-bullets) that focus on one bullet at a time and don't re-check whether a name got edited out along the way - rerun the Part A step 10a checklist after sync edits, not only during first extraction.
 
-## Part C — Drafting flow files manually
+## Part C — Marking entry points
 
-Status: this is a manual checklist for drafting the second, non-canonical `.llmflow` artifact described in [flow-format.md](flow-format.md). The canonical `.llm` file still owns code structure and behavior; a flow file is a readable execution map for an externally meaningful entry point, with internal function references tracked by the lockfile.
+Status: `.llmflow` is generated, never hand-drafted (see [flow-format.md](flow-format.md)) - there is no manual flow-authoring checklist anymore. The only step this format needs from an LLM is deciding *which* entries are real entry points and marking them.
 
-1. **Start from an externally meaningful entry point.** A flow begins at a job `main`, exposed API/RPC handler, queue consumer, CLI command, or other trigger boundary. Do not create one flow per helper function.
+1. **Mark a job `main`, exposed API/RPC handler, queue consumer, CLI command, or comparable trigger boundary with `@entry-point`.** Do not mark a helper function just because it's reachable from one - `.llmflow` generation follows the call graph on its own.
 
-2. **Walk the code, not memory.** Read the entry point and every reached function before drafting the flow. Do not summarize from the `.llm` file alone, because the flow file's value is that it shows the actual call path.
+2. **Write real `→ call`/`← return` bullets, not `@entry-point` alone.** A marked entry with no `→ call` lines anywhere in its reachable bullets produces a flow section with nothing to inline - correct if that entry genuinely calls nothing meaningful, a sign something was left as vague prose otherwise (§4e's completeness rule still applies; §4e/§4f cover the syntax).
 
-3. **Use flow-format arrows for every call.** Every call in the covered flow must be represented using the internal-call or external-call arrow syntax from [flow-format.md](flow-format.md).
-
-4. **Never omit calls.** If the call exists in the covered flow, it gets an arrow. Do not intentionally omit noisy helpers, obvious wrappers, logging calls, validation calls, or external calls. If the flow becomes too noisy, narrow the flow scope or improve the real code abstraction; do not make the flow artifact a curated subset.
-
-5. **Use dash bullets only for local behavior.** A `- ` bullet describes behavior happening in the current function scope, including glue logic and flow control. It must not hide an internal or external call. If the behavior is performed by a call, rewrite it as an arrow.
-
-6. **Put call explanations under the call.** A `→ call ...` line names the call target only. Put the reason or effect as nested `- ` bullets below it, not inline after the function name.
-
-7. **Show returns only when they clarify data flow.** A return line is optional and uses `← return conceptual result` at the same indentation as the matching call. Return text should describe information conceptually, not local variable names.
-
-8. **Keep arrows reserved for calls.** Do not use `->` as "then", "results in", "maps to", or any other prose arrow. Flow-control bullets use normal nested dash bullets from [flow-format.md](flow-format.md).
-
-9. **Preserve flow indentation.** Indent under a `→ call ...` line only to explain what happens inside that called entry. Indent under a `- ` control bullet only for the control body's behavior. Follow [flow-format.md](flow-format.md) for return indentation and colon usage.
-
-10. **Review for hidden calls before sharing.** After drafting, re-read the covered source and ask for every call expression: "Where is this arrow in the flow?" Also scan every dash bullet and ask: "Does this sentence describe a call by effect instead of naming it with an arrow?" Fix any mismatch before presenting the flow.
-
-11. **Run lock verification.** Run `build.py <file>.llm --check` after adding or editing a sibling `.llmflow` file. If any referenced entry hash, backing code hash, or flow block hash changes, add a disposition to `<stem>.llmchanges.json` explaining the reviewed relationship before running `--finalize`.
+3. **Run `llmlang build`/`finalize` after marking or editing calls, then re-read the generated `.llmflow`.** It's the fastest way to catch a call that didn't resolve (`FLOW_ERROR`, naming the entry it came from) or a target that resolved to the wrong entry via suffix match.
 
 ## Lessons from a real run (3dprinter-tycoon/Printer.js)
 

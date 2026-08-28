@@ -13,14 +13,6 @@ llmlang:
 			- file: text ("legacy_app/notes.py") or nothing: the file the failure is about, when known
 			- line: number (12) or nothing: the line within that file, when known
 
-		FlowRef data (stores, per flow reference, the connected llmlang entry hash, code hash, and flow-block hash):
-			- text: sibling flow file path
-			- text: canonical llmlang entry referenced by the flow
-			- [text]: call names used for that entry in the flow file
-			- text: hash of the current llmlang entry text and applicable policies
-			- text: hash of the current backing code
-			- text: hash of the flow call block text for this entry
-
 		LOCKFILE_SCHEMA_VERSION (the lockfile's own schema version, bumped whenever its shape changes):
 			- the lockfile's own schema version, bumped whenever its shape changes
 
@@ -36,6 +28,8 @@ llmlang:
 			- a nested regular bullet belongs to the same nearest entry, file or class bullet group, or policy item as its parent
 			- a test bullet can live under a named entry, file, or class node
 			- a header's real name is always its first word; any words after a folder, file, or class name up to the colon are a freetext hint, discarded once the name is extracted
+			- a bare `@entry-point` or `@entry-point(label)` line immediately before a named entry header marks that entry as a flow-generation starting point, rejecting it outright on any other kind of header
+			- a `→ call CanonicalName` or `→ call operation via ExternalService` bullet, and an optional following `← return ...` bullet, are valid anywhere a regular bullet is valid, including nested under a decision, case, or repeat bullet
 			- records the source line number of each folder, file, class, named entry, and data entry header, and of each test bullet
 			- returns the parsed tree
 
@@ -70,36 +64,40 @@ llmlang:
 			- returns a mapping of canonical node name to linked test comment records
 
 	flow.py:
-		flow_refs (returns hash records for internal function references in the sibling flow file):
-			- accepts an llmlang file path and current entry hash records
-			- reads the sibling `.llmflow` file when one exists
-			- resolves internal `call` targets to known llmlang entries by exact name or unique suffix match
-			- treats `call ... via ...` targets as external calls that are not locked to source handles
-			- reports each unresolved or ambiguous non-external call target as an error record with its source line, rather than rejecting the whole file
-			- combines every call block for the same internal entry into one flow reference hash
-			- returns flow reference records keyed by flow file and canonical llmlang entry, together with the list of any call-target errors found
+		generate_flow (composes a .llmflow view by walking every @entry-point entry and inlining each → call target's own bullets, recursively, expanding each referenced entry only the first time it's reached in a given trace):
+			- accepts the list of @entry-point entries and every named entry's own summary and bullets
+			- composes a .llmflow view by walking every @entry-point entry and inlining each → call target's own bullets, recursively
+			- expands a referenced entry's own bullets only the first time it's reached in a given entry point's trace; a repeat reference (including a cycle) renders as a bare call line with nothing nested under it
+			- resolves a → call target to a known llmlang entry by exact canonical name or unique suffix match
+			- treats a → call target containing " via " as an external call with nothing to resolve or expand
+			- reports each non-external → call target that doesn't resolve to exactly one entry as an error naming the entry it came from, rather than raising or losing any other output
+			- returns the composed text for every entry point, and the list of any call-target errors found
+
+		generate_flow_for_tree (builds the entry-point list and entry content from a parsed llmlang tree, then composes the flow view):
+			- accepts a parsed llmlang tree
+			- builds the entry-point list and entry content from a parsed llmlang tree, then composes the flow view using generate_flow
+			- returns the same (text, errors) shape as generate_flow
 
 	lockfile_builder.py:
 		build (builds a lockfile by using Parser to read llmlang, Extractor to locate each entry's code, and Lockfile to record a text and code hash per entry):
 			- accepts an llmlang file path and a lockfile output path
 			- builds a lockfile by using Parser to read llmlang, Extractor to locate each source-handled entry's code, and Lockfile to record a text and code hash per entry
 			- writes test trace records with the llm-test explanation text, relative path, and backing code hash
-			- writes flow reference records for internal calls in the sibling flow file
-			- refuses to write the lockfile when any test bullet lacks a matching llm-test comment or any llm-test comment lacks a matching test bullet
-			- refuses to write the lockfile when any internal flow call target is unresolved or ambiguous
-			- has no notion of dispositions or a change manifest at all; never reads or writes anything but the lockfile itself
+			- generates and overwrites the sibling .llmflow file from the current @entry-point entries and bullets
+			- refuses to write anything when any test bullet lacks a matching llm-test comment or any llm-test comment lacks a matching test bullet
+			- refuses to write anything when any → call target in an @entry-point entry's reachable bullets is unresolved or ambiguous
+			- has no notion of dispositions or a change manifest at all; never reads or writes anything but the lockfile and the generated flow file
 			- should reproduce the same hashes when run again against an unchanged codebase
 			- returns the built lock data
 
 		finalize (guards an incremental rebuild against silently skipping a flagged entry, reading and updating a change manifest bound to the exact spec and code hashes it describes):
 			- accepts an llmlang file path, a lockfile output path, and a change manifest file path
-			- uses Checker to find every named entry and flow reference currently flagged against the existing lockfile, and refuses to write anything unless the change manifest covers every one of them with a non-empty disposition
-			- refuses to write anything, same as build, when any internal flow call target is unresolved or ambiguous
+			- uses Checker to find every named entry currently flagged against the existing lockfile, and refuses to write anything unless the change manifest covers every one of them with a non-empty disposition
+			- refuses to write anything, same as build, when any → call target in an @entry-point entry's reachable bullets is unresolved or ambiguous
+			- generates and overwrites the sibling .llmflow file from the current @entry-point entries and bullets, same as build; a flow-only edit needs no disposition of its own, since it can only exist as part of an entry's own bullets, already gated by that entry's own SPEC_DIVERGED
 			- accepts a fresh disposition in the manifest as a plain string, and stamps it with the entry's current spec hash and code hash
-			- stamps fresh flow dispositions with the referenced entry's current spec hash, current code hash, and current flow reference hash
 			- a spec hash combines the entry's own text with every policy currently covering it, so a disposition goes stale whether the entry's own text changed or an applicable policy did
-			- for a manifest entry that's already stamped, keeps it only if all recorded hashes still match the entry or flow reference's current state; otherwise drops it as stale, along with any entry whose key no longer exists
-			- accepts a fresh one-time disposition for a removed flow reference, then prunes it from the lock and changes file
+			- for a manifest entry that's already stamped, keeps it only if both hashes still match the entry's current state; otherwise drops it as stale, along with any entry whose key no longer exists
 			- builds every hash and disposition fresh from the current llmlang text, current code, current policies, and current manifest only; never carries anything forward from the lockfile's own prior content
 			- writes both the new lockfile and the updated (stamped and pruned) manifest file, but never alters a disposition's own text
 			- returns the built lock data
@@ -121,14 +119,14 @@ llmlang:
 			- reports TEST_LINK_MISSING when any test bullet lacks a matching llm-test comment with the same text and canonical node name
 			- reports TEST_TRACE_STALE when any llm-test comment lacks a matching test bullet with the same text and canonical node name
 			- reports TEST_CODE_DIVERGED when a linked test's backing code hash differs from the lockfile
-			- reports FLOW_DIVERGED when an internal flow reference is new, removed, or stale against the referenced llmlang entry, backing code, or flow block text
-			- reports FLOW_ERROR, with the flow file and source line, when a flow call target is unresolved or ambiguous, without losing any other finding for the same file
+			- reports FLOW_ERROR, naming the entry it came from, when a → call target reachable from an @entry-point entry is unresolved or ambiguous, without losing any other finding for the same file
+			- reports FLOW_FILE_STALE when the checked-in .llmflow doesn't match what generating one fresh from the current llmlang and code would produce
 			- should report an entry as SPEC_DIVERGED when its own llmlang text changed, it's brand new, or an upstream policy covering it changed
 			- should report an entry as CODE_DIVERGED when its handle is missing from the code or its code changed unexpectedly
 			- should report an unmodified codebase as fully clean
 			- never prints anything itself; every finding is returned as a Finding record in a list, so a caller can present every failure from a run together instead of relying on interleaved prints, or render them as structured data instead of text
 			- each finding names a file and line where known: entry-level findings point at the entry's header line in the llmlang file, code-level findings point at the handle's own comment line in the source file
-			- returns whether everything checked out clean, the set of named-entry and flow-reference tracking keys currently flagged for any reason, and the list of findings
+			- returns whether everything checked out clean, the set of named-entry tracking keys currently flagged for any reason, and the list of findings
 
 	cli.py:
 		find_pyproject (finds the nearest pyproject.toml by walking up from a starting directory):
@@ -158,8 +156,12 @@ llmlang:
 
 		check_one (checks a single llmlang file, adding coverage findings when coverage is active):
 			- accepts an llmlang file path and whether coverage checking is active
-			- checks a single llmlang file, adding coverage findings when coverage is active
+			→ call llmlang.lockfile_checker.check
 			- if checking raises an error, reports it as a single ERROR finding instead of letting the exception propagate
+			- checks whether coverage checking is active:
+				- if yes:
+					→ call llmlang.coverage_checker.check_coverage
+				- if no, skips coverage checking
 			- returns whether it checked out clean and the combined list of findings
 
 		print_report_text (prints every finding across every checked file in one delineated FAILURES section, or a bare OK line when nothing was flagged):
@@ -175,24 +177,36 @@ llmlang:
 		run_check (checks every path given, applying config-resolved coverage and exclusions, and reports every failure together):
 			- accepts a list of file or directory paths, the parsed flags, an optional config path override, and the output format
 			- checks every path given, applying config-resolved coverage and exclusions, and reports every failure together
+			→ call llmlang.cli.load_config
+			→ call llmlang.cli.resolve_coverage
 			- accepts any number of file or directory paths, auto-discovering every *.llm file under a directory and checking a .llm file directly
+			→ call llmlang.cli.discover_llm_files
 			- warns to stderr and skips a path that doesn't exist, rather than failing the whole run
 			- exits with an error if no .llm files are found under any given path
+			- repeats checking for each discovered or directly given llmlang file:
+				→ call llmlang.cli.check_one
 			- prints "checking X" progress and any warnings to stderr, so stdout stays clean for the report in either format
+			- for json case:
+				→ call llmlang.cli.print_report_json
+			- for text case:
+				→ call llmlang.cli.print_report_text
 			- exits 0 if every checked file was clean, 1 otherwise
 
 		run_build (builds a fresh lockfile for exactly one llmlang file, unguarded):
 			- accepts a single llmlang file path
 			- builds a fresh lockfile for exactly one llmlang file, unguarded
 			- refuses more than one file argument, since build is always scoped to one project
+			→ call llmlang.lockfile_builder.build
 			- exits 1 and prints the error on failure
 
 		run_finalize (finalizes exactly one llmlang file's lockfile and change manifest, guarded by Checker):
 			- accepts a single llmlang file path
 			- finalizes exactly one llmlang file's lockfile and change manifest, guarded by Checker
 			- refuses more than one file argument, since finalize is always scoped to one project
+			→ call llmlang.lockfile_builder.finalize
 			- exits 1 and prints the error on failure
 
+		@entry-point(llmlang <command>: the compiler's own CLI entry point)
 		main (parses argv into a command and validated flags, then dispatches to check, build, or finalize):
 			- accepts no arguments; reads argv directly
 			- parses argv into a command and validated flags, then dispatches to check, build, or finalize
@@ -200,3 +214,9 @@ llmlang:
 			- --version prints the installed package version, falling back to a bundled version string when llmlang isn't actually installed
 			- rejects a command outside {check, build, finalize}, and rejects any flag that isn't valid for the given command (--coverage on build, say, or --config on finalize) - nothing is silently ignored
 			- --config and --output-format each consume the next argument as their value
+			- for check case:
+				→ call llmlang.cli.run_check
+			- for build case:
+				→ call llmlang.cli.run_build
+			- for finalize case:
+				→ call llmlang.cli.run_finalize

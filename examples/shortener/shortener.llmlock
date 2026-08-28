@@ -1,6 +1,6 @@
 {
-  "lockfile_schema_version": 5,
-  "ruleset_version": "2026-08-21-flow-ref-triples",
+  "lockfile_schema_version": 6,
+  "ruleset_version": "2026-08-28-generated-flow-view",
   "policies": {
     "Backend": {
       "policy[0]": {
@@ -12,12 +12,12 @@
   "entries": {
     "Backend.UrlShortener.create_short_code": {
       "file": "Backend/UrlShortener.py",
-      "text": "+ creates a unique short code for a given long URL, using CodeGenerator to generate the code\naccepts a long URL\ncreates a unique short code for a given long URL\nuses CodeGenerator to generate the code\ngenerated codes must be unique per URL\nreturns the short code\n~ should return the same code when called twice with the same URL\n~ should generate unique codes per URL",
-      "text_hash": "2e72914c1a66e422b0f686efd13b032d8f1ed88c917ac277dbc5409726211c5f",
+      "text": "+ creates a unique short code for a given long URL, using CodeGenerator to generate the code\naccepts a long URL\ncreates a unique short code for a given long URL\n\u2192 call Backend.CodeGenerator.generate\ngenerated codes must be unique per URL\nreturns the short code\n~ should return the same code when called twice with the same URL\n~ should generate unique codes per URL",
+      "text_hash": "204b6af8c5fe4458379258b3ef2d42617abcf2c778e872a253ecd04cb747fa76",
       "code_hash": "3654c44419a515e0d8bdf58413f6ee4c39257d8c82f0dbdfda03a5b2960c98b8",
       "last_change": {
-        "disposition": "extract_by_handle now includes the handle comment line in code_hash (bug fix, closes a real gap where the source comment could drift from the llmlang summary undetected) - no actual code change",
-        "for_spec_hash": "a61e7c53ce8dc3988e6b6a733ac8d82b144ef968340d2b23b4d36098ca3a3781",
+        "disposition": "swapped the 'uses CodeGenerator to generate the code' prose bullet for a \u2192 call Backend.CodeGenerator.generate arrow, and marked both create_short_code and get_url as @entry-point (POST /api/shorten, GET /{code}) - part of moving flow-view content into ordinary llmlang bullets instead of a separately hand-authored .llmflow file. shortener.llmflow is now generated fresh by build/finalize from these bullets; no behavior changed.",
+        "for_spec_hash": "152b6cbc7bda8d94114ee6b2c802c70de3a78b331984d13c533e06a911b9c396",
         "for_code_hash": "3654c44419a515e0d8bdf58413f6ee4c39257d8c82f0dbdfda03a5b2960c98b8"
       }
     },
@@ -25,67 +25,37 @@
       "file": "Backend/UrlShortener.py",
       "text": "+ looks up the original URL for a given short code\naccepts a short code\nlooks up the original URL for a given short code\nreturns the original URL\n~ should return not found for an unknown short code",
       "text_hash": "f6babee59b6fac478121285cf05e8421d133418468118affef3babb717d6435b",
-      "code_hash": "674b400bd7767b69f30da237e680d96f77b713c321d4fd01a0c7676618b0cd61",
-      "last_change": {
-        "disposition": "extract_by_handle now includes the handle comment line in code_hash (bug fix, closes a real gap where the source comment could drift from the llmlang summary undetected) - no actual code change",
-        "for_spec_hash": "d6ad17bdfe6d543cdfbfbfa1053e30125193b965a0fc7b1aff3e7efa83a39b5e",
-        "for_code_hash": "674b400bd7767b69f30da237e680d96f77b713c321d4fd01a0c7676618b0cd61"
-      }
+      "code_hash": "674b400bd7767b69f30da237e680d96f77b713c321d4fd01a0c7676618b0cd61"
     },
     "Backend.UrlShortener._code_to_url": {
       "file": "Backend/UrlShortener.py",
       "text": "+ stores a mapping of short code to original URL\nmapping:\n\t- text (\"aB3xY9\"): lookup key is the short code\n\t- text (\"https://example.com/page\"): value is the original URL",
       "text_hash": "521370a90ce0812b9a1ad3004e5bff6cf49ef34c1e0a227df663f3d2f40a929c",
-      "code_hash": "1a2fac1bfac6dd207f5f0e3a8571bf8eeba76f5654bed0eca1ab0b2fe7f45ea7",
-      "last_change": {
-        "disposition": "data bullets updated to the new type (example): description convention - purely a documentation/legibility change, adds concrete example values alongside the existing type annotations, no code change needed",
-        "for_spec_hash": "9c013b8dfe7bd63474ad8ce847c4890b8dc223337606fd355b116478cd8eea8a",
-        "for_code_hash": "1a2fac1bfac6dd207f5f0e3a8571bf8eeba76f5654bed0eca1ab0b2fe7f45ea7"
-      }
+      "code_hash": "1a2fac1bfac6dd207f5f0e3a8571bf8eeba76f5654bed0eca1ab0b2fe7f45ea7"
     },
     "Backend.CodeGenerator.generate": {
       "file": "Backend/CodeGenerator.py",
       "text": "+ generates a random 6-character alphanumeric code\ngenerates a random 6-character alphanumeric code\nreturns the generated code",
       "text_hash": "30faa392a3b9a3c086cfe209d58911954efe99b41719241587d3e74c24f4187b",
-      "code_hash": "6f2f7ff60ef7f18227ed4ab42bb52b0ff1b0002754ecd3d8002ed91411e455c4",
-      "last_change": {
-        "disposition": "extract_by_handle now includes the handle comment line in code_hash (bug fix, closes a real gap where the source comment could drift from the llmlang summary undetected) - no actual code change",
-        "for_spec_hash": "00619d344561ce68c9b1a71a43252da5af9e32356090fc4950f505ae66c5f42f",
-        "for_code_hash": "6f2f7ff60ef7f18227ed4ab42bb52b0ff1b0002754ecd3d8002ed91411e455c4"
-      }
+      "code_hash": "6f2f7ff60ef7f18227ed4ab42bb52b0ff1b0002754ecd3d8002ed91411e455c4"
     },
     "Frontend.ShortenerUI.form": {
       "file": "Frontend/ShortenerUI.html",
       "text": "+ shows a text input for a long URL and a submit button\nshows a text input for a long URL and a submit button",
       "text_hash": "d756a9c36e41c84e65a2ed67b1ac66ce5e417f3f8b12f991c2f4017feb3443f0",
-      "code_hash": "311887a5c4ec7b0ce4b05c97196bb20810f4d38b9ede3bdfa56fd21556150cb0",
-      "last_change": {
-        "disposition": "extract_by_handle now includes the handle comment line in code_hash (bug fix, closes a real gap where the source comment could drift from the llmlang summary undetected) - no actual code change",
-        "for_spec_hash": "d756a9c36e41c84e65a2ed67b1ac66ce5e417f3f8b12f991c2f4017feb3443f0",
-        "for_code_hash": "311887a5c4ec7b0ce4b05c97196bb20810f4d38b9ede3bdfa56fd21556150cb0"
-      }
+      "code_hash": "311887a5c4ec7b0ce4b05c97196bb20810f4d38b9ede3bdfa56fd21556150cb0"
     },
     "Frontend.ShortenerUI.shortenUrl": {
       "file": "Frontend/ShortenerUI.html",
       "text": "+ uses UrlShortener to create a short code when submitted\naccepts the long URL\nuses UrlShortener to create a short code when submitted\nreturns the short code",
       "text_hash": "79d0b9e69ee3a278b8274d1c10eb997f213c0f424f6ae9383521e54b06d47da7",
-      "code_hash": "c9e31210dc6a622d075c24b5235023940694ae5147461214ae6d098c2bd9e454",
-      "last_change": {
-        "disposition": "extract_by_handle now includes the handle comment line in code_hash (bug fix, closes a real gap where the source comment could drift from the llmlang summary undetected) - no actual code change",
-        "for_spec_hash": "79d0b9e69ee3a278b8274d1c10eb997f213c0f424f6ae9383521e54b06d47da7",
-        "for_code_hash": "c9e31210dc6a622d075c24b5235023940694ae5147461214ae6d098c2bd9e454"
-      }
+      "code_hash": "c9e31210dc6a622d075c24b5235023940694ae5147461214ae6d098c2bd9e454"
     },
     "Frontend.ShortenerUI.renderShortUrl": {
       "file": "Frontend/ShortenerUI.html",
       "text": "+ displays the resulting short URL as a clickable link to the original URL\naccepts the short code\ndisplays the resulting short URL as a clickable link to the original URL",
       "text_hash": "5e421ec381d5f45333bfcd2a169f65ef202f6fa4edbb2fab4321a5504994a136",
-      "code_hash": "71183beb6fd9aaabc247a35b6c3448e5fb26ef3c6656f87e422dc9dd2c379c99",
-      "last_change": {
-        "disposition": "extract_by_handle now includes the handle comment line in code_hash (bug fix, closes a real gap where the source comment could drift from the llmlang summary undetected) - no actual code change",
-        "for_spec_hash": "5e421ec381d5f45333bfcd2a169f65ef202f6fa4edbb2fab4321a5504994a136",
-        "for_code_hash": "71183beb6fd9aaabc247a35b6c3448e5fb26ef3c6656f87e422dc9dd2c379c99"
-      }
+      "code_hash": "71183beb6fd9aaabc247a35b6c3448e5fb26ef3c6656f87e422dc9dd2c379c99"
     }
   },
   "class_bullets": {
@@ -126,55 +96,5 @@
         "code_hash": "cdc50c218e90e55d0b2067966446a517729aa91ae3acd700d11e6b3b46af9a1d"
       }
     ]
-  },
-  "flow_refs": {
-    "flow:shortener.llmflow::Backend.UrlShortener.create_short_code": {
-      "flow": "shortener.llmflow",
-      "entry": "Backend.UrlShortener.create_short_code",
-      "call_names": [
-        "Backend.UrlShortener.create_short_code"
-      ],
-      "entry_spec_hash": "a61e7c53ce8dc3988e6b6a733ac8d82b144ef968340d2b23b4d36098ca3a3781",
-      "code_hash": "3654c44419a515e0d8bdf58413f6ee4c39257d8c82f0dbdfda03a5b2960c98b8",
-      "flow_ref_hash": "17c3a20dbdbc2827a6d9583ce3fa28bb6bd9158b97d5dac3f1574d35b8a43835",
-      "last_change": {
-        "disposition": "new flow file: added shortener.llmflow, a real execution-map for the two HTTP-triggered entry points (POST /api/shorten, GET /{code}). main.py itself is explicitly out of scope for llmlang (harness/wiring only), so the flow starts at the conceptual HTTP trigger and shows the first tracked call it reaches.",
-        "for_entry_spec_hash": "a61e7c53ce8dc3988e6b6a733ac8d82b144ef968340d2b23b4d36098ca3a3781",
-        "for_code_hash": "3654c44419a515e0d8bdf58413f6ee4c39257d8c82f0dbdfda03a5b2960c98b8",
-        "for_flow_ref_hash": "17c3a20dbdbc2827a6d9583ce3fa28bb6bd9158b97d5dac3f1574d35b8a43835"
-      }
-    },
-    "flow:shortener.llmflow::Backend.CodeGenerator.generate": {
-      "flow": "shortener.llmflow",
-      "entry": "Backend.CodeGenerator.generate",
-      "call_names": [
-        "Backend.CodeGenerator.generate"
-      ],
-      "entry_spec_hash": "00619d344561ce68c9b1a71a43252da5af9e32356090fc4950f505ae66c5f42f",
-      "code_hash": "6f2f7ff60ef7f18227ed4ab42bb52b0ff1b0002754ecd3d8002ed91411e455c4",
-      "flow_ref_hash": "864a0d21217b377ce91dbeabbeedf6ae7339351d98997343c1a8676ee2c74404",
-      "last_change": {
-        "disposition": "new flow file, same as create_short_code - see shortener.llmflow.",
-        "for_entry_spec_hash": "00619d344561ce68c9b1a71a43252da5af9e32356090fc4950f505ae66c5f42f",
-        "for_code_hash": "6f2f7ff60ef7f18227ed4ab42bb52b0ff1b0002754ecd3d8002ed91411e455c4",
-        "for_flow_ref_hash": "864a0d21217b377ce91dbeabbeedf6ae7339351d98997343c1a8676ee2c74404"
-      }
-    },
-    "flow:shortener.llmflow::Backend.UrlShortener.get_url": {
-      "flow": "shortener.llmflow",
-      "entry": "Backend.UrlShortener.get_url",
-      "call_names": [
-        "Backend.UrlShortener.get_url"
-      ],
-      "entry_spec_hash": "d6ad17bdfe6d543cdfbfbfa1053e30125193b965a0fc7b1aff3e7efa83a39b5e",
-      "code_hash": "674b400bd7767b69f30da237e680d96f77b713c321d4fd01a0c7676618b0cd61",
-      "flow_ref_hash": "3aa2a61625263a5148495a556eaea731f17c91834ebc42fefdc55870e9e7b349",
-      "last_change": {
-        "disposition": "new flow file, same as create_short_code - see shortener.llmflow.",
-        "for_entry_spec_hash": "d6ad17bdfe6d543cdfbfbfa1053e30125193b965a0fc7b1aff3e7efa83a39b5e",
-        "for_code_hash": "674b400bd7767b69f30da237e680d96f77b713c321d4fd01a0c7676618b0cd61",
-        "for_flow_ref_hash": "3aa2a61625263a5148495a556eaea731f17c91834ebc42fefdc55870e9e7b349"
-      }
-    }
   }
 }

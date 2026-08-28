@@ -31,7 +31,7 @@ from pathlib import Path
 
 
 # private helper of parse(), not independent architecture [llm-exempt]
-def _new_node(name, ext=None, summary=None, line=None):
+def _new_node(name, ext=None, summary=None, line=None, entry_point=None):
     return {
         "kind": None,
         "name": name,
@@ -42,6 +42,7 @@ def _new_node(name, ext=None, summary=None, line=None):
         "bullets": [],
         "tests": [],
         "children": {},
+        "entry_point": entry_point,
     }
 
 
@@ -57,6 +58,8 @@ def _finalize(node, path_desc):
         raise ValueError(f"{path_desc} is missing a parenthesized summary")
     if node["kind"] == "data" and node["tests"]:
         raise ValueError(f"{path_desc} is a data entry and cannot have test bullets")
+    if node["entry_point"] is not None and node["kind"] != "entry":
+        raise ValueError(f"{path_desc} has @entry-point but is not a named entry")
     for name, child in node["children"].items():
         _finalize(child, f"{path_desc}.{name}")
 
@@ -76,11 +79,35 @@ def _parse_header(content):
     return name, summary, marker
 
 
+_ARROW_PREFIXES = ("→ call ", "← return ")
+_CONTENT_PREFIXES = ("- ",) + _ARROW_PREFIXES
+
+
 # private helper of parse(), not independent architecture [llm-exempt]
 def _bullet_text(content: str, relative_depth: int) -> str:
+    if content.startswith(_ARROW_PREFIXES):
+        return "\t" * relative_depth + content
     if relative_depth <= 0:
         return content[2:]
     return "\t" * relative_depth + "- " + content[2:]
+
+
+# private helper of parse(), not independent architecture [llm-exempt]
+def _content_for_storage(content: str) -> str:
+    if content.startswith(_ARROW_PREFIXES):
+        return content
+    return content[2:]
+
+
+# private helper of parse(), not independent architecture [llm-exempt]
+def _parse_entry_point(content: str):
+    """Returns (is_entry_point_line, label) - label is None for a bare
+    @entry-point, or the text inside @entry-point(...)."""
+    if content == "@entry-point":
+        return True, None
+    if content.startswith("@entry-point(") and content.endswith(")"):
+        return True, content[len("@entry-point(") : -1].strip()
+    return False, None
 
 
 # parses a tab-indented llmlang file into a tree of folders, files, classes, and entries [llm:llmlang.parser.parse]
@@ -89,6 +116,8 @@ def parse(path):
     root = _new_node("", None)
     root["kind"] = "folder"
     stack = [(-1, root)]
+    pending_entry_point = False
+    pending_entry_point_label = None
 
     for line_no, raw_line in enumerate(raw_lines, start=1):
         if not raw_line.strip():
@@ -101,13 +130,22 @@ def parse(path):
 
         _, parent = stack[-1]
 
-        if content.startswith("- ") or content.startswith("~ "):
+        is_entry_point, entry_point_label = _parse_entry_point(content)
+        if is_entry_point:
+            assert isinstance(parent, dict) and parent["kind"] in ("file", "class"), (
+                f"@entry-point is only valid immediately before a named entry: {content!r}"
+            )
+            pending_entry_point = True
+            pending_entry_point_label = entry_point_label
+            continue
+
+        if content.startswith(_CONTENT_PREFIXES) or content.startswith("~ "):
             if isinstance(parent, list):
                 assert content.startswith("- "), f"a test bullet isn't valid here: {content!r}"
-                parent.append(content[2:])
+                parent.append(_content_for_storage(content))
                 stack.append((depth, {"kind": "bullet", "target": parent, "base_depth": depth}))
             elif isinstance(parent, dict) and parent.get("kind") == "bullet":
-                assert content.startswith("- "), f"a test bullet isn't valid here: {content!r}"
+                assert content.startswith(_CONTENT_PREFIXES), f"a test bullet isn't valid here: {content!r}"
                 relative_depth = depth - parent["base_depth"]
                 assert relative_depth > 0, f"a nested bullet must be indented: {content!r}"
                 parent["target"].append(_bullet_text(content, relative_depth))
@@ -129,7 +167,7 @@ def parse(path):
                     parent["tests"].append((content[2:], line_no))
                     stack.append((depth, None))
                 else:
-                    parent["bullets"].append(content[2:])
+                    parent["bullets"].append(_content_for_storage(content))
                     stack.append(
                         (
                             depth,
@@ -174,6 +212,10 @@ def parse(path):
             node = _new_node(name, summary=summary, line=line_no)
             if marker == "data":
                 node["kind"] = "data"
+            if pending_entry_point:
+                node["entry_point"] = pending_entry_point_label or True
+            pending_entry_point = False
+            pending_entry_point_label = None
             parent["children"][name] = node
             stack.append((depth, node))
         else:
@@ -250,6 +292,26 @@ def walk_entries(node, folder_parts=(), file_rel=None, class_name=None):
                 [f"+ {child['summary']}"] + child["bullets"] + [f"~ {t}" for t, _line in child["tests"]],
                 child["line"],
             )
+
+
+# already covered by parse()'s own tracked region [llm-exempt]
+def walk_entry_points(node, folder_parts=(), file_rel=None, class_name=None):
+    """Yield (tracking_key, label) for every entry marked @entry-point -
+    label is a string when @entry-point(label) was given, True when the
+    bare form was used (the entry's own summary stands in as the label)."""
+    for name, child in node["children"].items():
+        kind = child["kind"]
+        if kind == "folder":
+            yield from walk_entry_points(child, folder_parts + (name,), None, None)
+        elif kind == "file":
+            rel = "/".join(folder_parts + (f"{name}.{child['ext']}",))
+            yield from walk_entry_points(child, folder_parts, rel, None)
+        elif kind == "class":
+            yield from walk_entry_points(child, folder_parts, file_rel, name)
+        elif kind == "entry" and child["entry_point"] is not None:
+            local_key = f"{class_name}.{name}" if class_name else name
+            tracking_key = f"{_file_label(file_rel)}.{local_key}"
+            yield tracking_key, child["entry_point"]
 
 
 # already covered by parse()'s own tracked region [llm-exempt]

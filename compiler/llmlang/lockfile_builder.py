@@ -20,7 +20,7 @@ from llmlang.extractor import (
     test_comment_roots,
     test_comments_by_node,
 )
-from llmlang.flow import flow_path_for_llmlang, flow_refs
+from llmlang.flow import flow_path_for_llmlang, generate_flow_for_tree
 from llmlang.lockfile import LOCKFILE_SCHEMA_VERSION, RULESET_VERSION
 from llmlang.lockfile_checker import check
 from llmlang.parser import (
@@ -64,20 +64,6 @@ def _hash_all_entries(llmlang_path: Path, root) -> dict:
         spec_hash = _sha256("\n".join([text] + policy_texts))
         result[tracking_key] = (file_rel, text, _sha256(text), _sha256(code), spec_hash)
     return result
-
-
-# private helper of build()/finalize(), not independent architecture [llm-exempt]
-def _entry_records_from_hashes(hashed: dict) -> dict:
-    return {
-        key: {
-            "file": file_rel,
-            "text": text,
-            "text_hash": text_hash,
-            "code_hash": code_hash,
-            "spec_hash": spec_hash,
-        }
-        for key, (file_rel, text, text_hash, code_hash, spec_hash) in hashed.items()
-    }
 
 
 # private helper of build()/finalize(), not independent architecture [llm-exempt]
@@ -157,14 +143,18 @@ def _test_traces(llmlang_path: Path, root) -> dict:
     return traces
 
 
-# refuses to write a lockfile over an unresolved or ambiguous flow call target [llm-exempt]
-def _flow_refs_or_raise(llmlang_path: Path, entry_records: dict) -> dict:
-    refs, errors = flow_refs(llmlang_path, entry_records)
+# refuses to write a lockfile or flow file when an entry's own → call line doesn't resolve [llm-exempt]
+def _write_flow_or_raise(llmlang_path: Path, root):
+    text, errors = generate_flow_for_tree(root)
     if errors:
         flow_name = flow_path_for_llmlang(llmlang_path).name
-        details = "\n".join(f"- line {e['line']}: {e['message']}" for e in errors)
-        raise ValueError(f"flow call errors in {flow_name}:\n{details}")
-    return refs
+        details = "\n".join(f"- {e['source']}: {e['message']}" for e in errors)
+        raise ValueError(f"flow call errors while generating {flow_name}:\n{details}")
+    flow_path = flow_path_for_llmlang(llmlang_path)
+    if text:
+        flow_path.write_text(text, encoding="utf-8")
+    elif flow_path.exists():
+        flow_path.unlink()
 
 
 # builds a lockfile by using Parser to read llmlang, Extractor to locate each entry's code, and Lockfile to record a text and code hash per entry [llm:llmlang.lockfile_builder.build]
@@ -172,8 +162,8 @@ def build(llmlang_path: Path, lockfile_path: Path):
     root = parse(llmlang_path)
     test_traces = _test_traces(llmlang_path, root)
     hashed = _hash_all_entries(llmlang_path, root)
-    entry_records = _entry_records_from_hashes(hashed)
     policies, class_bullets = _policies_and_class_bullets(root)
+    _write_flow_or_raise(llmlang_path, root)
 
     lock = {
         "lockfile_schema_version": LOCKFILE_SCHEMA_VERSION,
@@ -185,7 +175,6 @@ def build(llmlang_path: Path, lockfile_path: Path):
         },
         "class_bullets": class_bullets,
         "test_traces": test_traces,
-        "flow_refs": _flow_refs_or_raise(llmlang_path, entry_records),
     }
     lockfile_path.write_text(json.dumps(lock, indent=2), encoding="utf-8")
     return lock
@@ -211,9 +200,8 @@ def finalize(llmlang_path: Path, lockfile_path: Path, changes_path: Path):
     root = parse(llmlang_path)
     test_traces = _test_traces(llmlang_path, root)
     hashed = _hash_all_entries(llmlang_path, root)
-    entry_records = _entry_records_from_hashes(hashed)
-    current_flow_refs = _flow_refs_or_raise(llmlang_path, entry_records)
     policies, class_bullets = _policies_and_class_bullets(root)
+    _write_flow_or_raise(llmlang_path, root)
 
     new_changes = {}
     resolved = {}
@@ -233,33 +221,7 @@ def finalize(llmlang_path: Path, lockfile_path: Path, changes_path: Path):
                 resolved[key] = stamped
             # else: empty or malformed value, drop it
             continue
-
-        if key in current_flow_refs:
-            current = current_flow_refs[key]
-            if isinstance(value, dict):
-                if (
-                    value.get("for_entry_spec_hash") == current["entry_spec_hash"]
-                    and value.get("for_code_hash") == current["code_hash"]
-                    and value.get("for_flow_ref_hash") == current["flow_ref_hash"]
-                ):
-                    new_changes[key] = value
-                    resolved[key] = value
-            elif isinstance(value, str) and value:
-                stamped = {
-                    "disposition": value,
-                    "for_entry_spec_hash": current["entry_spec_hash"],
-                    "for_code_hash": current["code_hash"],
-                    "for_flow_ref_hash": current["flow_ref_hash"],
-                }
-                new_changes[key] = stamped
-                resolved[key] = stamped
-            continue
-        if key.startswith("flow:") and isinstance(value, str) and value:
-            # A locked flow reference can be intentionally removed. Require
-            # a one-time disposition, then prune it from both lock and changes.
-            resolved[key] = value
-            continue
-        # orphaned - this entry or flow reference no longer exists
+        # orphaned - this entry no longer exists
 
     missing = flagged_entries - resolved.keys()
     if missing:
@@ -274,18 +236,12 @@ def finalize(llmlang_path: Path, lockfile_path: Path, changes_path: Path):
         "entries": {},
         "class_bullets": class_bullets,
         "test_traces": test_traces,
-        "flow_refs": {},
     }
     for key, (file_rel, text, text_hash, code_hash, _spec_hash) in hashed.items():
         entry_record = {"file": file_rel, "text": text, "text_hash": text_hash, "code_hash": code_hash}
         if key in resolved:
             entry_record["last_change"] = resolved[key]
         lock["entries"][key] = entry_record
-    for key, record in current_flow_refs.items():
-        flow_record = dict(record)
-        if key in resolved:
-            flow_record["last_change"] = resolved[key]
-        lock["flow_refs"][key] = flow_record
 
     lockfile_path.write_text(json.dumps(lock, indent=2), encoding="utf-8")
     changes_path.write_text(json.dumps(new_changes, indent=2), encoding="utf-8")
