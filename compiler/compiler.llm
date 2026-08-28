@@ -75,9 +75,9 @@ llmlang:
 			- reads the sibling `.llmflow` file when one exists
 			- resolves internal `call` targets to known llmlang entries by exact name or unique suffix match
 			- treats `call ... via ...` targets as external calls that are not locked to source handles
-			- rejects unresolved non-external call targets
+			- reports each unresolved or ambiguous non-external call target as an error record with its source line, rather than rejecting the whole file
 			- combines every call block for the same internal entry into one flow reference hash
-			- returns flow reference records keyed by flow file and canonical llmlang entry
+			- returns flow reference records keyed by flow file and canonical llmlang entry, together with the list of any call-target errors found
 
 	lockfile_builder.py:
 		build (builds a lockfile by using Parser to read llmlang, Extractor to locate each entry's code, and Lockfile to record a text and code hash per entry):
@@ -86,6 +86,7 @@ llmlang:
 			- writes test trace records with the llm-test explanation text, relative path, and backing code hash
 			- writes flow reference records for internal calls in the sibling flow file
 			- refuses to write the lockfile when any test bullet lacks a matching llm-test comment or any llm-test comment lacks a matching test bullet
+			- refuses to write the lockfile when any internal flow call target is unresolved or ambiguous
 			- has no notion of dispositions or a change manifest at all; never reads or writes anything but the lockfile itself
 			- should reproduce the same hashes when run again against an unchanged codebase
 			- returns the built lock data
@@ -93,6 +94,7 @@ llmlang:
 		finalize (guards an incremental rebuild against silently skipping a flagged entry, reading and updating a change manifest bound to the exact spec and code hashes it describes):
 			- accepts an llmlang file path, a lockfile output path, and a change manifest file path
 			- uses Checker to find every named entry and flow reference currently flagged against the existing lockfile, and refuses to write anything unless the change manifest covers every one of them with a non-empty disposition
+			- refuses to write anything, same as build, when any internal flow call target is unresolved or ambiguous
 			- accepts a fresh disposition in the manifest as a plain string, and stamps it with the entry's current spec hash and code hash
 			- stamps fresh flow dispositions with the referenced entry's current spec hash, current code hash, and current flow reference hash
 			- a spec hash combines the entry's own text with every policy currently covering it, so a disposition goes stale whether the entry's own text changed or an applicable policy did
@@ -120,6 +122,7 @@ llmlang:
 			- reports TEST_TRACE_STALE when any llm-test comment lacks a matching test bullet with the same text and canonical node name
 			- reports TEST_CODE_DIVERGED when a linked test's backing code hash differs from the lockfile
 			- reports FLOW_DIVERGED when an internal flow reference is new, removed, or stale against the referenced llmlang entry, backing code, or flow block text
+			- reports FLOW_ERROR, with the flow file and source line, when a flow call target is unresolved or ambiguous, without losing any other finding for the same file
 			- should report an entry as SPEC_DIVERGED when its own llmlang text changed, it's brand new, or an upstream policy covering it changed
 			- should report an entry as CODE_DIVERGED when its handle is missing from the code or its code changed unexpectedly
 			- should report an unmodified codebase as fully clean
@@ -156,6 +159,7 @@ llmlang:
 		check_one (checks a single llmlang file, adding coverage findings when coverage is active):
 			- accepts an llmlang file path and whether coverage checking is active
 			- checks a single llmlang file, adding coverage findings when coverage is active
+			- if checking raises an error, reports it as a single ERROR finding instead of letting the exception propagate
 			- returns whether it checked out clean and the combined list of findings
 
 		print_report_text (prints every finding across every checked file in one delineated FAILURES section, or a bare OK line when nothing was flagged):

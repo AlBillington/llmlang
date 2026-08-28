@@ -77,6 +77,7 @@ except ModuleNotFoundError:
     tomllib = None
 
 from .coverage_checker import check_coverage
+from .lockfile import Finding
 from .lockfile_builder import build, finalize
 from .lockfile_checker import check
 
@@ -144,7 +145,7 @@ def check_one(llmlang_path: Path, coverage: bool = False) -> tuple[bool, list]:
     try:
         ok, _flagged, findings = check(llmlang_path, lockfile_path)
     except ValueError as e:
-        return False, [str(e)]
+        return False, [Finding(category="ERROR", message=str(e), file=str(llmlang_path))]
 
     if coverage:
         coverage_findings = check_coverage(llmlang_path)

@@ -33,15 +33,10 @@ def _is_external_target(target: str) -> bool:
 
 
 # private helper of flow_refs(), not independent architecture [llm-exempt]
-def _resolve_target(target: str, entry_keys: set[str]) -> str | None:
+def _match_targets(target: str, entry_keys: set[str]) -> list[str]:
     if target in entry_keys:
-        return target
-    matches = [key for key in entry_keys if key.endswith("." + target)]
-    if len(matches) == 1:
-        return matches[0]
-    if len(matches) > 1:
-        raise ValueError(f"ambiguous flow call target {target!r}: {matches}")
-    return None
+        return [target]
+    return [key for key in entry_keys if key.endswith("." + target)]
 
 
 # private helper of flow_refs(), not independent architecture [llm-exempt]
@@ -55,42 +50,53 @@ def _call_block(lines: list[str], start_index: int) -> str:
     return "\n".join(lines[start_index:end_index])
 
 
-# returns hash records for internal function references in the sibling flow file [llm:llmlang.flow.flow_refs]
-def flow_refs(llmlang_path: Path, entries: dict) -> dict:
-    """Return flow lock records for the sibling .llmflow file, if present.
+# returns hash records for internal function references in the sibling flow file, plus any unresolved/ambiguous call targets [llm:llmlang.flow.flow_refs]
+def flow_refs(llmlang_path: Path, entries: dict) -> tuple[dict, list[dict]]:
+    """Return (refs, errors) for the sibling .llmflow file, if present.
 
     A flow reference is keyed by flow file and canonical llmlang entry.
     When an entry appears multiple times in one flow file, its flow hash
     combines every call block in source order so the disposition reviews
     the function-flow relationship once.
+
+    A call target that can't be resolved to exactly one entry (missing or
+    ambiguous) does not raise: it's reported as an error record with the
+    1-based source line, so a caller can surface it as a normal finding
+    without losing every other finding for the file. Resolvable refs are
+    still returned alongside any errors.
     """
     flow_path = flow_path_for_llmlang(llmlang_path)
     if not flow_path.exists():
-        return {}
+        return {}, []
 
     lines = flow_path.read_text(encoding="utf-8").splitlines()
     entry_keys = set(entries)
     blocks_by_entry = {}
     call_names_by_entry = {}
-    unresolved = []
+    errors = []
 
     for i, line in enumerate(lines):
         target = _call_target(line)
         if target is None:
             continue
-        resolved = _resolve_target(target, entry_keys)
-        if resolved is None:
+        matches = _match_targets(target, entry_keys)
+        if len(matches) == 1:
+            resolved = matches[0]
+        elif len(matches) == 0:
             if not _is_external_target(target):
-                unresolved.append(target)
+                errors.append({
+                    "line": i + 1,
+                    "message": f"unresolved flow call target {target!r}: no matching llmlang entry",
+                })
+            continue
+        else:
+            errors.append({
+                "line": i + 1,
+                "message": f"ambiguous flow call target {target!r}: matches {sorted(matches)}",
+            })
             continue
         blocks_by_entry.setdefault(resolved, []).append(_call_block(lines, i))
         call_names_by_entry.setdefault(resolved, set()).add(target)
-
-    if unresolved:
-        raise ValueError(
-            "unresolved non-external flow call targets in "
-            f"{flow_path.name}: {sorted(set(unresolved))}"
-        )
 
     rel_flow = flow_path.relative_to(llmlang_path.parent).as_posix()
     refs = {}
@@ -105,4 +111,4 @@ def flow_refs(llmlang_path: Path, entries: dict) -> dict:
             "code_hash": entry["code_hash"],
             "flow_ref_hash": _sha256("\n\n---\n\n".join(blocks)),
         }
-    return refs
+    return refs, errors

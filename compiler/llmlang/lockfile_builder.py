@@ -20,7 +20,7 @@ from llmlang.extractor import (
     test_comment_roots,
     test_comments_by_node,
 )
-from llmlang.flow import flow_refs
+from llmlang.flow import flow_path_for_llmlang, flow_refs
 from llmlang.lockfile import LOCKFILE_SCHEMA_VERSION, RULESET_VERSION
 from llmlang.lockfile_checker import check
 from llmlang.parser import (
@@ -157,6 +157,16 @@ def _test_traces(llmlang_path: Path, root) -> dict:
     return traces
 
 
+# refuses to write a lockfile over an unresolved or ambiguous flow call target [llm-exempt]
+def _flow_refs_or_raise(llmlang_path: Path, entry_records: dict) -> dict:
+    refs, errors = flow_refs(llmlang_path, entry_records)
+    if errors:
+        flow_name = flow_path_for_llmlang(llmlang_path).name
+        details = "\n".join(f"- line {e['line']}: {e['message']}" for e in errors)
+        raise ValueError(f"flow call errors in {flow_name}:\n{details}")
+    return refs
+
+
 # builds a lockfile by using Parser to read llmlang, Extractor to locate each entry's code, and Lockfile to record a text and code hash per entry [llm:llmlang.lockfile_builder.build]
 def build(llmlang_path: Path, lockfile_path: Path):
     root = parse(llmlang_path)
@@ -175,7 +185,7 @@ def build(llmlang_path: Path, lockfile_path: Path):
         },
         "class_bullets": class_bullets,
         "test_traces": test_traces,
-        "flow_refs": flow_refs(llmlang_path, entry_records),
+        "flow_refs": _flow_refs_or_raise(llmlang_path, entry_records),
     }
     lockfile_path.write_text(json.dumps(lock, indent=2), encoding="utf-8")
     return lock
@@ -202,7 +212,7 @@ def finalize(llmlang_path: Path, lockfile_path: Path, changes_path: Path):
     test_traces = _test_traces(llmlang_path, root)
     hashed = _hash_all_entries(llmlang_path, root)
     entry_records = _entry_records_from_hashes(hashed)
-    current_flow_refs = flow_refs(llmlang_path, entry_records)
+    current_flow_refs = _flow_refs_or_raise(llmlang_path, entry_records)
     policies, class_bullets = _policies_and_class_bullets(root)
 
     new_changes = {}

@@ -31,7 +31,7 @@ from llmlang.extractor import (
     test_comment_roots,
     test_comments_by_node,
 )
-from llmlang.flow import flow_refs
+from llmlang.flow import flow_path_for_llmlang, flow_refs
 from llmlang.lockfile import Finding, LOCKFILE_SCHEMA_VERSION, RULESET_VERSION
 from llmlang.parser import (
     applicable_policy_text,
@@ -373,7 +373,17 @@ def check(llmlang_path: Path, lockfile_path: Path) -> tuple:
             ))
             ok = False
 
-    current_flow_refs = flow_refs(llmlang_path, current_entries)
+    current_flow_refs, flow_errors = flow_refs(llmlang_path, current_entries)
+    if flow_errors:
+        flow_file = str(flow_path_for_llmlang(llmlang_path))
+        for error in flow_errors:
+            findings.append(Finding(
+                category="FLOW_ERROR",
+                message=f"FLOW_ERROR ({error['message']})",
+                file=flow_file,
+                line=error["line"],
+            ))
+        ok = False
     locked_flow_refs = lock.get("flow_refs", {})
     for key, current in current_flow_refs.items():
         locked = locked_flow_refs.get(key)
