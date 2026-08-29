@@ -1,12 +1,12 @@
 {
   "llmlang.flow.generate_flow": {
-    "disposition": "generator now renders a plain 'returns ...' bullet with a \u2190 marker instead of -, matching an explicit \u2190 return line, so authors don't need to rewrite every existing accepts/returns bookend bullet just to get the arrow. The change lives entirely in the already-exempt _return_text/_render_line helpers above this handle in flow.py, so generate_flow's own tracked code is unchanged; only its bullets were updated to describe the new rendering behavior.",
-    "for_spec_hash": "a7cf86b195f602ec1c1672defbf5bc3c50c16d850b43d27f453b089859c87fcc",
-    "for_code_hash": "0397dae0c714300c103c9cdb114e779ed7e6f3cf079528267f00c61ed6e0f9d7"
+    "disposition": "a called entry's own trailing return bullet (\"returns ...\" or an explicit \u2190 return) now renders at the calling \u2192 call line's own depth instead of nested one level inside the called entry's body - matches flow-format.md's original stated rule that a return sits at the same indentation as its matching call, marking control coming back out to the caller's level rather than still being 'inside' the callee.",
+    "for_spec_hash": "d0b02cd68c09da7f97dd9a6a1f597894e9233dc331ae16e0fe55f43043be879a",
+    "for_code_hash": "d38abc9f01aeb78ca881d23b28422e75446c062ce1c160820f81075f8194208b"
   },
   "llmlang.flow.generate_flow_for_tree": {
-    "disposition": "bullets now state explicitly that ~ test bullets are excluded from flow content - this was already true (the entries dict it builds already filtered them out), just undocumented until now. No code changed.",
-    "for_spec_hash": "735a922587f6115665cbe4b385dad3595159809a6a7975cdf23dd2ab0a378795",
+    "disposition": "also excludes a top-level 'should ...' bullet from flow content, the same as a ~ test bullet - some entries (llmlang.lockfile_checker.check among them) describe guarantees using that phrasing as plain - bullets rather than literal ~ bullets, and they read exactly like test assertions cluttering an execution trace, so they're excluded from generated flow views the same way.",
+    "for_spec_hash": "d248b0000739678073c73b447e880b23ac3325536cff207a8b9d034f7af4b7cf",
     "for_code_hash": "2eb4849ff28584d38e49c1952304111530e2d4ef47e6329e185449e4acc8e6fe"
   }
 }

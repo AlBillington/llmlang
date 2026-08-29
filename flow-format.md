@@ -11,9 +11,10 @@ For the concrete syntax that produces this file (`@entry-point`, `→ call`, `�
 The algorithm, per `@entry-point` entry found:
 
 1. Start a new section headed by the entry's label — its own text after `@entry-point(...)`, or `<canonical name> (<summary>):` when the bare form was used.
-2. Render the entry's own bullets in order, at one level of indentation. `~ ` test bullets are never rendered - a flow view is about execution, not test coverage, and they're excluded regardless of whether the covered entry has any. A plain `- returns ...` bullet (the accepts/returns bookend, [llmlang-format.md](llmlang-format.md) §4b) renders with `← ` instead of `- `, the same as an explicit `← return ...` line - no need to author the arrow form just for this common case.
+2. Render the entry's own bullets in order, at one level of indentation. Two kinds of bullet are never rendered, since a flow view is about execution, not test coverage: a `~ ` test bullet, and a top-level `- should ...` bullet, since that phrasing is llmlang's own test-style convention ([llmlang-format.md](llmlang-format.md) §4) even on the rare bullet that uses it without a literal `~`. A plain `- returns ...` bullet (the accepts/returns bookend, §4b) renders with `← ` instead of `- `, the same as an explicit `← return ...` line - no need to author the arrow form just for this common case.
 3. For every `→ call CanonicalName` bullet encountered, resolve the target to exactly one llmlang entry (by exact canonical name or unique suffix match) and, the *first* time that entry is reached anywhere in this section's trace, inline its own bullets recursively, one level deeper. A repeat reference to an already-expanded entry — including a direct or indirect cycle — renders as a bare `→ call` line with nothing nested under it.
-4. A `→ call ... via ExternalService` bullet is left as-is; there's no local entry to resolve or expand.
+4. A called entry's own top-level trailing return (`returns ...` or `← return ...`) renders at the calling `→ call` line's own depth, not nested one level inside the called entry's other bullets - it marks control coming back out to the caller, not something still happening inside the callee.
+5. A `→ call ... via ExternalService` bullet is left as-is; there's no local entry to resolve or expand.
 
 Every `@entry-point` entry across the whole `.llm` file becomes its own section in the one `.llmflow` file, in tree order — the same one-`.llmflow`-per-`.llm` convention as before, just generated instead of hand-assembled.
 
@@ -48,10 +49,10 @@ The generated `.llmflow`:
 GET /users/{id}: returns one user
 	→ call UserRepository.load
 		→ call read a row via UserRepository table with user_id
-		← returns the row mapped to a user, or nothing
+	← returns the row mapped to a user, or nothing
 	← returns the user, or nothing if no user has that id
 ```
 
-`find_user` itself is the `@entry-point`, so its own bullets render directly under the header — there's no `→ call find_user` wrapper, since the header line already means "execution starts here."
+`find_user` itself is the `@entry-point`, so its own bullets render directly under the header — there's no `→ call find_user` wrapper, since the header line already means "execution starts here." `load`'s own return sits at the same depth as `→ call UserRepository.load`, not nested inside it (rule 4) - reading top to bottom, execution goes into `load`, reads a row, then comes back out with the mapped row before `find_user`'s own return.
 
 Note there is nothing here that isn't also true reading the `.llm` file directly — the flow file adds no information, only a different, execution-ordered arrangement of the same facts.
