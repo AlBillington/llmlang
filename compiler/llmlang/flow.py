@@ -48,12 +48,21 @@ def _match_targets(target: str, entry_keys: set) -> list:
 
 
 # private helper of generate_flow(), not independent architecture [llm-exempt]
-def _render_bullets(bullets, base_indent, entry_keys, bullets_by_key, visited, errors, source_key):
+def _render_bullets(bullets, base_indent, entry_keys, bullets_by_key, visited, errors, source_key, call_depth=None):
     out = []
     for bullet in bullets:
         depth, text = _line_depth_and_text(bullet)
         abs_depth = base_indent + depth
-        out.append(_render_line(text, abs_depth))
+        return_text = _return_text(text)
+        if depth == 0 and call_depth is not None and return_text is not None:
+            # the callee's own trailing return sits at the calling → call
+            # line's own depth, not nested inside the callee's body - it
+            # marks control coming back out to the caller's level. The
+            # dash leader keeps it visually distinct from a sibling bullet
+            # at that same depth despite the jump.
+            out.append("\t" * call_depth + "←---- " + return_text)
+        else:
+            out.append(_render_line(text, abs_depth))
         if not text.startswith("→ call "):
             continue
         target = text[len("→ call "):].strip()
@@ -78,7 +87,7 @@ def _render_bullets(bullets, base_indent, entry_keys, bullets_by_key, visited, e
         visited.add(resolved)
         out.extend(_render_bullets(
             bullets_by_key.get(resolved, []), abs_depth + 1, entry_keys,
-            bullets_by_key, visited, errors, resolved,
+            bullets_by_key, visited, errors, resolved, call_depth=abs_depth,
         ))
     return out
 

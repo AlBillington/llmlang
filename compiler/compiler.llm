@@ -111,11 +111,15 @@ llmlang:
 	coverage_checker.py:
 		check_coverage (checks every module- and class-level Python function against comment handles and inline llm-exempt markers, reporting each uncovered one as UNMAPPED_CODE):
 			- accepts an llmlang file path
-			- checks every module- and class-level Python function against comment handles and inline llm-exempt markers, reporting each uncovered one as UNMAPPED_CODE
-			- only checks files with a Python extension; files in other languages are silently skipped, not flagged
-			- a function is covered if a comment handle sits on the line directly above it, or above its first decorator
-			- a function nested inside another function is never checked on its own; it has no stable qualified name to report or exempt, and its enclosing function's own handle (if any) already sweeps its code into that handle's region
-			- a function is exempt if a bare "[llm-exempt]" comment sits on the line directly above it, or above its first decorator - a reason may be written before the tag on the same line but isn't required, and there is no built-in exemption for dunder methods, private helpers, or anything else
+			- repeats for each file the llmlang tree knows about:
+				- checks whether the file has a Python extension:
+					- if no, skips it, not flagged
+					- if yes, continues processing
+				- only considers functions defined at module or class level; a function nested inside another function is never checked on its own, since it has no stable qualified name to report or exempt, and its enclosing function's own handle (if any) already sweeps its code into that handle's region
+				- repeats for each such function:
+					- checks whether a comment handle, or a bare "[llm-exempt]" comment, sits on the line directly above it or above its first decorator (a reason may be written before the exempt tag on the same line but isn't required, and there is no built-in exemption for dunder methods, private helpers, or anything else):
+						- if yes, continues to the next function
+						- if no, reports it as UNMAPPED_CODE
 			- returns the list of findings, each a Finding record
 
 	lockfile_checker.py:

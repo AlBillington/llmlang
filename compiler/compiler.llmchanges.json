@@ -1,22 +1,7 @@
 {
-  "llmlang.lockfile_builder.build": {
-    "disposition": "rewrote two 'refuses to write anything when X' bullets into checks-whether/if-yes structure, per the new llmlang-format.md \u00a74c rule (condition leads, sub-bullet for the outcome, especially when several bullets describe alternative trigger conditions for the same action). No behavior changed.",
-    "for_spec_hash": "e08b5de976401e36a390f09fa1313c399886a8c6644f5e1a3848c0f5726aa055",
-    "for_code_hash": "395647527734dee36d8b9e2922beaca0069d6e9019c1af8c7c093420569ff8dc"
-  },
-  "llmlang.lockfile_builder.finalize": {
-    "disposition": "same restructuring as build() for its own 'refuses to write anything... when X' bullet, for consistency. No behavior changed.",
-    "for_spec_hash": "e36cdc880fbb07f33e8b5c1a6515a51a4f98b9c46604577605e9ffc77bccce9e",
-    "for_code_hash": "f581668bf2be64d6d75abcf5f3bcbdbc40c850950ce5c0c57926a45a604dfa65"
-  },
-  "llmlang.lockfile_checker.check": {
-    "disposition": "rewrote all seven finding-report bullets (TEST_LINK_MISSING through CODE_DIVERGED) into checks-whether/if-yes-or-if-no structure - they previously led with the result ('reports X when Y'), which reads as a flat sequence of facts rather than alternative outcomes of distinct checks, and phrasing was inconsistent (some said 'an entry', some didn't). The condition now leads uniformly in every one. No behavior changed.",
-    "for_spec_hash": "010ba11dd12b03125e27934cac43df47a72bb414f5da16f9144799d8b3f31c35",
-    "for_code_hash": "5ef6fee0620bf9f2d0c9fed5b57fd2ae0791b75dd8ce5880c88238852848bd7b"
-  },
-  "llmlang.cli.load_config": {
-    "disposition": "same restructuring: 'uses X when given, otherwise Y', 'warns...when Y', and 'falls back...when Y' all rewritten condition-first with if-yes/if-no sub-bullets, matching the new \u00a74c rule. No behavior changed.",
-    "for_spec_hash": "d399f53dd731a554b0a46ebf692b815249020b2bff74412ddc0c7d7508431593",
-    "for_code_hash": "eead4c5defe4756cf7edbb8e76631471c4dba01e7674e043861594c6ed0b2430"
+  "llmlang.coverage_checker.check_coverage": {
+    "disposition": "rewrote bullets from a rules/definitions style ('a function is covered if...', 'a function is exempt if...') into an execution-ordered checks-whether/repeats structure matching the real code's actual loop-and-branch shape (walk files, filter to .py, walk module/class-level functions, check handle-or-exempt, report UNMAPPED_CODE if neither). Same facts, verified against coverage_checker.py directly - no behavior changed. The old style read fine on its own in the .llm file, but reads out of place once inlined into a generated flow trace next to genuinely execution-ordered bullets, since it was never authored with that composition in mind.",
+    "for_spec_hash": "6898f7570b70601175c758799e645c9de268797df4bae10eaab16afe962be11d",
+    "for_code_hash": "6f50f5b8a4bc58f99ac84ca6e6b9a992ae653c5db5f515164e565212f538fe76"
   }
 }

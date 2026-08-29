@@ -19,18 +19,18 @@ llmlang <command>: the compiler's own CLI entry point
 					- if yes, warns to stderr and returns an empty config, rather than crashing
 				- checks whether no pyproject.toml was found at all:
 					- if yes, falls back to an empty config, with no warning
-				←---- returns the [tool.llmlang] table
+			←---- returns the [tool.llmlang] table
 			→ call llmlang.cli.resolve_coverage
 				- accepts the parsed flags and the loaded config
 				- decides whether --coverage is active, letting a CLI flag override the config either way
 				- --no-coverage always forces it off, then --coverage always forces it on, then the config's own coverage value is the default
-				←---- returns whether coverage checking is active
+			←---- returns whether coverage checking is active
 			- accepts any number of file or directory paths, auto-discovering every *.llm file under a directory and checking a .llm file directly
 			→ call llmlang.cli.discover_llm_files
 				- accepts a root directory and an extra set of directory names to exclude
 				- finds every *.llm file under a directory, honoring the built-in and config-configured exclusions
 				- excludes .git, __pycache__, node_modules, venv, and .venv by default, plus anything the config's exclude list adds
-				←---- returns the sorted list of discovered files
+			←---- returns the sorted list of discovered files
 			- warns to stderr and skips a path that doesn't exist, rather than failing the whole run
 			- exits with an error if no .llm files are found under any given path
 			- repeats checking for each discovered or directly given llmlang file:
@@ -56,20 +56,24 @@ llmlang <command>: the compiler's own CLI entry point
 						- reports a codebase with none of these changes as fully clean
 						- never prints anything itself; every finding is returned as a Finding record in a list, so a caller can present every failure from a run together instead of relying on interleaved prints, or render them as structured data instead of text
 						- each finding names a file and line where known: entry-level findings point at the entry's header line in the llmlang file, code-level findings point at the handle's own comment line in the source file
-						←---- returns whether everything checked out clean, the set of named-entry tracking keys currently flagged for any reason, and the list of findings
+					←---- returns whether everything checked out clean, the set of named-entry tracking keys currently flagged for any reason, and the list of findings
 					- if checking raises an error, reports it as a single ERROR finding instead of letting the exception propagate
 					- checks whether coverage checking is active:
 						- if yes:
 							→ call llmlang.coverage_checker.check_coverage
 								- accepts an llmlang file path
-								- checks every module- and class-level Python function against comment handles and inline llm-exempt markers, reporting each uncovered one as UNMAPPED_CODE
-								- only checks files with a Python extension; files in other languages are silently skipped, not flagged
-								- a function is covered if a comment handle sits on the line directly above it, or above its first decorator
-								- a function nested inside another function is never checked on its own; it has no stable qualified name to report or exempt, and its enclosing function's own handle (if any) already sweeps its code into that handle's region
-								- a function is exempt if a bare "[llm-exempt]" comment sits on the line directly above it, or above its first decorator - a reason may be written before the tag on the same line but isn't required, and there is no built-in exemption for dunder methods, private helpers, or anything else
-								←---- returns the list of findings, each a Finding record
+								- repeats for each file the llmlang tree knows about:
+									- checks whether the file has a Python extension:
+										- if no, skips it, not flagged
+										- if yes, continues processing
+									- only considers functions defined at module or class level; a function nested inside another function is never checked on its own, since it has no stable qualified name to report or exempt, and its enclosing function's own handle (if any) already sweeps its code into that handle's region
+									- repeats for each such function:
+										- checks whether a comment handle, or a bare "[llm-exempt]" comment, sits on the line directly above it or above its first decorator (a reason may be written before the exempt tag on the same line but isn't required, and there is no built-in exemption for dunder methods, private helpers, or anything else):
+											- if yes, continues to the next function
+											- if no, reports it as UNMAPPED_CODE
+							←---- returns the list of findings, each a Finding record
 						- if no, skips coverage checking
-					←---- returns whether it checked out clean and the combined list of findings
+				←---- returns whether it checked out clean and the combined list of findings
 			- prints "checking X" progress and any warnings to stderr, so stdout stays clean for the report in either format
 			- for json case:
 				→ call llmlang.cli.print_report_json
@@ -98,7 +102,7 @@ llmlang <command>: the compiler's own CLI entry point
 					- if yes, refuses to write anything
 				- has no notion of dispositions or a change manifest at all; never reads or writes anything but the lockfile and the generated flow file
 				- reproduces the same hashes when run again against an unchanged codebase
-				←---- returns the built lock data
+			←---- returns the built lock data
 			- exits 1 and prints the error on failure
 	- for finalize case:
 		→ call llmlang.cli.run_finalize
@@ -116,5 +120,5 @@ llmlang <command>: the compiler's own CLI entry point
 				- for a manifest entry that's already stamped, keeps it only if both hashes still match the entry's current state; otherwise drops it as stale, along with any entry whose key no longer exists
 				- builds every hash and disposition fresh from the current llmlang text, current code, current policies, and current manifest only; never carries anything forward from the lockfile's own prior content
 				- writes both the new lockfile and the updated (stamped and pruned) manifest file, but never alters a disposition's own text
-				←---- returns the built lock data
+			←---- returns the built lock data
 			- exits 1 and prints the error on failure
