@@ -82,6 +82,8 @@ Where there's something to say, two separate single-purpose bullets frame the en
 
 Never state the return value twice. If a regular behavioral bullet already says what's returned — most often because it already starts with "returns" itself ("returns whether the roll's original size is zero or less") — that bullet already *is* the closing returns bullet; it does not get a second, more generic "returns Y" bullet stacked next to it restating the same fact in vaguer words. Only add a standalone returns bullet when no existing bullet already states the return value explicitly. This makes the returns half of the convention closer to "make sure the return value is stated exactly once, and that whichever bullet does it sits last" than "always append a bullet."
 
+Code with several genuinely different exit points doesn't get several top-level "returns ..." bullets stacked as siblings — that reads as one thing returning multiple times in sequence, not as alternative outcomes. Nest each one under whatever actually distinguishes it (§4c's `if yes`/`if no` or `for X case:`), stating that branch's own return inline, same as any other bullet that already states its return. The bookend stays reserved for the one true fall-through case, if there is one.
+
 ## 4c. Decisions and repeats
 
 When a behavior needs visible branching, make the parent bullet only the thing being checked or chosen; put outcomes on nested bullets. For a yes/no branch, use `checks whether ...` and nest `if yes` / `if no` outcomes:

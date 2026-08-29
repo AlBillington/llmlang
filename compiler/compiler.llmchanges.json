@@ -1,12 +1,27 @@
 {
   "llmlang.flow.generate_flow": {
-    "disposition": "a called entry's own trailing return bullet (\"returns ...\" or an explicit \u2190 return) now renders at the calling \u2192 call line's own depth instead of nested one level inside the called entry's body - matches flow-format.md's original stated rule that a return sits at the same indentation as its matching call, marking control coming back out to the caller's level rather than still being 'inside' the callee.",
+    "disposition": "removed _is_should_bullet and its use in _entries_for_flow: llmlang has no notion of test-like content outside a literal ~ bullet (llmlang-format.md \u00a74 makes ~ the only way to mark tested behavior, paired mandatorily with a real source [llm-test:...] comment), so a plain '- should ...' bullet reaching the generator was never a real test to filter - it was always a content defect (a guarantee phrased as if tested, with nothing backing it). The actual fix is rephrasing those bullets at the source (see lockfile_builder.build and lockfile_checker.check below), not a generator-side heuristic.",
     "for_spec_hash": "d0b02cd68c09da7f97dd9a6a1f597894e9233dc331ae16e0fe55f43043be879a",
-    "for_code_hash": "d38abc9f01aeb78ca881d23b28422e75446c062ce1c160820f81075f8194208b"
+    "for_code_hash": "0397dae0c714300c103c9cdb114e779ed7e6f3cf079528267f00c61ed6e0f9d7"
   },
   "llmlang.flow.generate_flow_for_tree": {
-    "disposition": "also excludes a top-level 'should ...' bullet from flow content, the same as a ~ test bullet - some entries (llmlang.lockfile_checker.check among them) describe guarantees using that phrasing as plain - bullets rather than literal ~ bullets, and they read exactly like test assertions cluttering an execution trace, so they're excluded from generated flow views the same way.",
-    "for_spec_hash": "d248b0000739678073c73b447e880b23ac3325536cff207a8b9d034f7af4b7cf",
+    "disposition": "removed the now-inaccurate bullet describing 'should' bullet exclusion, since that filter no longer exists - see generate_flow's disposition for why.",
+    "for_spec_hash": "735a922587f6115665cbe4b385dad3595159809a6a7975cdf23dd2ab0a378795",
     "for_code_hash": "2eb4849ff28584d38e49c1952304111530e2d4ef47e6329e185449e4acc8e6fe"
+  },
+  "llmlang.lockfile_builder.build": {
+    "disposition": "rephrased 'should reproduce the same hashes...' to 'reproduces the same hashes...', matching every other bullet in this entry's own declarative style. No test backs this claim, so it was never eligible to read as one (llmlang-format.md \u00a74b/\u00a74).",
+    "for_spec_hash": "00ea4e8841760869a9aa8c26cdeb055ca6453b78e131cab3fcd6b78af670fe51",
+    "for_code_hash": "395647527734dee36d8b9e2922beaca0069d6e9019c1af8c7c093420569ff8dc"
+  },
+  "llmlang.lockfile_checker.check": {
+    "disposition": "rephrased three 'should report...' bullets to plain declarative 'reports...', matching this entry's own TEST_LINK_MISSING/TEST_TRACE_STALE/etc bullets immediately above them. Same reasoning as build() - no test backs these, so 'should' phrasing was never accurate; it happened to visually collide with flow generation's test-bullet exclusion, which is what surfaced the pre-existing inconsistency, but the fix is the wording, not the generator.",
+    "for_spec_hash": "9da8887a32a83b5cff7700884b28c413a10b8a89cbd9d263326e10d9bf6b5f33",
+    "for_code_hash": "5ef6fee0620bf9f2d0c9fed5b57fd2ae0791b75dd8ce5880c88238852848bd7b"
+  },
+  "llmlang.cli.load_config": {
+    "disposition": "rephrased 'returns an empty config when no pyproject.toml is found at all' to 'falls back to an empty config, with no warning, when no pyproject.toml is found at all'. This was a real llmlang-format.md \u00a74b violation (the return value was stated twice - once here, once in the trailing 'returns the [tool.llmlang] table' bookend - because this branch happened to start literally with the word 'returns' while an equivalent neighboring branch already phrases the same kind of fact as 'warns to stderr and returns...'). No behavior changed; only wording, to state each exit path's return exactly once per \u00a74b's actual rule.",
+    "for_spec_hash": "b5c8133765e19e8f85e74afb3c5d22f9ad957b469d94e8af94a0d91da06d9cea",
+    "for_code_hash": "eead4c5defe4756cf7edbb8e76631471c4dba01e7674e043861594c6ed0b2430"
   }
 }

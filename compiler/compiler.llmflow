@@ -14,7 +14,7 @@ llmlang <command>: the compiler's own CLI entry point
 				- loads the [tool.llmlang] table from pyproject.toml, degrading gracefully when it can't be read
 				- uses the override path directly when given, otherwise finds the nearest pyproject.toml from the starting directory
 				- warns to stderr and returns an empty config, rather than crashing, when the override path doesn't exist or when this Python has no tomllib (needs 3.11+)
-			← returns an empty config when no pyproject.toml is found at all
+				- falls back to an empty config, with no warning, when no pyproject.toml is found at all
 			← returns the [tool.llmlang] table
 			→ call llmlang.cli.resolve_coverage
 				- accepts the parsed flags and the loaded config
@@ -40,6 +40,9 @@ llmlang <command>: the compiler's own CLI entry point
 						- reports TEST_CODE_DIVERGED when a linked test's backing code hash differs from the lockfile
 						- reports FLOW_ERROR, naming the entry it came from, when a → call target reachable from an @entry-point entry is unresolved or ambiguous, without losing any other finding for the same file
 						- reports FLOW_FILE_STALE when the checked-in .llmflow doesn't match what generating one fresh from the current llmlang and code would produce
+						- reports an entry as SPEC_DIVERGED when its own llmlang text changed, it's brand new, or an upstream policy covering it changed
+						- reports an entry as CODE_DIVERGED when its handle is missing from the code or its code changed unexpectedly
+						- reports a codebase with none of these changes as fully clean
 						- never prints anything itself; every finding is returned as a Finding record in a list, so a caller can present every failure from a run together instead of relying on interleaved prints, or render them as structured data instead of text
 						- each finding names a file and line where known: entry-level findings point at the entry's header line in the llmlang file, code-level findings point at the handle's own comment line in the source file
 					← returns whether everything checked out clean, the set of named-entry tracking keys currently flagged for any reason, and the list of findings
@@ -81,6 +84,7 @@ llmlang <command>: the compiler's own CLI entry point
 				- refuses to write anything when any test bullet lacks a matching llm-test comment or any llm-test comment lacks a matching test bullet
 				- refuses to write anything when any → call target in an @entry-point entry's reachable bullets is unresolved or ambiguous
 				- has no notion of dispositions or a change manifest at all; never reads or writes anything but the lockfile and the generated flow file
+				- reproduces the same hashes when run again against an unchanged codebase
 			← returns the built lock data
 			- exits 1 and prints the error on failure
 	- for finalize case:

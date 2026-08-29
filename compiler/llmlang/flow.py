@@ -128,15 +128,6 @@ def generate_flow(entry_points: list, all_entries: dict) -> tuple[str, list]:
 
 
 # private helper of generate_flow_for_tree(), not independent architecture [llm-exempt]
-def _is_should_bullet(bullet: str) -> bool:
-    depth, text = _line_depth_and_text(bullet)
-    if depth != 0:
-        return False
-    body = text[2:] if text.startswith("- ") else text
-    return body.startswith("should ")
-
-
-# private helper of generate_flow_for_tree(), not independent architecture [llm-exempt]
 def _entries_for_flow(root) -> dict:
     result = {}
     for _file_rel, _handle_key, tracking_key, bullets, _line in walk_entries(root):
@@ -145,7 +136,7 @@ def _entries_for_flow(root) -> dict:
         for bullet in bullets:
             if bullet.startswith("+ "):
                 summary = bullet[2:]
-            elif bullet.startswith("~ ") or _is_should_bullet(bullet):
+            elif bullet.startswith("~ "):
                 continue
             else:
                 content.append(bullet)
