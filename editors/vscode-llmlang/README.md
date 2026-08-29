@@ -4,7 +4,7 @@ Syntax highlighting and basic editor configuration for `.llm` and `.llmflow` fil
 
 ## What this gives you
 
-- **Syntax highlighting** for every real llmlang line type: folder/file/class headers, named and data entry headers (with the summary shown distinctly from the identifier), `@policy:`, `@entry-point`/`@entry-point(label)`, `~` test bullets (italicized), `# ` commentary bullets (colored as comments), `→ call`/`← return` arrows, and `if yes`/`if no`/`checks whether`/`for X case:`/`chooses ... by`/`repeats` keywords inside regular bullets.
+- **Syntax highlighting**, scoped strictly to what the parser actually enforces: folder/file/class headers, the identifier and required-summary shape of named/data entry headers, `@policy:`, `@entry-point`/`@entry-point(label)`, `~` test bullets (italicized), `# ` commentary bullets (colored as comments), and the `→ call`/`← return` prefixes. Free-form prose - a header's hint text, a summary's own words, a `- ` bullet's text, whatever follows `→ call`/`← return` - is deliberately left unstyled, even where a phrase like "checks whether"/"if yes"/"returns"/"via" is common convention (llmlang-format.md §4c/§4e): convention isn't grammar, and coloring it would imply an enforcement that doesn't exist.
 - **Comment toggling**: `# ` is registered as the line-comment character, so Ctrl+/ (Cmd+/ on macOS) on a bullet turns it into a `#` commentary bullet.
 - **Indentation hinting**: a line ending in `:` (a header, or a decision/case/repeat parent) signals the next line should indent.
 

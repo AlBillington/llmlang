@@ -17,57 +17,64 @@
   ],
   "repository": {
     "policy": {
+      "comment": "@policy: is the one reserved keyword the parser dispatches on directly.",
       "match": "^(\\s*)(@policy:)\\s*$",
       "captures": {
         "2": { "name": "keyword.control.policy.llmlang" }
       }
     },
     "entry-point": {
+      "comment": "@entry-point/@entry-point(label) is recognized by the parser as a structural marker, not free text.",
       "match": "^(\\s*)(@entry-point)(\\((.*)\\))?\\s*$",
       "captures": {
-        "2": { "name": "storage.modifier.entry-point.llmlang" },
-        "4": { "name": "string.unquoted.entry-point-label.llmlang" }
+        "2": { "name": "keyword.control.entry-point.llmlang" }
       }
     },
     "data-entry-header": {
+      "comment": "identifier data (summary): - the 'data' marker and a non-empty parenthesized summary are required grammar; the summary's own text is free prose and stays unstyled.",
       "match": "^(\\s*)([A-Za-z_][A-Za-z0-9_.]*)\\s+(data)\\s+(\\()(.*)(\\))(:)\\s*$",
       "captures": {
         "2": { "name": "entity.name.function.llmlang" },
         "3": { "name": "storage.type.data.llmlang" },
-        "5": { "name": "string.unquoted.description.llmlang" },
+        "4": { "name": "punctuation.definition.header.llmlang" },
+        "6": { "name": "punctuation.definition.header.llmlang" },
         "7": { "name": "punctuation.definition.header.llmlang" }
       }
     },
     "named-entry-header": {
+      "comment": "identifier (summary): - a non-empty parenthesized summary is required grammar; the summary's own text is free prose and stays unstyled.",
       "match": "^(\\s*)([A-Za-z_][A-Za-z0-9_.]*)\\s+(\\()(.*)(\\))(:)\\s*$",
       "captures": {
         "2": { "name": "entity.name.function.llmlang" },
-        "4": { "name": "string.unquoted.description.llmlang" },
+        "3": { "name": "punctuation.definition.header.llmlang" },
+        "5": { "name": "punctuation.definition.header.llmlang" },
         "6": { "name": "punctuation.definition.header.llmlang" }
       }
     },
     "generic-header": {
+      "comment": "Folder/File/Class header. Only the name and trailing colon are enforced; any hint text after the name is explicitly not enforced (llmlang-format.md §1) and is left unstyled.",
       "match": "^(\\s*)([A-Za-z_][A-Za-z0-9_.]*)(\\s+[^:]*)?(:)\\s*$",
       "captures": {
         "2": { "name": "entity.name.type.llmlang" },
-        "3": { "name": "comment.line.hint.llmlang" },
         "4": { "name": "punctuation.definition.header.llmlang" }
       }
     },
     "flow-entry-header": {
-      "comment": "A generated .llmflow entry-point header - free-text label (trigger: description), always unindented, colon not necessarily at the end.",
+      "comment": "A generated .llmflow entry-point header - always unindented, a real structural position, not a word match.",
       "match": "^(\\S.*)$",
       "captures": {
         "1": { "name": "entity.name.section.llmlang" }
       }
     },
     "commentary-bullet": {
+      "comment": "# is a real content prefix the parser recognizes.",
       "match": "^(\\s*)(#\\s.*)$",
       "captures": {
         "2": { "name": "comment.line.number-sign.llmlang" }
       }
     },
     "test-bullet": {
+      "comment": "~ is a real content prefix the parser recognizes.",
       "match": "^(\\s*)(~)(\\s.*)$",
       "captures": {
         "2": { "name": "keyword.operator.test.llmlang" },
@@ -75,40 +82,25 @@
       }
     },
     "arrow-call": {
-      "match": "^(\\s*)(→\\s*call)\\s+(.*?)(\\s+via\\s+)(.*)$|^(\\s*)(→\\s*call)\\s+(.*)$",
+      "comment": "→ call is a real content prefix the parser recognizes. Everything after it (a canonical name, or an external 'via' description) is free text with no further parser-level structure, so it's left unstyled rather than splitting on the word 'via'.",
+      "match": "^(\\s*)(→\\s*call)\\s+",
       "captures": {
-        "2": { "name": "keyword.control.call.llmlang" },
-        "3": { "name": "entity.name.function.call.llmlang" },
-        "4": { "name": "keyword.control.via.llmlang" },
-        "5": { "name": "support.class.external.llmlang" },
-        "7": { "name": "keyword.control.call.llmlang" },
-        "8": { "name": "entity.name.function.call.llmlang" }
+        "2": { "name": "keyword.control.call.llmlang" }
       }
     },
     "arrow-return": {
-      "match": "^(\\s*)(←[\\s-]*(?:return)?)\\s+(.*)$",
+      "comment": "← return is a real content prefix the parser recognizes (the dash-leader form is the generator's own rendering of it in .llmflow output). The returned text itself is free-form and left unstyled.",
+      "match": "^(\\s*)(←[\\s-]*(?:return)?)\\s+",
       "captures": {
-        "2": { "name": "keyword.control.return.llmlang" },
-        "3": { "name": "string.unquoted.return-value.llmlang" }
+        "2": { "name": "keyword.control.return.llmlang" }
       }
     },
     "behavior-bullet": {
+      "comment": "- is a real content prefix. Its text is free-form prose - no word within it (accepts/returns/checks whether/if yes/repeats/etc.) is recognized or required by the parser, so none of it is styled differently from any other word.",
       "match": "^(\\s*)(-)(\\s.*)$",
       "captures": {
-        "2": { "name": "punctuation.definition.list.llmlang" },
-        "3": { "patterns": [{ "include": "#decision-keywords" }] }
+        "2": { "name": "punctuation.definition.list.llmlang" }
       }
-    },
-    "decision-keywords": {
-      "patterns": [
-        { "match": "\\bchecks whether\\b", "name": "keyword.control.conditional.llmlang" },
-        { "match": "\\bif (yes|no)\\b", "name": "keyword.control.conditional.llmlang" },
-        { "match": "\\bfor\\s+.+?\\s+case\\b", "name": "keyword.control.conditional.llmlang" },
-        { "match": "\\bchooses\\b.*?\\bby\\b", "name": "keyword.control.conditional.llmlang" },
-        { "match": "\\brepeats\\b", "name": "keyword.control.loop.llmlang" },
-        { "match": "\\b(for each|until|at most)\\b", "name": "keyword.control.loop.llmlang" },
-        { "match": "\\baccepts\\b|\\breturns\\b", "name": "support.function.bookend.llmlang" }
-      ]
     }
   }
 }
