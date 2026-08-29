@@ -1,7 +1,7 @@
 {
   "Backend.UrlShortener.create_short_code": {
-    "disposition": "swapped the 'uses CodeGenerator to generate the code' prose bullet for a \u2192 call Backend.CodeGenerator.generate arrow, and marked both create_short_code and get_url as @entry-point (POST /api/shorten, GET /{code}) - part of moving flow-view content into ordinary llmlang bullets instead of a separately hand-authored .llmflow file. shortener.llmflow is now generated fresh by build/finalize from these bullets; no behavior changed.",
-    "for_spec_hash": "152b6cbc7bda8d94114ee6b2c802c70de3a78b331984d13c533e06a911b9c396",
+    "disposition": "marked 'generated codes must be unique per URL' as # commentary - it's the invariant the retry loop exists to guarantee, not a step create_short_code performs itself. No behavior changed.",
+    "for_spec_hash": "3e7bd597ca9123c24c762b2b62adc9317c0567cbf7e9a59e35d637d825df1e7e",
     "for_code_hash": "3654c44419a515e0d8bdf58413f6ee4c39257d8c82f0dbdfda03a5b2960c98b8"
   }
 }

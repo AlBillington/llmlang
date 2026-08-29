@@ -48,7 +48,7 @@ def _match_targets(target: str, entry_keys: set) -> list:
 
 
 # private helper of generate_flow(), not independent architecture [llm-exempt]
-def _render_bullets(bullets, base_indent, entry_keys, bullets_by_key, visited, errors, source_key, call_depth=None):
+def _render_bullets(bullets, base_indent, entry_keys, all_entries, visited, errors, source_key, call_depth=None):
     out = []
     for bullet in bullets:
         depth, text = _line_depth_and_text(bullet)
@@ -61,12 +61,13 @@ def _render_bullets(bullets, base_indent, entry_keys, bullets_by_key, visited, e
             # dash leader keeps it visually distinct from a sibling bullet
             # at that same depth despite the jump.
             out.append("\t" * call_depth + "←---- " + return_text)
-        else:
-            out.append(_render_line(text, abs_depth))
+            continue
         if not text.startswith("→ call "):
+            out.append(_render_line(text, abs_depth))
             continue
         target = text[len("→ call "):].strip()
         if " via " in target:
+            out.append(_render_line(text, abs_depth))
             continue
         matches = _match_targets(target, entry_keys)
         if len(matches) == 0:
@@ -74,20 +75,25 @@ def _render_bullets(bullets, base_indent, entry_keys, bullets_by_key, visited, e
                 "source": source_key,
                 "message": f"unresolved flow call target {target!r}: no matching llmlang entry",
             })
+            out.append(_render_line(text, abs_depth))
             continue
         if len(matches) > 1:
             errors.append({
                 "source": source_key,
                 "message": f"ambiguous flow call target {target!r}: matches {sorted(matches)}",
             })
+            out.append(_render_line(text, abs_depth))
             continue
         resolved = matches[0]
+        summary = all_entries[resolved]["summary"]
+        call_line = f"→ call {resolved}" + (f" ({summary})" if summary else "")
+        out.append("\t" * abs_depth + call_line)
         if resolved in visited:
             continue
         visited.add(resolved)
         out.extend(_render_bullets(
-            bullets_by_key.get(resolved, []), abs_depth + 1, entry_keys,
-            bullets_by_key, visited, errors, resolved, call_depth=abs_depth,
+            all_entries[resolved]["bullets"], abs_depth + 1, entry_keys,
+            all_entries, visited, errors, resolved, call_depth=abs_depth,
         ))
     return out
 
@@ -121,7 +127,7 @@ def generate_flow(entry_points: list, all_entries: dict) -> tuple[str, list]:
         header = _entry_point_header(tracking_key, label, entry["summary"])
         visited = {tracking_key}
         rendered = _render_bullets(
-            entry["bullets"], 1, entry_keys, {k: v["bullets"] for k, v in all_entries.items()},
+            entry["bullets"], 1, entry_keys, all_entries,
             visited, errors, tracking_key,
         )
         sections.append(header + "\n" + "\n".join(rendered))
@@ -139,6 +145,8 @@ def _entries_for_flow(root) -> dict:
             if bullet.startswith("+ "):
                 summary = bullet[2:]
             elif bullet.startswith("~ "):
+                continue
+            elif _line_depth_and_text(bullet)[1].startswith("# "):
                 continue
             else:
                 content.append(bullet)

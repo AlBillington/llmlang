@@ -10,7 +10,7 @@ Backend:
 			- accepts a long URL
 			- creates a unique short code for a given long URL
 			→ call Backend.CodeGenerator.generate
-			- generated codes must be unique per URL
+			# generated codes must be unique per URL
 			~ should return the same code when called twice with the same URL
 			~ should generate unique codes per URL
 			- returns the short code

@@ -12,9 +12,14 @@
   "entries": {
     "Backend.UrlShortener.create_short_code": {
       "file": "Backend/UrlShortener.py",
-      "text": "+ creates a unique short code for a given long URL, using CodeGenerator to generate the code\naccepts a long URL\ncreates a unique short code for a given long URL\n\u2192 call Backend.CodeGenerator.generate\ngenerated codes must be unique per URL\nreturns the short code\n~ should return the same code when called twice with the same URL\n~ should generate unique codes per URL",
-      "text_hash": "204b6af8c5fe4458379258b3ef2d42617abcf2c778e872a253ecd04cb747fa76",
-      "code_hash": "3654c44419a515e0d8bdf58413f6ee4c39257d8c82f0dbdfda03a5b2960c98b8"
+      "text": "+ creates a unique short code for a given long URL, using CodeGenerator to generate the code\naccepts a long URL\ncreates a unique short code for a given long URL\n\u2192 call Backend.CodeGenerator.generate\n# generated codes must be unique per URL\nreturns the short code\n~ should return the same code when called twice with the same URL\n~ should generate unique codes per URL",
+      "text_hash": "324cedb6c0b3b6586341ee6dd12ce4b7fc9e4965210735fcfe84e2b8e85fbf58",
+      "code_hash": "3654c44419a515e0d8bdf58413f6ee4c39257d8c82f0dbdfda03a5b2960c98b8",
+      "last_change": {
+        "disposition": "marked 'generated codes must be unique per URL' as # commentary - it's the invariant the retry loop exists to guarantee, not a step create_short_code performs itself. No behavior changed.",
+        "for_spec_hash": "3e7bd597ca9123c24c762b2b62adc9317c0567cbf7e9a59e35d637d825df1e7e",
+        "for_code_hash": "3654c44419a515e0d8bdf58413f6ee4c39257d8c82f0dbdfda03a5b2960c98b8"
+      }
     },
     "Backend.UrlShortener.get_url": {
       "file": "Backend/UrlShortener.py",

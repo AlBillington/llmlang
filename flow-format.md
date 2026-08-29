@@ -11,8 +11,8 @@ For the concrete syntax that produces this file (`@entry-point`, `→ call`, `�
 The algorithm, per `@entry-point` entry found:
 
 1. Start a new section headed by the entry's label — its own text after `@entry-point(...)`, or `<canonical name> (<summary>):` when the bare form was used.
-2. Render the entry's own bullets in order, at one level of indentation. A `~ ` test bullet is never rendered - a flow view is about execution, not test coverage. There's no separate heuristic for a plain bullet that merely *looks* test-like: `~ ` is the only way llmlang marks tested behavior at all ([llmlang-format.md](llmlang-format.md) §4 - a real test always gets a `~` bullet with a matching `[llm-test:...]` source comment, and a guarantee with no backing test is never phrased as one), so a `- ` bullet reaching the generator is trusted as real content. A plain `- returns ...` bullet (the accepts/returns bookend, §4b) renders with `← ` instead of `- `, the same as an explicit `← return ...` line - no need to author the arrow form just for this common case.
-3. For every `→ call CanonicalName` bullet encountered, resolve the target to exactly one llmlang entry (by exact canonical name or unique suffix match) and, the *first* time that entry is reached anywhere in this section's trace, inline its own bullets recursively, one level deeper. A repeat reference to an already-expanded entry — including a direct or indirect cycle — renders as a bare `→ call` line with nothing nested under it.
+2. Render the entry's own bullets in order, at one level of indentation. A `~ ` test bullet and a `# ` commentary bullet are never rendered - a flow view is about execution, and neither describes it. There's no separate heuristic for a plain bullet that merely *looks* test-like or commentary-like: `~` and `#` are the only ways llmlang marks either at all ([llmlang-format.md](llmlang-format.md) §1/§4 - a real test always gets a `~` bullet with a matching `[llm-test:...]` source comment, and a guarantee with no backing test, or a property/rationale/scope note with no execution step of its own, is marked `#` explicitly rather than left for the generator to guess at from wording), so a `- ` bullet reaching the generator is trusted as a real step. A plain `- returns ...` bullet (the accepts/returns bookend, §4b) renders with `← ` instead of `- `, the same as an explicit `← return ...` line - no need to author the arrow form just for this common case.
+3. For every `→ call CanonicalName` bullet encountered, resolve the target to exactly one llmlang entry (by exact canonical name or unique suffix match) and render the call line using the target's full canonical name plus its own parenthesized summary, regardless of what shorthand the author wrote (`→ call Backend.CodeGenerator.generate (generates a random 6-character alphanumeric code)`). The *first* time that entry is reached anywhere in this section's trace, inline its own bullets recursively, one level deeper. A repeat reference to an already-expanded entry — including a direct or indirect cycle — renders as a bare `→ call` line (still carrying the summary) with nothing nested under it.
 4. A called entry's own top-level trailing return (`returns ...` or `← return ...`) renders at the calling `→ call` line's own depth, not nested one level inside the called entry's other bullets - it marks control coming back out to the caller, not something still happening inside the callee.
 5. A `→ call ... via ExternalService` bullet is left as-is; there's no local entry to resolve or expand.
 
@@ -47,12 +47,12 @@ The generated `.llmflow`:
 
 ```
 GET /users/{id}: returns one user
-	→ call UserRepository.load
+	→ call UserRepository.load (reads a user record by id)
 		→ call read a row via UserRepository table with user_id
-	← returns the row mapped to a user, or nothing
-	← returns the user, or nothing if no user has that id
+	←---- returns the row mapped to a user, or nothing
+	←---- returns the user, or nothing if no user has that id
 ```
 
-`find_user` itself is the `@entry-point`, so its own bullets render directly under the header — there's no `→ call find_user` wrapper, since the header line already means "execution starts here." `load`'s own return sits at the same depth as `→ call UserRepository.load`, not nested inside it (rule 4) - reading top to bottom, execution goes into `load`, reads a row, then comes back out with the mapped row before `find_user`'s own return.
+`find_user` itself is the `@entry-point`, so its own bullets render directly under the header — there's no `→ call find_user` wrapper, since the header line already means "execution starts here." The resolved call carries `load`'s own summary alongside its name (rule 3), so a reader doesn't need to jump to `load`'s own header to know what it's for. `load`'s own return sits at the same depth as `→ call UserRepository.load`, not nested inside it (rule 4) - reading top to bottom, execution goes into `load`, reads a row, then comes back out with the mapped row before `find_user`'s own return.
 
 Note there is nothing here that isn't also true reading the `.llm` file directly — the flow file adds no information, only a different, execution-ordered arrangement of the same facts.

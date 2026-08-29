@@ -80,12 +80,13 @@ def _parse_header(content):
 
 
 _ARROW_PREFIXES = ("→ call ", "← return ")
-_CONTENT_PREFIXES = ("- ",) + _ARROW_PREFIXES
+_KEEP_PREFIX = _ARROW_PREFIXES + ("# ",)
+_CONTENT_PREFIXES = ("- ",) + _KEEP_PREFIX
 
 
 # private helper of parse(), not independent architecture [llm-exempt]
 def _bullet_text(content: str, relative_depth: int) -> str:
-    if content.startswith(_ARROW_PREFIXES):
+    if content.startswith(_KEEP_PREFIX):
         return "\t" * relative_depth + content
     if relative_depth <= 0:
         return content[2:]
@@ -94,7 +95,7 @@ def _bullet_text(content: str, relative_depth: int) -> str:
 
 # private helper of parse(), not independent architecture [llm-exempt]
 def _content_for_storage(content: str) -> str:
-    if content.startswith(_ARROW_PREFIXES):
+    if content.startswith(_KEEP_PREFIX):
         return content
     return content[2:]
 

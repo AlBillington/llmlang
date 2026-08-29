@@ -1,7 +1,32 @@
 {
-  "llmlang.coverage_checker.check_coverage": {
-    "disposition": "rewrote bullets from a rules/definitions style ('a function is covered if...', 'a function is exempt if...') into an execution-ordered checks-whether/repeats structure matching the real code's actual loop-and-branch shape (walk files, filter to .py, walk module/class-level functions, check handle-or-exempt, report UNMAPPED_CODE if neither). Same facts, verified against coverage_checker.py directly - no behavior changed. The old style read fine on its own in the .llm file, but reads out of place once inlined into a generated flow trace next to genuinely execution-ordered bullets, since it was never authored with that composition in mind.",
-    "for_spec_hash": "6898f7570b70601175c758799e645c9de268797df4bae10eaab16afe962be11d",
-    "for_code_hash": "6f50f5b8a4bc58f99ac84ca6e6b9a992ae653c5db5f515164e565212f538fe76"
+  "llmlang.parser.parse": {
+    "disposition": "marked 7 grammar-rule bullets as # commentary (structural constraints on valid input - summary/data-marker placement, bullet nesting, test-bullet placement, hint parsing, @entry-point/\u2192 call validity) instead of plain - bullets. These describe properties of the format, not steps parse() takes, so they read oddly as flat behavior bullets and would read worse if parse() ever becomes flow-reachable. No behavior changed - this adds # support to the parser/format and applies it here as the first real usage.",
+    "for_spec_hash": "9114241cc3d736153c89345bb3ff4fe1ea829e605a25cd0a6fae74a20283e22d",
+    "for_code_hash": "ae6f8882f17b128a636a8164e064da585701fba4ea6829a847228a4d5ffd042b"
+  },
+  "llmlang.extractor.extract_by_handle": {
+    "disposition": "marked the 'including the comment line itself means...' bullet as # commentary - it's a rationale for why code_hash is computed the way it is, not a step extract_by_handle performs. No behavior changed.",
+    "for_spec_hash": "169df0363e1e5a25d77590785b253d510e70d83874cdfb2ae72839cdbcdecb17",
+    "for_code_hash": "dfcdba4cfc149411d59081171b439737e81d27a2a6de0cb8e103dbb1d36e12b8"
+  },
+  "llmlang.flow.generate_flow": {
+    "disposition": "two additions: (1) a resolved \u2192 call line now renders with the target's full canonical name plus its own parenthesized summary, so a reader doesn't need to jump to the target's header to know what it does; (2) excludes # commentary bullets from rendering, the same treatment as ~ test bullets, since neither describes execution.",
+    "for_spec_hash": "0bae603dbded3c93b58769e6064e357ad1b31dbbb45bcd6dc82817acdc39da23",
+    "for_code_hash": "f33bc1e105e38ca095dd50f6363a609133715dfe10fc976d3da008eb92595d3a"
+  },
+  "llmlang.flow.generate_flow_for_tree": {
+    "disposition": "bullets updated to describe the new # exclusion (mirrors the existing ~ exclusion, same rationale).",
+    "for_spec_hash": "d5667580f39b707cb7ce8930c3b2591cb00e68134784e1e90253de44f6c7535f",
+    "for_code_hash": "2eb4849ff28584d38e49c1952304111530e2d4ef47e6329e185449e4acc8e6fe"
+  },
+  "llmlang.lockfile_builder.build": {
+    "disposition": "marked 'has no notion of dispositions...' and 'reproduces the same hashes...' as # commentary - both are properties/guarantees about build() as a whole (a scope note contrasting it with finalize, and an idempotency guarantee across runs), not steps taken during one call. No behavior changed.",
+    "for_spec_hash": "4d95dcfd389c04962c5fb63f2b93a182102b5e2bf728f1dfc999dc0bf0d9b8d5",
+    "for_code_hash": "395647527734dee36d8b9e2922beaca0069d6e9019c1af8c7c093420569ff8dc"
+  },
+  "llmlang.lockfile_builder.finalize": {
+    "disposition": "marked 'builds every hash and disposition fresh from... never carries anything forward...' as # commentary - a statelessness guarantee, not a step. No behavior changed.",
+    "for_spec_hash": "b55436cd636c1a6e0d85a2ecf6e97a3a010b979262899d01ee992d860769cedb",
+    "for_code_hash": "f581668bf2be64d6d75abcf5f3bcbdbc40c850950ce5c0c57926a45a604dfa65"
   }
 }

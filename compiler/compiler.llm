@@ -23,13 +23,13 @@ llmlang:
 		parse (parses a tab-indented llmlang file into a tree of folders, files, classes, and entries):
 			- accepts a file path
 			- parses a tab-indented llmlang file into a tree of folders, files, classes, named entries, and data entries
-			- a source-handled entry header must include a parenthesized summary after the identifier and before the colon
-			- a data entry header must include the data marker after the identifier and before the parenthesized summary
-			- a nested regular bullet belongs to the same nearest entry, file or class bullet group, or policy item as its parent
-			- a test bullet can live under a named entry, file, or class node
-			- a header's real name is always its first word; any words after a folder, file, or class name up to the colon are a freetext hint, discarded once the name is extracted
-			- a bare `@entry-point` or `@entry-point(label)` line immediately before a named entry header marks that entry as a flow-generation starting point, rejecting it outright on any other kind of header
-			- a `→ call CanonicalName` or `→ call operation via ExternalService` bullet, and an optional following `← return ...` bullet, are valid anywhere a regular bullet is valid, including nested under a decision, case, or repeat bullet
+			# a source-handled entry header must include a parenthesized summary after the identifier and before the colon
+			# a data entry header must include the data marker after the identifier and before the parenthesized summary
+			# a nested regular bullet belongs to the same nearest entry, file or class bullet group, or policy item as its parent
+			# a test bullet can live under a named entry, file, or class node
+			# a header's real name is always its first word; any words after a folder, file, or class name up to the colon are a freetext hint, discarded once the name is extracted
+			# a bare `@entry-point` or `@entry-point(label)` line immediately before a named entry header marks that entry as a flow-generation starting point, rejecting it outright on any other kind of header
+			# a `→ call CanonicalName` or `→ call operation via ExternalService` bullet, and an optional following `← return ...` bullet, are valid anywhere a regular bullet is valid, including nested under a decision, case, or repeat bullet
 			- records the source line number of each folder, file, class, named entry, and data entry header, and of each test bullet
 			- returns the parsed tree
 
@@ -41,7 +41,7 @@ llmlang:
 		extract_by_handle (extracts the code implementing an entry by locating its comment handle and taking everything from the handle's own comment line up to the next handle):
 			- accepts a file path and canonical entry name
 			- extracts the code implementing an entry by locating its comment handle and taking everything from the handle's own comment line up to the next handle
-			- including the comment line itself means the entry's summary comment is part of the resulting hash, so it can't drift from the llmlang summary undetected
+			# including the comment line itself means the entry's summary comment is part of the resulting hash, so it can't drift from the llmlang summary undetected
 			- returns the extracted code and the line number of its handle comment, or nothing if the handle isn't found
 
 		handle_line_numbers (finds the source line of every comment handle in a file, for coverage checking):
@@ -69,6 +69,7 @@ llmlang:
 			- composes a .llmflow view by walking every @entry-point entry and inlining each → call target's own bullets, recursively
 			- expands a referenced entry's own bullets only the first time it's reached in a given entry point's trace; a repeat reference (including a cycle) renders as a bare call line with nothing nested under it
 			- resolves a → call target to a known llmlang entry by exact canonical name or unique suffix match
+			- renders a resolved → call line using the target's full canonical name and its own parenthesized summary, regardless of the shorthand the author wrote
 			- treats a → call target containing " via " as an external call with nothing to resolve or expand
 			- renders a plain "returns ..." bullet with a ← marker instead of -, the same as an explicit ← return line
 			- renders a called entry's own trailing "returns ..."/← return bullet at the calling → call line's own depth, not nested inside the called entry's body, since it marks control coming back out to the caller's level
@@ -79,6 +80,7 @@ llmlang:
 			- accepts a parsed llmlang tree
 			- builds the entry-point list and entry content from a parsed llmlang tree, then composes the flow view using generate_flow
 			- excludes ~ test bullets from every entry's content; a flow view is about execution, not test coverage
+			- excludes a # commentary bullet from every entry's content too; commentary is for a human/LLM reading llmlang directly, not part of the execution it describes
 			- returns the same (text, errors) shape as generate_flow
 
 	lockfile_builder.py:
@@ -91,8 +93,8 @@ llmlang:
 				- if yes, refuses to write anything
 			- checks whether any → call target in an @entry-point entry's reachable bullets is unresolved or ambiguous:
 				- if yes, refuses to write anything
-			- has no notion of dispositions or a change manifest at all; never reads or writes anything but the lockfile and the generated flow file
-			- reproduces the same hashes when run again against an unchanged codebase
+			# has no notion of dispositions or a change manifest at all; never reads or writes anything but the lockfile and the generated flow file
+			# reproduces the same hashes when run again against an unchanged codebase
 			- returns the built lock data
 
 		finalize (guards an incremental rebuild against silently skipping a flagged entry, reading and updating a change manifest bound to the exact spec and code hashes it describes):
@@ -104,7 +106,7 @@ llmlang:
 			- accepts a fresh disposition in the manifest as a plain string, and stamps it with the entry's current spec hash and code hash
 			- a spec hash combines the entry's own text with every policy currently covering it, so a disposition goes stale whether the entry's own text changed or an applicable policy did
 			- for a manifest entry that's already stamped, keeps it only if both hashes still match the entry's current state; otherwise drops it as stale, along with any entry whose key no longer exists
-			- builds every hash and disposition fresh from the current llmlang text, current code, current policies, and current manifest only; never carries anything forward from the lockfile's own prior content
+			# builds every hash and disposition fresh from the current llmlang text, current code, current policies, and current manifest only; never carries anything forward from the lockfile's own prior content
 			- writes both the new lockfile and the updated (stamped and pruned) manifest file, but never alters a disposition's own text
 			- returns the built lock data
 
