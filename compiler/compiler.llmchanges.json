@@ -1,57 +1,12 @@
 {
-  "llmlang.parser.parse": {
-    "disposition": "added @entry-point/@entry-point(label) recognition (immediately before a named entry header, rejected anywhere else) and \u2192 call X / \u2190 return X as content lines valid anywhere a regular - bullet is valid, including nested under decisions/cases/repeats. This is the redesign of the flow feature: flow content now lives directly in ordinary llmlang bullets instead of a separately hand-authored .llmflow file, so there is exactly one place to describe what an entry calls, and nothing to keep in sync by hand.",
-    "for_spec_hash": "50549f0e870f10af4ffba8cfccf115d97b9b2cb4d65ce6778ebf60f2e42d7a4a",
-    "for_code_hash": "ae6f8882f17b128a636a8164e064da585701fba4ea6829a847228a4d5ffd042b"
-  },
   "llmlang.flow.generate_flow": {
-    "disposition": "new entry, replacing the deleted flow_refs()/FlowRef hash-triple system entirely. Composes a .llmflow view purely by walking @entry-point entries and inlining each \u2192 call target's own bullets recursively (expanding a given entry only once per trace, so a frequently-called or cyclic function doesn't blow up the render or need re-authoring at every call site). No hashing happens here at all - a \u2192 call bullet is just more of its owning entry's text, already covered by that entry's existing text_hash/code_hash.",
-    "for_spec_hash": "9843f02df4960b98b0e98ab404fe5b76d3733b4dacee6091dc436420e7107dba",
+    "disposition": "generator now renders a plain 'returns ...' bullet with a \u2190 marker instead of -, matching an explicit \u2190 return line, so authors don't need to rewrite every existing accepts/returns bookend bullet just to get the arrow. The change lives entirely in the already-exempt _return_text/_render_line helpers above this handle in flow.py, so generate_flow's own tracked code is unchanged; only its bullets were updated to describe the new rendering behavior.",
+    "for_spec_hash": "a7cf86b195f602ec1c1672defbf5bc3c50c16d850b43d27f453b089859c87fcc",
     "for_code_hash": "0397dae0c714300c103c9cdb114e779ed7e6f3cf079528267f00c61ed6e0f9d7"
   },
   "llmlang.flow.generate_flow_for_tree": {
-    "disposition": "new entry, the tree-walking adapter around generate_flow - builds the entry-point list and per-entry bullet content from a parsed llmlang tree.",
-    "for_spec_hash": "b72a0812a6ed634563090ee0d9a658efddb1caf215c5fa0510e87361870f4f19",
+    "disposition": "bullets now state explicitly that ~ test bullets are excluded from flow content - this was already true (the entries dict it builds already filtered them out), just undocumented until now. No code changed.",
+    "for_spec_hash": "735a922587f6115665cbe4b385dad3595159809a6a7975cdf23dd2ab0a378795",
     "for_code_hash": "2eb4849ff28584d38e49c1952304111530e2d4ef47e6329e185449e4acc8e6fe"
-  },
-  "llmlang.lockfile_builder.build": {
-    "disposition": "removed all flow-reference hashing/writing; build() now calls the new flow generator and overwrites the sibling .llmflow file unconditionally (same treatment as the lockfile itself), refusing to write anything if a \u2192 call target reachable from an @entry-point doesn't resolve.",
-    "for_spec_hash": "5e3a926dd7e02c60544154131eec7a08888b9d0bc232a7f4f0e3bdbcd2db5b14",
-    "for_code_hash": "395647527734dee36d8b9e2922beaca0069d6e9019c1af8c7c093420569ff8dc"
-  },
-  "llmlang.lockfile_builder.finalize": {
-    "disposition": "same change as build() - generates and overwrites .llmflow directly. No flow-specific disposition branch exists anymore: a \u2192 call line only ever exists inside some entry's own bullets, so editing one already flags that entry's ordinary SPEC_DIVERGED and goes through the same disposition gate every other bullet edit does.",
-    "for_spec_hash": "c241e9dc48563c6dbb1e9010013c643042d4a5de406f6745e5b46fa49bb91134",
-    "for_code_hash": "f581668bf2be64d6d75abcf5f3bcbdbc40c850950ce5c0c57926a45a604dfa65"
-  },
-  "llmlang.lockfile_checker.check": {
-    "disposition": "removed the flow_refs hash-triple comparison (FLOW_DIVERGED) entirely. check() now regenerates the flow view fresh from the current tree and compares it byte-for-byte against the checked-in .llmflow, reporting FLOW_FILE_STALE on a mismatch - this also catches someone hand-editing the generated file directly, which the old design never could. FLOW_ERROR is kept, now naming the source entry a bad \u2192 call line was found in rather than a flow-file line number, since the call now lives in the .llm file, not a separate file.",
-    "for_spec_hash": "e9b9fd3f0a07884f64c487273c60fece0fadb0e3dbd1804c5ff9f9278e17a413",
-    "for_code_hash": "5ef6fee0620bf9f2d0c9fed5b57fd2ae0791b75dd8ce5880c88238852848bd7b"
-  },
-  "llmlang.cli.check_one": {
-    "disposition": "bullets now show its two real calls (lockfile_checker.check, and coverage_checker.check_coverage when coverage is active) as \u2192 call lines instead of leaving them undescribed.",
-    "for_spec_hash": "f0d5602275343980884f3652522db376a746e94ca37db1272b3f0d4c565d962e",
-    "for_code_hash": "e293003177cc9082719c4fbb4d4f41ad02e02f2b41ade4ce914dbf49d2c501db"
-  },
-  "llmlang.cli.run_check": {
-    "disposition": "bullets now name its real calls (load_config, resolve_coverage, discover_llm_files, check_one, and the text/json report printers) as \u2192 call lines instead of leaving the orchestration implicit.",
-    "for_spec_hash": "8b8077e96d1f490963fe0b827a5d62a1470d9fe229529eb194f3896710eb5e0e",
-    "for_code_hash": "b9ddca013f67caa8582c768a4cb5db37069e3792041a245943b71e9e10ebfeb3"
-  },
-  "llmlang.cli.run_build": {
-    "disposition": "adds a \u2192 call to lockfile_builder.build, naming the delegation that was already true.",
-    "for_spec_hash": "47bdc138c70eb419fd2f14f1e8b3453c0e7d9dea7e0f29b6985376ba688d08e2",
-    "for_code_hash": "918dc67e1b7d875a2d7251e5065e448e21cee8f97d301fd4106ad3ea5eec7ede"
-  },
-  "llmlang.cli.run_finalize": {
-    "disposition": "adds a \u2192 call to lockfile_builder.finalize, naming the delegation that was already true.",
-    "for_spec_hash": "264d53f3514c7cfcd5d92f497e5ef07b4cdb7c81eca64f0799737f02ae56b662",
-    "for_code_hash": "e8dd6bca6270f057a55e1b5d22c7a51c4078eae2e7c5c7f6bcf0ece93e18288b"
-  },
-  "llmlang.cli.main": {
-    "disposition": "marked @entry-point (the CLI's own real entry point) and its command dispatch now uses for X case: with a \u2192 call to run_check/run_build/run_finalize per case, instead of prose describing the dispatch generically. This entry point is what compiler.llmflow is generated from.",
-    "for_spec_hash": "c860d0c6119ee627350fd92bd101827b81657ed1f7c86f856ef71a8e8e167a72",
-    "for_code_hash": "16aa05d4a37c0918ff196505518d96256b12ab046eef83ddd0883e112cefa25c"
   }
 }

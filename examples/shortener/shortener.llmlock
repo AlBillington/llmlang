@@ -14,12 +14,7 @@
       "file": "Backend/UrlShortener.py",
       "text": "+ creates a unique short code for a given long URL, using CodeGenerator to generate the code\naccepts a long URL\ncreates a unique short code for a given long URL\n\u2192 call Backend.CodeGenerator.generate\ngenerated codes must be unique per URL\nreturns the short code\n~ should return the same code when called twice with the same URL\n~ should generate unique codes per URL",
       "text_hash": "204b6af8c5fe4458379258b3ef2d42617abcf2c778e872a253ecd04cb747fa76",
-      "code_hash": "3654c44419a515e0d8bdf58413f6ee4c39257d8c82f0dbdfda03a5b2960c98b8",
-      "last_change": {
-        "disposition": "swapped the 'uses CodeGenerator to generate the code' prose bullet for a \u2192 call Backend.CodeGenerator.generate arrow, and marked both create_short_code and get_url as @entry-point (POST /api/shorten, GET /{code}) - part of moving flow-view content into ordinary llmlang bullets instead of a separately hand-authored .llmflow file. shortener.llmflow is now generated fresh by build/finalize from these bullets; no behavior changed.",
-        "for_spec_hash": "152b6cbc7bda8d94114ee6b2c802c70de3a78b331984d13c533e06a911b9c396",
-        "for_code_hash": "3654c44419a515e0d8bdf58413f6ee4c39257d8c82f0dbdfda03a5b2960c98b8"
-      }
+      "code_hash": "3654c44419a515e0d8bdf58413f6ee4c39257d8c82f0dbdfda03a5b2960c98b8"
     },
     "Backend.UrlShortener.get_url": {
       "file": "Backend/UrlShortener.py",

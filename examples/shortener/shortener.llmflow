@@ -3,11 +3,11 @@ POST /api/shorten: creates a short code for a submitted URL
 	- creates a unique short code for a given long URL
 	→ call Backend.CodeGenerator.generate
 		- generates a random 6-character alphanumeric code
-		- returns the generated code
+		← returns the generated code
 	- generated codes must be unique per URL
-	- returns the short code
+	← returns the short code
 
 GET /{code}: redirects to the original URL for a short code
 	- accepts a short code
 	- looks up the original URL for a given short code
-	- returns the original URL
+	← returns the original URL

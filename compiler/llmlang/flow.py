@@ -23,8 +23,19 @@ def _line_depth_and_text(bullet: str) -> tuple[int, str]:
 
 
 # private helper of generate_flow(), not independent architecture [llm-exempt]
+def _return_text(text: str):
+    body = text[2:] if text.startswith("- ") else text
+    return body if body.startswith("returns ") else None
+
+
+# private helper of generate_flow(), not independent architecture [llm-exempt]
 def _render_line(text: str, abs_depth: int) -> str:
-    if text.startswith(_ARROW_PREFIXES) or text.startswith("- "):
+    if text.startswith(_ARROW_PREFIXES):
+        return "\t" * abs_depth + text
+    return_text = _return_text(text)
+    if return_text is not None:
+        return "\t" * abs_depth + "← " + return_text
+    if text.startswith("- "):
         return "\t" * abs_depth + text
     return "\t" * abs_depth + "- " + text
 

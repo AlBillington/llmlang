@@ -70,12 +70,14 @@ llmlang:
 			- expands a referenced entry's own bullets only the first time it's reached in a given entry point's trace; a repeat reference (including a cycle) renders as a bare call line with nothing nested under it
 			- resolves a → call target to a known llmlang entry by exact canonical name or unique suffix match
 			- treats a → call target containing " via " as an external call with nothing to resolve or expand
+			- renders a plain "returns ..." bullet with a ← marker instead of -, the same as an explicit ← return line
 			- reports each non-external → call target that doesn't resolve to exactly one entry as an error naming the entry it came from, rather than raising or losing any other output
 			- returns the composed text for every entry point, and the list of any call-target errors found
 
 		generate_flow_for_tree (builds the entry-point list and entry content from a parsed llmlang tree, then composes the flow view):
 			- accepts a parsed llmlang tree
 			- builds the entry-point list and entry content from a parsed llmlang tree, then composes the flow view using generate_flow
+			- excludes ~ test bullets from every entry's content; a flow view is about execution, not test coverage
 			- returns the same (text, errors) shape as generate_flow
 
 	lockfile_builder.py:

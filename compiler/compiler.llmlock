@@ -37,12 +37,7 @@
       "file": "llmlang/parser.py",
       "text": "+ parses a tab-indented llmlang file into a tree of folders, files, classes, and entries\naccepts a file path\nparses a tab-indented llmlang file into a tree of folders, files, classes, named entries, and data entries\na source-handled entry header must include a parenthesized summary after the identifier and before the colon\na data entry header must include the data marker after the identifier and before the parenthesized summary\na nested regular bullet belongs to the same nearest entry, file or class bullet group, or policy item as its parent\na test bullet can live under a named entry, file, or class node\na header's real name is always its first word; any words after a folder, file, or class name up to the colon are a freetext hint, discarded once the name is extracted\na bare `@entry-point` or `@entry-point(label)` line immediately before a named entry header marks that entry as a flow-generation starting point, rejecting it outright on any other kind of header\na `\u2192 call CanonicalName` or `\u2192 call operation via ExternalService` bullet, and an optional following `\u2190 return ...` bullet, are valid anywhere a regular bullet is valid, including nested under a decision, case, or repeat bullet\nrecords the source line number of each folder, file, class, named entry, and data entry header, and of each test bullet\nreturns the parsed tree",
       "text_hash": "50549f0e870f10af4ffba8cfccf115d97b9b2cb4d65ce6778ebf60f2e42d7a4a",
-      "code_hash": "ae6f8882f17b128a636a8164e064da585701fba4ea6829a847228a4d5ffd042b",
-      "last_change": {
-        "disposition": "added @entry-point/@entry-point(label) recognition (immediately before a named entry header, rejected anywhere else) and \u2192 call X / \u2190 return X as content lines valid anywhere a regular - bullet is valid, including nested under decisions/cases/repeats. This is the redesign of the flow feature: flow content now lives directly in ordinary llmlang bullets instead of a separately hand-authored .llmflow file, so there is exactly one place to describe what an entry calls, and nothing to keep in sync by hand.",
-        "for_spec_hash": "50549f0e870f10af4ffba8cfccf115d97b9b2cb4d65ce6778ebf60f2e42d7a4a",
-        "for_code_hash": "ae6f8882f17b128a636a8164e064da585701fba4ea6829a847228a4d5ffd042b"
-      }
+      "code_hash": "ae6f8882f17b128a636a8164e064da585701fba4ea6829a847228a4d5ffd042b"
     },
     "llmlang.extractor.TestComment": {
       "file": "llmlang/extractor.py",
@@ -82,23 +77,23 @@
     },
     "llmlang.flow.generate_flow": {
       "file": "llmlang/flow.py",
-      "text": "+ composes a .llmflow view by walking every @entry-point entry and inlining each \u2192 call target's own bullets, recursively, expanding each referenced entry only the first time it's reached in a given trace\naccepts the list of @entry-point entries and every named entry's own summary and bullets\ncomposes a .llmflow view by walking every @entry-point entry and inlining each \u2192 call target's own bullets, recursively\nexpands a referenced entry's own bullets only the first time it's reached in a given entry point's trace; a repeat reference (including a cycle) renders as a bare call line with nothing nested under it\nresolves a \u2192 call target to a known llmlang entry by exact canonical name or unique suffix match\ntreats a \u2192 call target containing \" via \" as an external call with nothing to resolve or expand\nreports each non-external \u2192 call target that doesn't resolve to exactly one entry as an error naming the entry it came from, rather than raising or losing any other output\nreturns the composed text for every entry point, and the list of any call-target errors found",
-      "text_hash": "9843f02df4960b98b0e98ab404fe5b76d3733b4dacee6091dc436420e7107dba",
+      "text": "+ composes a .llmflow view by walking every @entry-point entry and inlining each \u2192 call target's own bullets, recursively, expanding each referenced entry only the first time it's reached in a given trace\naccepts the list of @entry-point entries and every named entry's own summary and bullets\ncomposes a .llmflow view by walking every @entry-point entry and inlining each \u2192 call target's own bullets, recursively\nexpands a referenced entry's own bullets only the first time it's reached in a given entry point's trace; a repeat reference (including a cycle) renders as a bare call line with nothing nested under it\nresolves a \u2192 call target to a known llmlang entry by exact canonical name or unique suffix match\ntreats a \u2192 call target containing \" via \" as an external call with nothing to resolve or expand\nrenders a plain \"returns ...\" bullet with a \u2190 marker instead of -, the same as an explicit \u2190 return line\nreports each non-external \u2192 call target that doesn't resolve to exactly one entry as an error naming the entry it came from, rather than raising or losing any other output\nreturns the composed text for every entry point, and the list of any call-target errors found",
+      "text_hash": "a7cf86b195f602ec1c1672defbf5bc3c50c16d850b43d27f453b089859c87fcc",
       "code_hash": "0397dae0c714300c103c9cdb114e779ed7e6f3cf079528267f00c61ed6e0f9d7",
       "last_change": {
-        "disposition": "new entry, replacing the deleted flow_refs()/FlowRef hash-triple system entirely. Composes a .llmflow view purely by walking @entry-point entries and inlining each \u2192 call target's own bullets recursively (expanding a given entry only once per trace, so a frequently-called or cyclic function doesn't blow up the render or need re-authoring at every call site). No hashing happens here at all - a \u2192 call bullet is just more of its owning entry's text, already covered by that entry's existing text_hash/code_hash.",
-        "for_spec_hash": "9843f02df4960b98b0e98ab404fe5b76d3733b4dacee6091dc436420e7107dba",
+        "disposition": "generator now renders a plain 'returns ...' bullet with a \u2190 marker instead of -, matching an explicit \u2190 return line, so authors don't need to rewrite every existing accepts/returns bookend bullet just to get the arrow. The change lives entirely in the already-exempt _return_text/_render_line helpers above this handle in flow.py, so generate_flow's own tracked code is unchanged; only its bullets were updated to describe the new rendering behavior.",
+        "for_spec_hash": "a7cf86b195f602ec1c1672defbf5bc3c50c16d850b43d27f453b089859c87fcc",
         "for_code_hash": "0397dae0c714300c103c9cdb114e779ed7e6f3cf079528267f00c61ed6e0f9d7"
       }
     },
     "llmlang.flow.generate_flow_for_tree": {
       "file": "llmlang/flow.py",
-      "text": "+ builds the entry-point list and entry content from a parsed llmlang tree, then composes the flow view\naccepts a parsed llmlang tree\nbuilds the entry-point list and entry content from a parsed llmlang tree, then composes the flow view using generate_flow\nreturns the same (text, errors) shape as generate_flow",
-      "text_hash": "b72a0812a6ed634563090ee0d9a658efddb1caf215c5fa0510e87361870f4f19",
+      "text": "+ builds the entry-point list and entry content from a parsed llmlang tree, then composes the flow view\naccepts a parsed llmlang tree\nbuilds the entry-point list and entry content from a parsed llmlang tree, then composes the flow view using generate_flow\nexcludes ~ test bullets from every entry's content; a flow view is about execution, not test coverage\nreturns the same (text, errors) shape as generate_flow",
+      "text_hash": "735a922587f6115665cbe4b385dad3595159809a6a7975cdf23dd2ab0a378795",
       "code_hash": "2eb4849ff28584d38e49c1952304111530e2d4ef47e6329e185449e4acc8e6fe",
       "last_change": {
-        "disposition": "new entry, the tree-walking adapter around generate_flow - builds the entry-point list and per-entry bullet content from a parsed llmlang tree.",
-        "for_spec_hash": "b72a0812a6ed634563090ee0d9a658efddb1caf215c5fa0510e87361870f4f19",
+        "disposition": "bullets now state explicitly that ~ test bullets are excluded from flow content - this was already true (the entries dict it builds already filtered them out), just undocumented until now. No code changed.",
+        "for_spec_hash": "735a922587f6115665cbe4b385dad3595159809a6a7975cdf23dd2ab0a378795",
         "for_code_hash": "2eb4849ff28584d38e49c1952304111530e2d4ef47e6329e185449e4acc8e6fe"
       }
     },
@@ -106,23 +101,13 @@
       "file": "llmlang/lockfile_builder.py",
       "text": "+ builds a lockfile by using Parser to read llmlang, Extractor to locate each entry's code, and Lockfile to record a text and code hash per entry\naccepts an llmlang file path and a lockfile output path\nbuilds a lockfile by using Parser to read llmlang, Extractor to locate each source-handled entry's code, and Lockfile to record a text and code hash per entry\nwrites test trace records with the llm-test explanation text, relative path, and backing code hash\ngenerates and overwrites the sibling .llmflow file from the current @entry-point entries and bullets\nrefuses to write anything when any test bullet lacks a matching llm-test comment or any llm-test comment lacks a matching test bullet\nrefuses to write anything when any \u2192 call target in an @entry-point entry's reachable bullets is unresolved or ambiguous\nhas no notion of dispositions or a change manifest at all; never reads or writes anything but the lockfile and the generated flow file\nshould reproduce the same hashes when run again against an unchanged codebase\nreturns the built lock data",
       "text_hash": "5e3a926dd7e02c60544154131eec7a08888b9d0bc232a7f4f0e3bdbcd2db5b14",
-      "code_hash": "395647527734dee36d8b9e2922beaca0069d6e9019c1af8c7c093420569ff8dc",
-      "last_change": {
-        "disposition": "removed all flow-reference hashing/writing; build() now calls the new flow generator and overwrites the sibling .llmflow file unconditionally (same treatment as the lockfile itself), refusing to write anything if a \u2192 call target reachable from an @entry-point doesn't resolve.",
-        "for_spec_hash": "5e3a926dd7e02c60544154131eec7a08888b9d0bc232a7f4f0e3bdbcd2db5b14",
-        "for_code_hash": "395647527734dee36d8b9e2922beaca0069d6e9019c1af8c7c093420569ff8dc"
-      }
+      "code_hash": "395647527734dee36d8b9e2922beaca0069d6e9019c1af8c7c093420569ff8dc"
     },
     "llmlang.lockfile_builder.finalize": {
       "file": "llmlang/lockfile_builder.py",
       "text": "+ guards an incremental rebuild against silently skipping a flagged entry, reading and updating a change manifest bound to the exact spec and code hashes it describes\naccepts an llmlang file path, a lockfile output path, and a change manifest file path\nuses Checker to find every named entry currently flagged against the existing lockfile, and refuses to write anything unless the change manifest covers every one of them with a non-empty disposition\nrefuses to write anything, same as build, when any \u2192 call target in an @entry-point entry's reachable bullets is unresolved or ambiguous\ngenerates and overwrites the sibling .llmflow file from the current @entry-point entries and bullets, same as build; a flow-only edit needs no disposition of its own, since it can only exist as part of an entry's own bullets, already gated by that entry's own SPEC_DIVERGED\naccepts a fresh disposition in the manifest as a plain string, and stamps it with the entry's current spec hash and code hash\na spec hash combines the entry's own text with every policy currently covering it, so a disposition goes stale whether the entry's own text changed or an applicable policy did\nfor a manifest entry that's already stamped, keeps it only if both hashes still match the entry's current state; otherwise drops it as stale, along with any entry whose key no longer exists\nbuilds every hash and disposition fresh from the current llmlang text, current code, current policies, and current manifest only; never carries anything forward from the lockfile's own prior content\nwrites both the new lockfile and the updated (stamped and pruned) manifest file, but never alters a disposition's own text\nreturns the built lock data",
       "text_hash": "c241e9dc48563c6dbb1e9010013c643042d4a5de406f6745e5b46fa49bb91134",
-      "code_hash": "f581668bf2be64d6d75abcf5f3bcbdbc40c850950ce5c0c57926a45a604dfa65",
-      "last_change": {
-        "disposition": "same change as build() - generates and overwrites .llmflow directly. No flow-specific disposition branch exists anymore: a \u2192 call line only ever exists inside some entry's own bullets, so editing one already flags that entry's ordinary SPEC_DIVERGED and goes through the same disposition gate every other bullet edit does.",
-        "for_spec_hash": "c241e9dc48563c6dbb1e9010013c643042d4a5de406f6745e5b46fa49bb91134",
-        "for_code_hash": "f581668bf2be64d6d75abcf5f3bcbdbc40c850950ce5c0c57926a45a604dfa65"
-      }
+      "code_hash": "f581668bf2be64d6d75abcf5f3bcbdbc40c850950ce5c0c57926a45a604dfa65"
     },
     "llmlang.coverage_checker.check_coverage": {
       "file": "llmlang/coverage_checker.py",
@@ -134,12 +119,7 @@
       "file": "llmlang/lockfile_checker.py",
       "text": "+ checks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as SPEC_DIVERGED, CODE_DIVERGED, or unchanged, alongside its file and line\naccepts an llmlang file path and a lockfile path\nchecks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as SPEC_DIVERGED, CODE_DIVERGED, or unchanged, alongside its file and line\nreports TEST_LINK_MISSING when any test bullet lacks a matching llm-test comment with the same text and canonical node name\nreports TEST_TRACE_STALE when any llm-test comment lacks a matching test bullet with the same text and canonical node name\nreports TEST_CODE_DIVERGED when a linked test's backing code hash differs from the lockfile\nreports FLOW_ERROR, naming the entry it came from, when a \u2192 call target reachable from an @entry-point entry is unresolved or ambiguous, without losing any other finding for the same file\nreports FLOW_FILE_STALE when the checked-in .llmflow doesn't match what generating one fresh from the current llmlang and code would produce\nshould report an entry as SPEC_DIVERGED when its own llmlang text changed, it's brand new, or an upstream policy covering it changed\nshould report an entry as CODE_DIVERGED when its handle is missing from the code or its code changed unexpectedly\nshould report an unmodified codebase as fully clean\nnever prints anything itself; every finding is returned as a Finding record in a list, so a caller can present every failure from a run together instead of relying on interleaved prints, or render them as structured data instead of text\neach finding names a file and line where known: entry-level findings point at the entry's header line in the llmlang file, code-level findings point at the handle's own comment line in the source file\nreturns whether everything checked out clean, the set of named-entry tracking keys currently flagged for any reason, and the list of findings",
       "text_hash": "e9b9fd3f0a07884f64c487273c60fece0fadb0e3dbd1804c5ff9f9278e17a413",
-      "code_hash": "5ef6fee0620bf9f2d0c9fed5b57fd2ae0791b75dd8ce5880c88238852848bd7b",
-      "last_change": {
-        "disposition": "removed the flow_refs hash-triple comparison (FLOW_DIVERGED) entirely. check() now regenerates the flow view fresh from the current tree and compares it byte-for-byte against the checked-in .llmflow, reporting FLOW_FILE_STALE on a mismatch - this also catches someone hand-editing the generated file directly, which the old design never could. FLOW_ERROR is kept, now naming the source entry a bad \u2192 call line was found in rather than a flow-file line number, since the call now lives in the .llm file, not a separate file.",
-        "for_spec_hash": "e9b9fd3f0a07884f64c487273c60fece0fadb0e3dbd1804c5ff9f9278e17a413",
-        "for_code_hash": "5ef6fee0620bf9f2d0c9fed5b57fd2ae0791b75dd8ce5880c88238852848bd7b"
-      }
+      "code_hash": "5ef6fee0620bf9f2d0c9fed5b57fd2ae0791b75dd8ce5880c88238852848bd7b"
     },
     "llmlang.cli.find_pyproject": {
       "file": "llmlang/cli.py",
@@ -169,12 +149,7 @@
       "file": "llmlang/cli.py",
       "text": "+ checks a single llmlang file, adding coverage findings when coverage is active\naccepts an llmlang file path and whether coverage checking is active\n\u2192 call llmlang.lockfile_checker.check\nif checking raises an error, reports it as a single ERROR finding instead of letting the exception propagate\nchecks whether coverage checking is active:\n\t- if yes:\n\t\t\u2192 call llmlang.coverage_checker.check_coverage\n\t- if no, skips coverage checking\nreturns whether it checked out clean and the combined list of findings",
       "text_hash": "f0d5602275343980884f3652522db376a746e94ca37db1272b3f0d4c565d962e",
-      "code_hash": "e293003177cc9082719c4fbb4d4f41ad02e02f2b41ade4ce914dbf49d2c501db",
-      "last_change": {
-        "disposition": "bullets now show its two real calls (lockfile_checker.check, and coverage_checker.check_coverage when coverage is active) as \u2192 call lines instead of leaving them undescribed.",
-        "for_spec_hash": "f0d5602275343980884f3652522db376a746e94ca37db1272b3f0d4c565d962e",
-        "for_code_hash": "e293003177cc9082719c4fbb4d4f41ad02e02f2b41ade4ce914dbf49d2c501db"
-      }
+      "code_hash": "e293003177cc9082719c4fbb4d4f41ad02e02f2b41ade4ce914dbf49d2c501db"
     },
     "llmlang.cli.print_report_text": {
       "file": "llmlang/cli.py",
@@ -192,45 +167,25 @@
       "file": "llmlang/cli.py",
       "text": "+ checks every path given, applying config-resolved coverage and exclusions, and reports every failure together\naccepts a list of file or directory paths, the parsed flags, an optional config path override, and the output format\nchecks every path given, applying config-resolved coverage and exclusions, and reports every failure together\n\u2192 call llmlang.cli.load_config\n\u2192 call llmlang.cli.resolve_coverage\naccepts any number of file or directory paths, auto-discovering every *.llm file under a directory and checking a .llm file directly\n\u2192 call llmlang.cli.discover_llm_files\nwarns to stderr and skips a path that doesn't exist, rather than failing the whole run\nexits with an error if no .llm files are found under any given path\nrepeats checking for each discovered or directly given llmlang file:\n\t\u2192 call llmlang.cli.check_one\nprints \"checking X\" progress and any warnings to stderr, so stdout stays clean for the report in either format\nfor json case:\n\t\u2192 call llmlang.cli.print_report_json\nfor text case:\n\t\u2192 call llmlang.cli.print_report_text\nexits 0 if every checked file was clean, 1 otherwise",
       "text_hash": "8b8077e96d1f490963fe0b827a5d62a1470d9fe229529eb194f3896710eb5e0e",
-      "code_hash": "b9ddca013f67caa8582c768a4cb5db37069e3792041a245943b71e9e10ebfeb3",
-      "last_change": {
-        "disposition": "bullets now name its real calls (load_config, resolve_coverage, discover_llm_files, check_one, and the text/json report printers) as \u2192 call lines instead of leaving the orchestration implicit.",
-        "for_spec_hash": "8b8077e96d1f490963fe0b827a5d62a1470d9fe229529eb194f3896710eb5e0e",
-        "for_code_hash": "b9ddca013f67caa8582c768a4cb5db37069e3792041a245943b71e9e10ebfeb3"
-      }
+      "code_hash": "b9ddca013f67caa8582c768a4cb5db37069e3792041a245943b71e9e10ebfeb3"
     },
     "llmlang.cli.run_build": {
       "file": "llmlang/cli.py",
       "text": "+ builds a fresh lockfile for exactly one llmlang file, unguarded\naccepts a single llmlang file path\nbuilds a fresh lockfile for exactly one llmlang file, unguarded\nrefuses more than one file argument, since build is always scoped to one project\n\u2192 call llmlang.lockfile_builder.build\nexits 1 and prints the error on failure",
       "text_hash": "47bdc138c70eb419fd2f14f1e8b3453c0e7d9dea7e0f29b6985376ba688d08e2",
-      "code_hash": "918dc67e1b7d875a2d7251e5065e448e21cee8f97d301fd4106ad3ea5eec7ede",
-      "last_change": {
-        "disposition": "adds a \u2192 call to lockfile_builder.build, naming the delegation that was already true.",
-        "for_spec_hash": "47bdc138c70eb419fd2f14f1e8b3453c0e7d9dea7e0f29b6985376ba688d08e2",
-        "for_code_hash": "918dc67e1b7d875a2d7251e5065e448e21cee8f97d301fd4106ad3ea5eec7ede"
-      }
+      "code_hash": "918dc67e1b7d875a2d7251e5065e448e21cee8f97d301fd4106ad3ea5eec7ede"
     },
     "llmlang.cli.run_finalize": {
       "file": "llmlang/cli.py",
       "text": "+ finalizes exactly one llmlang file's lockfile and change manifest, guarded by Checker\naccepts a single llmlang file path\nfinalizes exactly one llmlang file's lockfile and change manifest, guarded by Checker\nrefuses more than one file argument, since finalize is always scoped to one project\n\u2192 call llmlang.lockfile_builder.finalize\nexits 1 and prints the error on failure",
       "text_hash": "264d53f3514c7cfcd5d92f497e5ef07b4cdb7c81eca64f0799737f02ae56b662",
-      "code_hash": "e8dd6bca6270f057a55e1b5d22c7a51c4078eae2e7c5c7f6bcf0ece93e18288b",
-      "last_change": {
-        "disposition": "adds a \u2192 call to lockfile_builder.finalize, naming the delegation that was already true.",
-        "for_spec_hash": "264d53f3514c7cfcd5d92f497e5ef07b4cdb7c81eca64f0799737f02ae56b662",
-        "for_code_hash": "e8dd6bca6270f057a55e1b5d22c7a51c4078eae2e7c5c7f6bcf0ece93e18288b"
-      }
+      "code_hash": "e8dd6bca6270f057a55e1b5d22c7a51c4078eae2e7c5c7f6bcf0ece93e18288b"
     },
     "llmlang.cli.main": {
       "file": "llmlang/cli.py",
       "text": "+ parses argv into a command and validated flags, then dispatches to check, build, or finalize\naccepts no arguments; reads argv directly\nparses argv into a command and validated flags, then dispatches to check, build, or finalize\n--help or -h anywhere in argv, or no arguments at all, prints usage\n--version prints the installed package version, falling back to a bundled version string when llmlang isn't actually installed\nrejects a command outside {check, build, finalize}, and rejects any flag that isn't valid for the given command (--coverage on build, say, or --config on finalize) - nothing is silently ignored\n--config and --output-format each consume the next argument as their value\nfor check case:\n\t\u2192 call llmlang.cli.run_check\nfor build case:\n\t\u2192 call llmlang.cli.run_build\nfor finalize case:\n\t\u2192 call llmlang.cli.run_finalize",
       "text_hash": "c860d0c6119ee627350fd92bd101827b81657ed1f7c86f856ef71a8e8e167a72",
-      "code_hash": "16aa05d4a37c0918ff196505518d96256b12ab046eef83ddd0883e112cefa25c",
-      "last_change": {
-        "disposition": "marked @entry-point (the CLI's own real entry point) and its command dispatch now uses for X case: with a \u2192 call to run_check/run_build/run_finalize per case, instead of prose describing the dispatch generically. This entry point is what compiler.llmflow is generated from.",
-        "for_spec_hash": "c860d0c6119ee627350fd92bd101827b81657ed1f7c86f856ef71a8e8e167a72",
-        "for_code_hash": "16aa05d4a37c0918ff196505518d96256b12ab046eef83ddd0883e112cefa25c"
-      }
+      "code_hash": "16aa05d4a37c0918ff196505518d96256b12ab046eef83ddd0883e112cefa25c"
     }
   },
   "class_bullets": {},
