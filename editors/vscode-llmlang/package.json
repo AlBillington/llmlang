@@ -1,0 +1,37 @@
+{
+  "name": "llmlang",
+  "displayName": "llmlang",
+  "description": "Syntax highlighting and language configuration for llmlang (.llm) and generated flow (.llmflow) files.",
+  "version": "0.1.0",
+  "publisher": "llmlang",
+  "license": "SEE LICENSE IN ../../readme.md",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "llmlang",
+        "aliases": [
+          "llmlang",
+          "llm"
+        ],
+        "extensions": [
+          ".llm",
+          ".llmflow"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "llmlang",
+        "scopeName": "source.llmlang",
+        "path": "./syntaxes/llmlang.tmLanguage.json"
+      }
+    ]
+  }
+}

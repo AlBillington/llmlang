@@ -191,6 +191,8 @@ This repo's own `pyproject.toml` sets `coverage = true`, which is why the CI wor
 
 Not yet published to PyPI, so `pip install llmlang` alone doesn't resolve, only `pip install .` or a git URL. Deliberately deferred: a published package implies a stability commitment around naming and versioning that's easier to make once the CLI and output shape have had more use behind them. See §8.
 
+**Editor support.** [`editors/vscode-llmlang/`](editors/vscode-llmlang/) is a local VS Code extension: syntax highlighting for every llmlang line type and `#`-as-comment toggling. Not published to the Marketplace; see its own README for local install steps. Presentation only - no diagnostics or hover, `llmlang check` is still the source of truth.
+
 ## 8. Limitations
 
 - **Correctness of a disposition is a human-review responsibility, not something this tool verifies** (§3.4). `finalize` guarantees coverage: nothing gets silently skipped. It can't guarantee a disposition is true; a fabricated one is possible, the same way generated code can always be wrong in ways that still pass every check.

@@ -1,0 +1,114 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "llmlang",
+  "scopeName": "source.llmlang",
+  "patterns": [
+    { "include": "#policy" },
+    { "include": "#entry-point" },
+    { "include": "#data-entry-header" },
+    { "include": "#named-entry-header" },
+    { "include": "#generic-header" },
+    { "include": "#flow-entry-header" },
+    { "include": "#commentary-bullet" },
+    { "include": "#test-bullet" },
+    { "include": "#arrow-return" },
+    { "include": "#arrow-call" },
+    { "include": "#behavior-bullet" }
+  ],
+  "repository": {
+    "policy": {
+      "match": "^(\\s*)(@policy:)\\s*$",
+      "captures": {
+        "2": { "name": "keyword.control.policy.llmlang" }
+      }
+    },
+    "entry-point": {
+      "match": "^(\\s*)(@entry-point)(\\((.*)\\))?\\s*$",
+      "captures": {
+        "2": { "name": "storage.modifier.entry-point.llmlang" },
+        "4": { "name": "string.unquoted.entry-point-label.llmlang" }
+      }
+    },
+    "data-entry-header": {
+      "match": "^(\\s*)([A-Za-z_][A-Za-z0-9_.]*)\\s+(data)\\s+(\\()(.*)(\\))(:)\\s*$",
+      "captures": {
+        "2": { "name": "entity.name.function.llmlang" },
+        "3": { "name": "storage.type.data.llmlang" },
+        "5": { "name": "string.unquoted.description.llmlang" },
+        "7": { "name": "punctuation.definition.header.llmlang" }
+      }
+    },
+    "named-entry-header": {
+      "match": "^(\\s*)([A-Za-z_][A-Za-z0-9_.]*)\\s+(\\()(.*)(\\))(:)\\s*$",
+      "captures": {
+        "2": { "name": "entity.name.function.llmlang" },
+        "4": { "name": "string.unquoted.description.llmlang" },
+        "6": { "name": "punctuation.definition.header.llmlang" }
+      }
+    },
+    "generic-header": {
+      "match": "^(\\s*)([A-Za-z_][A-Za-z0-9_.]*)(\\s+[^:]*)?(:)\\s*$",
+      "captures": {
+        "2": { "name": "entity.name.type.llmlang" },
+        "3": { "name": "comment.line.hint.llmlang" },
+        "4": { "name": "punctuation.definition.header.llmlang" }
+      }
+    },
+    "flow-entry-header": {
+      "comment": "A generated .llmflow entry-point header - free-text label (trigger: description), always unindented, colon not necessarily at the end.",
+      "match": "^(\\S.*)$",
+      "captures": {
+        "1": { "name": "entity.name.section.llmlang" }
+      }
+    },
+    "commentary-bullet": {
+      "match": "^(\\s*)(#\\s.*)$",
+      "captures": {
+        "2": { "name": "comment.line.number-sign.llmlang" }
+      }
+    },
+    "test-bullet": {
+      "match": "^(\\s*)(~)(\\s.*)$",
+      "captures": {
+        "2": { "name": "keyword.operator.test.llmlang" },
+        "3": { "name": "markup.italic.test.llmlang" }
+      }
+    },
+    "arrow-call": {
+      "match": "^(\\s*)(→\\s*call)\\s+(.*?)(\\s+via\\s+)(.*)$|^(\\s*)(→\\s*call)\\s+(.*)$",
+      "captures": {
+        "2": { "name": "keyword.control.call.llmlang" },
+        "3": { "name": "entity.name.function.call.llmlang" },
+        "4": { "name": "keyword.control.via.llmlang" },
+        "5": { "name": "support.class.external.llmlang" },
+        "7": { "name": "keyword.control.call.llmlang" },
+        "8": { "name": "entity.name.function.call.llmlang" }
+      }
+    },
+    "arrow-return": {
+      "match": "^(\\s*)(←[\\s-]*(?:return)?)\\s+(.*)$",
+      "captures": {
+        "2": { "name": "keyword.control.return.llmlang" },
+        "3": { "name": "string.unquoted.return-value.llmlang" }
+      }
+    },
+    "behavior-bullet": {
+      "match": "^(\\s*)(-)(\\s.*)$",
+      "captures": {
+        "2": { "name": "punctuation.definition.list.llmlang" },
+        "3": { "patterns": [{ "include": "#decision-keywords" }] }
+      }
+    },
+    "decision-keywords": {
+      "patterns": [
+        { "match": "\\bchecks whether\\b", "name": "keyword.control.conditional.llmlang" },
+        { "match": "\\bif (yes|no)\\b", "name": "keyword.control.conditional.llmlang" },
+        { "match": "\\bfor\\s+.+?\\s+case\\b", "name": "keyword.control.conditional.llmlang" },
+        { "match": "\\bchooses\\b.*?\\bby\\b", "name": "keyword.control.conditional.llmlang" },
+        { "match": "\\brepeats\\b", "name": "keyword.control.loop.llmlang" },
+        { "match": "\\b(for each|until|at most)\\b", "name": "keyword.control.loop.llmlang" },
+        { "match": "\\baccepts\\b|\\breturns\\b", "name": "support.function.bookend.llmlang" }
+      ]
+    }
+  }
+}
