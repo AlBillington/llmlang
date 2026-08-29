@@ -1,7 +1,22 @@
 {
   "Backend.UrlShortener.create_short_code": {
-    "disposition": "marked 'generated codes must be unique per URL' as # commentary - it's the invariant the retry loop exists to guarantee, not a step create_short_code performs itself. No behavior changed.",
-    "for_spec_hash": "3e7bd597ca9123c24c762b2b62adc9317c0567cbf7e9a59e35d637d825df1e7e",
+    "disposition": "removed a bullet verbatim-restating the header's own summary. No behavior changed.",
+    "for_spec_hash": "ea1f37667d1501282119f3994f9c8f42e3980f4c8ed5f4f4c7a4a858e6cdbb8b",
     "for_code_hash": "3654c44419a515e0d8bdf58413f6ee4c39257d8c82f0dbdfda03a5b2960c98b8"
+  },
+  "Backend.UrlShortener.get_url": {
+    "disposition": "removed a bullet verbatim-restating the header's own summary. No behavior changed.",
+    "for_spec_hash": "46bb2aec7149374d2c1b517ed928132ce3e8870e55818a49ce183b336ef0890f",
+    "for_code_hash": "674b400bd7767b69f30da237e680d96f77b713c321d4fd01a0c7676618b0cd61"
+  },
+  "Backend.CodeGenerator.generate": {
+    "disposition": "removed a bullet verbatim-restating the header's own summary. No behavior changed.",
+    "for_spec_hash": "4681ecfd459e7bfa611ae6b7f02e2974dd7d09ff28d322ad045797a82af69fce",
+    "for_code_hash": "6f2f7ff60ef7f18227ed4ab42bb52b0ff1b0002754ecd3d8002ed91411e455c4"
+  },
+  "Frontend.ShortenerUI.shortenUrl": {
+    "disposition": "removed a bullet verbatim-restating the header's own summary; the header itself already names UrlShortener as the delegate, satisfying \u00a74e without a duplicate body bullet. No behavior changed.",
+    "for_spec_hash": "1c847c0efd1ec227e49d7ccd46ad1d249b462de131fd6c691bf831169c2ce21a",
+    "for_code_hash": "c9e31210dc6a622d075c24b5235023940694ae5147461214ae6d098c2bd9e454"
   }
 }

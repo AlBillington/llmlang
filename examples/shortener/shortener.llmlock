@@ -12,20 +12,25 @@
   "entries": {
     "Backend.UrlShortener.create_short_code": {
       "file": "Backend/UrlShortener.py",
-      "text": "+ creates a unique short code for a given long URL, using CodeGenerator to generate the code\naccepts a long URL\ncreates a unique short code for a given long URL\n\u2192 call Backend.CodeGenerator.generate\n# generated codes must be unique per URL\nreturns the short code\n~ should return the same code when called twice with the same URL\n~ should generate unique codes per URL",
-      "text_hash": "324cedb6c0b3b6586341ee6dd12ce4b7fc9e4965210735fcfe84e2b8e85fbf58",
+      "text": "+ creates a unique short code for a given long URL, using CodeGenerator to generate the code\naccepts a long URL\n\u2192 call Backend.CodeGenerator.generate\n# generated codes must be unique per URL\nreturns the short code\n~ should return the same code when called twice with the same URL\n~ should generate unique codes per URL",
+      "text_hash": "339e3bfddce4ec16593215589300564ee4c87e8a56a71d6e77c0f1628cef7f58",
       "code_hash": "3654c44419a515e0d8bdf58413f6ee4c39257d8c82f0dbdfda03a5b2960c98b8",
       "last_change": {
-        "disposition": "marked 'generated codes must be unique per URL' as # commentary - it's the invariant the retry loop exists to guarantee, not a step create_short_code performs itself. No behavior changed.",
-        "for_spec_hash": "3e7bd597ca9123c24c762b2b62adc9317c0567cbf7e9a59e35d637d825df1e7e",
+        "disposition": "removed a bullet verbatim-restating the header's own summary. No behavior changed.",
+        "for_spec_hash": "ea1f37667d1501282119f3994f9c8f42e3980f4c8ed5f4f4c7a4a858e6cdbb8b",
         "for_code_hash": "3654c44419a515e0d8bdf58413f6ee4c39257d8c82f0dbdfda03a5b2960c98b8"
       }
     },
     "Backend.UrlShortener.get_url": {
       "file": "Backend/UrlShortener.py",
-      "text": "+ looks up the original URL for a given short code\naccepts a short code\nlooks up the original URL for a given short code\nreturns the original URL\n~ should return not found for an unknown short code",
-      "text_hash": "f6babee59b6fac478121285cf05e8421d133418468118affef3babb717d6435b",
-      "code_hash": "674b400bd7767b69f30da237e680d96f77b713c321d4fd01a0c7676618b0cd61"
+      "text": "+ looks up the original URL for a given short code\naccepts a short code\nreturns the original URL\n~ should return not found for an unknown short code",
+      "text_hash": "43d1401e4d090f6e2b64ecf99b74366ebaf1c764810691855ff94b25206df93f",
+      "code_hash": "674b400bd7767b69f30da237e680d96f77b713c321d4fd01a0c7676618b0cd61",
+      "last_change": {
+        "disposition": "removed a bullet verbatim-restating the header's own summary. No behavior changed.",
+        "for_spec_hash": "46bb2aec7149374d2c1b517ed928132ce3e8870e55818a49ce183b336ef0890f",
+        "for_code_hash": "674b400bd7767b69f30da237e680d96f77b713c321d4fd01a0c7676618b0cd61"
+      }
     },
     "Backend.UrlShortener._code_to_url": {
       "file": "Backend/UrlShortener.py",
@@ -35,9 +40,14 @@
     },
     "Backend.CodeGenerator.generate": {
       "file": "Backend/CodeGenerator.py",
-      "text": "+ generates a random 6-character alphanumeric code\ngenerates a random 6-character alphanumeric code\nreturns the generated code",
-      "text_hash": "30faa392a3b9a3c086cfe209d58911954efe99b41719241587d3e74c24f4187b",
-      "code_hash": "6f2f7ff60ef7f18227ed4ab42bb52b0ff1b0002754ecd3d8002ed91411e455c4"
+      "text": "+ generates a random 6-character alphanumeric code\nreturns the generated code",
+      "text_hash": "26905b0cd8b2d329995c350cdc9b897e0c2a1262dcc56d06dcf0b5b418fa6fef",
+      "code_hash": "6f2f7ff60ef7f18227ed4ab42bb52b0ff1b0002754ecd3d8002ed91411e455c4",
+      "last_change": {
+        "disposition": "removed a bullet verbatim-restating the header's own summary. No behavior changed.",
+        "for_spec_hash": "4681ecfd459e7bfa611ae6b7f02e2974dd7d09ff28d322ad045797a82af69fce",
+        "for_code_hash": "6f2f7ff60ef7f18227ed4ab42bb52b0ff1b0002754ecd3d8002ed91411e455c4"
+      }
     },
     "Frontend.ShortenerUI.form": {
       "file": "Frontend/ShortenerUI.html",
@@ -47,9 +57,14 @@
     },
     "Frontend.ShortenerUI.shortenUrl": {
       "file": "Frontend/ShortenerUI.html",
-      "text": "+ uses UrlShortener to create a short code when submitted\naccepts the long URL\nuses UrlShortener to create a short code when submitted\nreturns the short code",
-      "text_hash": "79d0b9e69ee3a278b8274d1c10eb997f213c0f424f6ae9383521e54b06d47da7",
-      "code_hash": "c9e31210dc6a622d075c24b5235023940694ae5147461214ae6d098c2bd9e454"
+      "text": "+ uses UrlShortener to create a short code when submitted\naccepts the long URL\nreturns the short code",
+      "text_hash": "1c847c0efd1ec227e49d7ccd46ad1d249b462de131fd6c691bf831169c2ce21a",
+      "code_hash": "c9e31210dc6a622d075c24b5235023940694ae5147461214ae6d098c2bd9e454",
+      "last_change": {
+        "disposition": "removed a bullet verbatim-restating the header's own summary; the header itself already names UrlShortener as the delegate, satisfying \u00a74e without a duplicate body bullet. No behavior changed.",
+        "for_spec_hash": "1c847c0efd1ec227e49d7ccd46ad1d249b462de131fd6c691bf831169c2ce21a",
+        "for_code_hash": "c9e31210dc6a622d075c24b5235023940694ae5147461214ae6d098c2bd9e454"
+      }
     },
     "Frontend.ShortenerUI.renderShortUrl": {
       "file": "Frontend/ShortenerUI.html",

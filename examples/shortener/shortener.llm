@@ -8,7 +8,6 @@ Backend:
 		@entry-point(POST /api/shorten: creates a short code for a submitted URL)
 		create_short_code (creates a unique short code for a given long URL, using CodeGenerator to generate the code):
 			- accepts a long URL
-			- creates a unique short code for a given long URL
 			→ call Backend.CodeGenerator.generate
 			# generated codes must be unique per URL
 			~ should return the same code when called twice with the same URL
@@ -18,7 +17,6 @@ Backend:
 		@entry-point(GET /{code}: redirects to the original URL for a short code)
 		get_url (looks up the original URL for a given short code):
 			- accepts a short code
-			- looks up the original URL for a given short code
 			~ should return not found for an unknown short code
 			- returns the original URL
 
@@ -29,7 +27,6 @@ Backend:
 
 	CodeGenerator.py class:
 		generate (generates a random 6-character alphanumeric code):
-			- generates a random 6-character alphanumeric code
 			- returns the generated code
 
 Frontend:
@@ -39,7 +36,6 @@ Frontend:
 
 		shortenUrl (uses UrlShortener to create a short code when submitted):
 			- accepts the long URL
-			- uses UrlShortener to create a short code when submitted
 			- returns the short code
 
 		renderShortUrl (displays the resulting short URL as a clickable link to the original URL):
