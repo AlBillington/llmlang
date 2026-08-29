@@ -96,6 +96,8 @@ When a behavior needs visible branching, make the parent bullet only the thing b
 
 Use `if yes` / `if no` for if/then logic: a condition is evaluated and the nested bullets describe the outcomes of that condition.
 
+The condition always leads. Don't write a flat "does X when Y" bullet, and especially don't stack several of them side by side for different values of Y - that reads as a sequence of separate facts, not as alternative outcomes of one decision, and hides which conditions are mutually exclusive. Put the condition in the parent and the outcome underneath, even when the outcome is one word (`if yes, refuses to write anything`). A single bullet that already states both branches in one sentence with "otherwise" (`returns the repository root when one is found, otherwise the llmlang file directory`) is exempt - there's only one bullet either way, so there's no flat-list ambiguity to create.
+
 For a multi-way choice where selecting an option is meaningful behavior, use `chooses ... by ...` and put each outcome underneath. Keep result detail out of the parent so the branch axis remains obvious.
 
 For case-style grouping inside an already-described flow, put one nested branch per case without adding a separate `chooses` bullet. Use `for X case:` labels so the branch context is explicit even without a separate choice parent:

@@ -34,7 +34,7 @@ def _render_line(text: str, abs_depth: int) -> str:
         return "\t" * abs_depth + text
     return_text = _return_text(text)
     if return_text is not None:
-        return "\t" * abs_depth + "← " + return_text
+        return "\t" * abs_depth + "←---- " + return_text
     if text.startswith("- "):
         return "\t" * abs_depth + text
     return "\t" * abs_depth + "- " + text
@@ -48,19 +48,12 @@ def _match_targets(target: str, entry_keys: set) -> list:
 
 
 # private helper of generate_flow(), not independent architecture [llm-exempt]
-def _render_bullets(bullets, base_indent, entry_keys, bullets_by_key, visited, errors, source_key, call_depth=None):
+def _render_bullets(bullets, base_indent, entry_keys, bullets_by_key, visited, errors, source_key):
     out = []
     for bullet in bullets:
         depth, text = _line_depth_and_text(bullet)
         abs_depth = base_indent + depth
-        return_text = _return_text(text)
-        if depth == 0 and call_depth is not None and return_text is not None:
-            # the callee's own trailing return sits at the calling → call
-            # line's own depth, not nested inside the callee's body - it
-            # marks control coming back out to the caller's level.
-            out.append("\t" * call_depth + "← " + return_text)
-        else:
-            out.append(_render_line(text, abs_depth))
+        out.append(_render_line(text, abs_depth))
         if not text.startswith("→ call "):
             continue
         target = text[len("→ call "):].strip()
@@ -85,7 +78,7 @@ def _render_bullets(bullets, base_indent, entry_keys, bullets_by_key, visited, e
         visited.add(resolved)
         out.extend(_render_bullets(
             bullets_by_key.get(resolved, []), abs_depth + 1, entry_keys,
-            bullets_by_key, visited, errors, resolved, call_depth=abs_depth,
+            bullets_by_key, visited, errors, resolved,
         ))
     return out
 

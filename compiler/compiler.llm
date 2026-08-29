@@ -87,8 +87,10 @@ llmlang:
 			- builds a lockfile by using Parser to read llmlang, Extractor to locate each source-handled entry's code, and Lockfile to record a text and code hash per entry
 			- writes test trace records with the llm-test explanation text, relative path, and backing code hash
 			- generates and overwrites the sibling .llmflow file from the current @entry-point entries and bullets
-			- refuses to write anything when any test bullet lacks a matching llm-test comment or any llm-test comment lacks a matching test bullet
-			- refuses to write anything when any → call target in an @entry-point entry's reachable bullets is unresolved or ambiguous
+			- checks whether any test bullet lacks a matching llm-test comment or any llm-test comment lacks a matching test bullet:
+				- if yes, refuses to write anything
+			- checks whether any → call target in an @entry-point entry's reachable bullets is unresolved or ambiguous:
+				- if yes, refuses to write anything
 			- has no notion of dispositions or a change manifest at all; never reads or writes anything but the lockfile and the generated flow file
 			- reproduces the same hashes when run again against an unchanged codebase
 			- returns the built lock data
@@ -96,7 +98,8 @@ llmlang:
 		finalize (guards an incremental rebuild against silently skipping a flagged entry, reading and updating a change manifest bound to the exact spec and code hashes it describes):
 			- accepts an llmlang file path, a lockfile output path, and a change manifest file path
 			- uses Checker to find every named entry currently flagged against the existing lockfile, and refuses to write anything unless the change manifest covers every one of them with a non-empty disposition
-			- refuses to write anything, same as build, when any → call target in an @entry-point entry's reachable bullets is unresolved or ambiguous
+			- checks whether any → call target in an @entry-point entry's reachable bullets is unresolved or ambiguous, same as build:
+				- if yes, refuses to write anything
 			- generates and overwrites the sibling .llmflow file from the current @entry-point entries and bullets, same as build; a flow-only edit needs no disposition of its own, since it can only exist as part of an entry's own bullets, already gated by that entry's own SPEC_DIVERGED
 			- accepts a fresh disposition in the manifest as a plain string, and stamps it with the entry's current spec hash and code hash
 			- a spec hash combines the entry's own text with every policy currently covering it, so a disposition goes stale whether the entry's own text changed or an applicable policy did
@@ -119,13 +122,20 @@ llmlang:
 		check (checks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as SPEC_DIVERGED, CODE_DIVERGED, or unchanged, alongside its file and line):
 			- accepts an llmlang file path and a lockfile path
 			- checks a lockfile by using Parser and Extractor to compare current text and code hashes against Lockfile, reporting each entry as SPEC_DIVERGED, CODE_DIVERGED, or unchanged, alongside its file and line
-			- reports TEST_LINK_MISSING when any test bullet lacks a matching llm-test comment with the same text and canonical node name
-			- reports TEST_TRACE_STALE when any llm-test comment lacks a matching test bullet with the same text and canonical node name
-			- reports TEST_CODE_DIVERGED when a linked test's backing code hash differs from the lockfile
-			- reports FLOW_ERROR, naming the entry it came from, when a → call target reachable from an @entry-point entry is unresolved or ambiguous, without losing any other finding for the same file
-			- reports FLOW_FILE_STALE when the checked-in .llmflow doesn't match what generating one fresh from the current llmlang and code would produce
-			- reports an entry as SPEC_DIVERGED when its own llmlang text changed, it's brand new, or an upstream policy covering it changed
-			- reports an entry as CODE_DIVERGED when its handle is missing from the code or its code changed unexpectedly
+			- checks whether any test bullet lacks a matching llm-test comment with the same text and canonical node name:
+				- if yes, reports TEST_LINK_MISSING
+			- checks whether any llm-test comment lacks a matching test bullet with the same text and canonical node name:
+				- if yes, reports TEST_TRACE_STALE
+			- checks whether a linked test's backing code hash differs from the lockfile:
+				- if yes, reports TEST_CODE_DIVERGED
+			- checks whether a → call target reachable from an @entry-point entry is unresolved or ambiguous:
+				- if yes, reports FLOW_ERROR, naming the entry it came from, without losing any other finding for the same file
+			- checks whether the checked-in .llmflow matches what generating one fresh from the current llmlang and code would produce:
+				- if no, reports FLOW_FILE_STALE
+			- checks whether an entry's own llmlang text changed, it's brand new, or an upstream policy covering it changed:
+				- if yes, reports it as SPEC_DIVERGED
+			- checks whether an entry's handle is missing from the code or its code changed unexpectedly:
+				- if yes, reports it as CODE_DIVERGED
 			- reports a codebase with none of these changes as fully clean
 			- never prints anything itself; every finding is returned as a Finding record in a list, so a caller can present every failure from a run together instead of relying on interleaved prints, or render them as structured data instead of text
 			- each finding names a file and line where known: entry-level findings point at the entry's header line in the llmlang file, code-level findings point at the handle's own comment line in the source file
@@ -140,9 +150,13 @@ llmlang:
 		load_config (loads the [tool.llmlang] table from pyproject.toml, degrading gracefully when it can't be read):
 			- accepts a starting directory and an optional explicit config path override
 			- loads the [tool.llmlang] table from pyproject.toml, degrading gracefully when it can't be read
-			- uses the override path directly when given, otherwise finds the nearest pyproject.toml from the starting directory
-			- warns to stderr and returns an empty config, rather than crashing, when the override path doesn't exist or when this Python has no tomllib (needs 3.11+)
-			- falls back to an empty config, with no warning, when no pyproject.toml is found at all
+			- checks whether an override path was given:
+				- if yes, uses it directly
+				- if no, finds the nearest pyproject.toml from the starting directory
+			- checks whether the override path doesn't exist, or this Python has no tomllib (needs 3.11+):
+				- if yes, warns to stderr and returns an empty config, rather than crashing
+			- checks whether no pyproject.toml was found at all:
+				- if yes, falls back to an empty config, with no warning
 			- returns the [tool.llmlang] table
 
 		resolve_coverage (decides whether --coverage is active, letting a CLI flag override the config either way):

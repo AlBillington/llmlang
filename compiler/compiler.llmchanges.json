@@ -1,27 +1,22 @@
 {
-  "llmlang.flow.generate_flow": {
-    "disposition": "removed _is_should_bullet and its use in _entries_for_flow: llmlang has no notion of test-like content outside a literal ~ bullet (llmlang-format.md \u00a74 makes ~ the only way to mark tested behavior, paired mandatorily with a real source [llm-test:...] comment), so a plain '- should ...' bullet reaching the generator was never a real test to filter - it was always a content defect (a guarantee phrased as if tested, with nothing backing it). The actual fix is rephrasing those bullets at the source (see lockfile_builder.build and lockfile_checker.check below), not a generator-side heuristic.",
-    "for_spec_hash": "d0b02cd68c09da7f97dd9a6a1f597894e9233dc331ae16e0fe55f43043be879a",
-    "for_code_hash": "0397dae0c714300c103c9cdb114e779ed7e6f3cf079528267f00c61ed6e0f9d7"
-  },
-  "llmlang.flow.generate_flow_for_tree": {
-    "disposition": "removed the now-inaccurate bullet describing 'should' bullet exclusion, since that filter no longer exists - see generate_flow's disposition for why.",
-    "for_spec_hash": "735a922587f6115665cbe4b385dad3595159809a6a7975cdf23dd2ab0a378795",
-    "for_code_hash": "2eb4849ff28584d38e49c1952304111530e2d4ef47e6329e185449e4acc8e6fe"
-  },
   "llmlang.lockfile_builder.build": {
-    "disposition": "rephrased 'should reproduce the same hashes...' to 'reproduces the same hashes...', matching every other bullet in this entry's own declarative style. No test backs this claim, so it was never eligible to read as one (llmlang-format.md \u00a74b/\u00a74).",
-    "for_spec_hash": "00ea4e8841760869a9aa8c26cdeb055ca6453b78e131cab3fcd6b78af670fe51",
+    "disposition": "rewrote two 'refuses to write anything when X' bullets into checks-whether/if-yes structure, per the new llmlang-format.md \u00a74c rule (condition leads, sub-bullet for the outcome, especially when several bullets describe alternative trigger conditions for the same action). No behavior changed.",
+    "for_spec_hash": "e08b5de976401e36a390f09fa1313c399886a8c6644f5e1a3848c0f5726aa055",
     "for_code_hash": "395647527734dee36d8b9e2922beaca0069d6e9019c1af8c7c093420569ff8dc"
   },
+  "llmlang.lockfile_builder.finalize": {
+    "disposition": "same restructuring as build() for its own 'refuses to write anything... when X' bullet, for consistency. No behavior changed.",
+    "for_spec_hash": "e36cdc880fbb07f33e8b5c1a6515a51a4f98b9c46604577605e9ffc77bccce9e",
+    "for_code_hash": "f581668bf2be64d6d75abcf5f3bcbdbc40c850950ce5c0c57926a45a604dfa65"
+  },
   "llmlang.lockfile_checker.check": {
-    "disposition": "rephrased three 'should report...' bullets to plain declarative 'reports...', matching this entry's own TEST_LINK_MISSING/TEST_TRACE_STALE/etc bullets immediately above them. Same reasoning as build() - no test backs these, so 'should' phrasing was never accurate; it happened to visually collide with flow generation's test-bullet exclusion, which is what surfaced the pre-existing inconsistency, but the fix is the wording, not the generator.",
-    "for_spec_hash": "9da8887a32a83b5cff7700884b28c413a10b8a89cbd9d263326e10d9bf6b5f33",
+    "disposition": "rewrote all seven finding-report bullets (TEST_LINK_MISSING through CODE_DIVERGED) into checks-whether/if-yes-or-if-no structure - they previously led with the result ('reports X when Y'), which reads as a flat sequence of facts rather than alternative outcomes of distinct checks, and phrasing was inconsistent (some said 'an entry', some didn't). The condition now leads uniformly in every one. No behavior changed.",
+    "for_spec_hash": "010ba11dd12b03125e27934cac43df47a72bb414f5da16f9144799d8b3f31c35",
     "for_code_hash": "5ef6fee0620bf9f2d0c9fed5b57fd2ae0791b75dd8ce5880c88238852848bd7b"
   },
   "llmlang.cli.load_config": {
-    "disposition": "rephrased 'returns an empty config when no pyproject.toml is found at all' to 'falls back to an empty config, with no warning, when no pyproject.toml is found at all'. This was a real llmlang-format.md \u00a74b violation (the return value was stated twice - once here, once in the trailing 'returns the [tool.llmlang] table' bookend - because this branch happened to start literally with the word 'returns' while an equivalent neighboring branch already phrases the same kind of fact as 'warns to stderr and returns...'). No behavior changed; only wording, to state each exit path's return exactly once per \u00a74b's actual rule.",
-    "for_spec_hash": "b5c8133765e19e8f85e74afb3c5d22f9ad957b469d94e8af94a0d91da06d9cea",
+    "disposition": "same restructuring: 'uses X when given, otherwise Y', 'warns...when Y', and 'falls back...when Y' all rewritten condition-first with if-yes/if-no sub-bullets, matching the new \u00a74c rule. No behavior changed.",
+    "for_spec_hash": "d399f53dd731a554b0a46ebf692b815249020b2bff74412ddc0c7d7508431593",
     "for_code_hash": "eead4c5defe4756cf7edbb8e76631471c4dba01e7674e043861594c6ed0b2430"
   }
 }
