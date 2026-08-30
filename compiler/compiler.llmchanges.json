@@ -1,92 +1,12 @@
 {
-  "llmlang.lockfile.LockEntry": {
-    "disposition": "removed a bullet that was a verbatim restatement of the header's own summary; the remaining bullet already states everything else there is to say. No behavior changed.",
-    "for_spec_hash": "406e255cd433644955410c2ebead98e86eb2189a4ba3866e41a31dfcb8971f7b",
-    "for_code_hash": "8b6f67e1b5389c40fbd5ab5c7c7d712d2ed15763c3c573e79779623c7a80085e"
-  },
-  "llmlang.extractor.extract_by_handle": {
-    "disposition": "removed a bullet verbatim-restating the header's own summary. No behavior changed.",
-    "for_spec_hash": "412cbf8a5b62a48dd076a993ca7f314ef604bf7e9d39e6f8d4a27b24d0bad862",
-    "for_code_hash": "dfcdba4cfc149411d59081171b439737e81d27a2a6de0cb8e103dbb1d36e12b8"
-  },
-  "llmlang.extractor.handle_line_numbers": {
-    "disposition": "removed a bullet verbatim-restating the header's own summary. No behavior changed.",
-    "for_spec_hash": "cd838420ae7ea157424e6d577e51e62f37defa1c2671e855c4551a349bd3b754",
-    "for_code_hash": "a8a0c66867dfcd947939f1fcb294d6dcf4c7ba9f023eee420eed15d64cb29162"
-  },
-  "llmlang.flow.generate_flow": {
-    "disposition": "removed a bullet that restated the header's own summary with no unique information beyond what the adjacent 'expands a referenced entry...' bullet already covers. No behavior changed.",
-    "for_spec_hash": "d7c28d5c690659e521c5749fa9a5c8a85d5183f220b2d0790b37ea0c92fa5677",
-    "for_code_hash": "f33bc1e105e38ca095dd50f6363a609133715dfe10fc976d3da008eb92595d3a"
-  },
-  "llmlang.flow.generate_flow_for_tree": {
-    "disposition": "replaced the prose 'composes the flow view using generate_flow' with a real \u2192 call llmlang.flow.generate_flow arrow, matching the project's own convention (llmlang-format.md \u00a74e) instead of naming the delegate in prose. No behavior changed.",
-    "for_spec_hash": "3b9658b56bf5cabeef2ad30f4739a923f73659e3459044dd803a6634317fbee0",
-    "for_code_hash": "2eb4849ff28584d38e49c1952304111530e2d4ef47e6329e185449e4acc8e6fe"
-  },
-  "llmlang.lockfile_builder.build": {
-    "disposition": "removed a bullet verbatim-restating the header's own summary. No behavior changed.",
-    "for_spec_hash": "9edbf6c13262ee539eaac3d74f2c179206effcaea4e03c086912b00ada641f88",
-    "for_code_hash": "395647527734dee36d8b9e2922beaca0069d6e9019c1af8c7c093420569ff8dc"
-  },
   "llmlang.lockfile_builder.finalize": {
-    "disposition": "split 'writes both the new lockfile and the updated (stamped and pruned) manifest file, but never alters a disposition's own text' into a real - step and a # guarantee - the write is a step, 'never alters a disposition's own text' is a property, not part of the write action itself. No behavior changed.",
-    "for_spec_hash": "a07dc30ba209c9c32a77bfb9e6ab4f777a5f2b1719b9915d02d7b53615b4f4ab",
+    "disposition": "fixed a real misuse of 'accepts': a bullet describing what a fresh manifest value can look like ('accepts a fresh disposition in the manifest as a plain string...') reused the word reserved for the entry's own \u00a74b bookend, giving this entry two 'accepts' bullets with no clear reason. Restructured the whole disposition-resolution walk condition-first per \u00a74c (checks whether the key still names a current entry; for a fresh-value case, stamps it; for an already-stamped case, keeps-or-drops it) instead of describing it as a loose sequence of facts. Also repositioned the 'builds every hash and disposition fresh...' # commentary to sit right before the closing writes/returns bullets, matching build()'s own layout - it's a global property of the whole computation, not anchored to the specific bullet it used to sit next to. No behavior changed.",
+    "for_spec_hash": "6dbcb29fa6c87458be7067458552e9dd0d415b083d6894ed4250b1627e5a2961",
     "for_code_hash": "f581668bf2be64d6d75abcf5f3bcbdbc40c850950ce5c0c57926a45a604dfa65"
   },
-  "llmlang.coverage_checker.check_coverage": {
-    "disposition": "marked the module/class-level scoping bullet ('only considers functions defined at module or class level...') as # commentary - it's a scope definition (which functions get considered), not a step check_coverage performs, even though it's directly relevant context for the loop that follows. No behavior changed.",
-    "for_spec_hash": "54ea5470bc1895e8aa4511ed78a65109aafe55e535ddf8bf559914ae6ea9d8af",
-    "for_code_hash": "6f50f5b8a4bc58f99ac84ca6e6b9a992ae653c5db5f515164e565212f538fe76"
-  },
-  "llmlang.lockfile_checker.check": {
-    "disposition": "removed a bullet verbatim-restating the header's own summary, and marked 'never prints anything itself; every finding is returned...' as # commentary - it's a negative-capability/API-contract statement, not a step check() performs. No behavior changed.",
-    "for_spec_hash": "cd8916fcd76db33ef39c7b9c1138b06e127f983343f24752e002c9f04c53e37e",
-    "for_code_hash": "5ef6fee0620bf9f2d0c9fed5b57fd2ae0791b75dd8ce5880c88238852848bd7b"
-  },
-  "llmlang.cli.load_config": {
-    "disposition": "removed a bullet verbatim-restating the header's own summary. No behavior changed.",
-    "for_spec_hash": "f14d798f6485fb3d0ae605bc6ff4ddc7de0d1383bea5f44a639f366aebbfd1cc",
-    "for_code_hash": "eead4c5defe4756cf7edbb8e76631471c4dba01e7674e043861594c6ed0b2430"
-  },
-  "llmlang.cli.resolve_coverage": {
-    "disposition": "removed a bullet verbatim-restating the header's own summary. No behavior changed.",
-    "for_spec_hash": "6ce591a298a08a724801708c5359e7da1eae234766950ed0df647f121d745471",
-    "for_code_hash": "afbd41ca3373ec7c9cfb5abfd1d8b1806c3a3f2a2602b9dd679c56a140139516"
-  },
-  "llmlang.cli.discover_llm_files": {
-    "disposition": "removed a bullet verbatim-restating the header's own summary. No behavior changed.",
-    "for_spec_hash": "11218b07fba650be46e35a35ad294eec6c8e6045aa4efe968db50b594207f86a",
-    "for_code_hash": "42e41f3981306840366d52afd7c74df6661231e5bb03cce58a5b7b85c5d3781a"
-  },
-  "llmlang.cli.print_report_text": {
-    "disposition": "removed a bullet verbatim-restating the header's own summary. No behavior changed.",
-    "for_spec_hash": "cb67a54b74abb9a0b7474809855f859cff2cf46bb1760e29a7b05266238fe32a",
-    "for_code_hash": "d7be1bc93658c964c4a2fb9945aeeb26bd445aa478354e4bf08e1f1f8c39a43b"
-  },
-  "llmlang.cli.print_report_json": {
-    "disposition": "removed a bullet verbatim-restating the header's own summary. No behavior changed.",
-    "for_spec_hash": "6e7873c0c80fd741e165e0d60ac7a6f90b669645bef1f7c300d2c45a54015423",
-    "for_code_hash": "15c9add003438a83f16ca07265a23e9f8fcaabbd3014cbb2bacde624c87986bf"
-  },
   "llmlang.cli.run_check": {
-    "disposition": "removed a bullet verbatim-restating the header's own summary. No behavior changed.",
-    "for_spec_hash": "e081a30e2f1713e270abd342c2cd8de127bb4479d533e2e34562b41bb9506e5c",
+    "disposition": "fixed the same 'accepts' misuse: a bullet describing path auto-discovery reused the word reserved for the entry's own bookend. Reworded to state the real behavior (discovers vs. checks-directly) without the word 'accepts'. No behavior changed.",
+    "for_spec_hash": "d0150f92e336007327d7f399bdd644569ef9cfe69b4e82f7571302b6c06a4599",
     "for_code_hash": "b9ddca013f67caa8582c768a4cb5db37069e3792041a245943b71e9e10ebfeb3"
-  },
-  "llmlang.cli.run_build": {
-    "disposition": "removed a bullet verbatim-restating the header's own summary. No behavior changed.",
-    "for_spec_hash": "59ae0cb45743856855c3fbfcef1e4b6e351e910c19869b7bc3f497f637245923",
-    "for_code_hash": "918dc67e1b7d875a2d7251e5065e448e21cee8f97d301fd4106ad3ea5eec7ede"
-  },
-  "llmlang.cli.run_finalize": {
-    "disposition": "removed a bullet verbatim-restating the header's own summary. No behavior changed.",
-    "for_spec_hash": "72dc89bb59d42f3944ba90275574666f96ad9d481434df197997b9182adc6701",
-    "for_code_hash": "e8dd6bca6270f057a55e1b5d22c7a51c4078eae2e7c5c7f6bcf0ece93e18288b"
-  },
-  "llmlang.cli.main": {
-    "disposition": "removed a bullet verbatim-restating the header's own summary. No behavior changed.",
-    "for_spec_hash": "2175ae9dbdcae0144018b825060925a9701dba0ea7b9957d76def2640d562c5b",
-    "for_code_hash": "16aa05d4a37c0918ff196505518d96256b12ab046eef83ddd0883e112cefa25c"
   }
 }

@@ -98,9 +98,15 @@ llmlang:
 			- checks whether any → call target in an @entry-point entry's reachable bullets is unresolved or ambiguous, same as build:
 				- if yes, refuses to write anything
 			- generates and overwrites the sibling .llmflow file from the current @entry-point entries and bullets, same as build; a flow-only edit needs no disposition of its own, since it can only exist as part of an entry's own bullets, already gated by that entry's own SPEC_DIVERGED
-			- accepts a fresh disposition in the manifest as a plain string, and stamps it with the entry's current spec hash and code hash
 			- a spec hash combines the entry's own text with every policy currently covering it, so a disposition goes stale whether the entry's own text changed or an applicable policy did
-			- for a manifest entry that's already stamped, keeps it only if both hashes still match the entry's current state; otherwise drops it as stale, along with any entry whose key no longer exists
+			- repeats resolution for each key already in the change manifest:
+				- checks whether the key still names a current entry:
+					- if no, drops it as orphaned
+				- for a fresh (plain-string) value case:
+					- stamps it with the entry's current spec hash and code hash
+				- for an already-stamped value case:
+					- keeps it only if both recorded hashes still match the entry's current state
+					- otherwise drops it as stale
 			# builds every hash and disposition fresh from the current llmlang text, current code, current policies, and current manifest only; never carries anything forward from the lockfile's own prior content
 			- writes both the new lockfile and the updated (stamped and pruned) manifest file
 			# never alters a disposition's own text
@@ -191,7 +197,7 @@ llmlang:
 			- accepts a list of file or directory paths, the parsed flags, an optional config path override, and the output format
 			→ call llmlang.cli.load_config
 			→ call llmlang.cli.resolve_coverage
-			- accepts any number of file or directory paths, auto-discovering every *.llm file under a directory and checking a .llm file directly
+			- auto-discovers every *.llm file under a directory path, and checks a directly given .llm file path as-is
 			→ call llmlang.cli.discover_llm_files
 			- warns to stderr and skips a path that doesn't exist, rather than failing the whole run
 			- exits with an error if no .llm files are found under any given path

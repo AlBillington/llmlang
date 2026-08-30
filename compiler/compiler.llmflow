@@ -21,7 +21,7 @@ llmlang <command>: the compiler's own CLI entry point
 				- accepts the parsed flags and the loaded config
 				- --no-coverage always forces it off, then --coverage always forces it on, then the config's own coverage value is the default
 			←---- returns whether coverage checking is active
-			- accepts any number of file or directory paths, auto-discovering every *.llm file under a directory and checking a .llm file directly
+			- auto-discovers every *.llm file under a directory path, and checks a directly given .llm file path as-is
 			→ call llmlang.cli.discover_llm_files (finds every *.llm file under a directory, honoring the built-in and config-configured exclusions)
 				- accepts a root directory and an extra set of directory names to exclude
 				- excludes .git, __pycache__, node_modules, venv, and .venv by default, plus anything the config's exclude list adds
@@ -100,9 +100,15 @@ llmlang <command>: the compiler's own CLI entry point
 				- checks whether any → call target in an @entry-point entry's reachable bullets is unresolved or ambiguous, same as build:
 					- if yes, refuses to write anything
 				- generates and overwrites the sibling .llmflow file from the current @entry-point entries and bullets, same as build; a flow-only edit needs no disposition of its own, since it can only exist as part of an entry's own bullets, already gated by that entry's own SPEC_DIVERGED
-				- accepts a fresh disposition in the manifest as a plain string, and stamps it with the entry's current spec hash and code hash
 				- a spec hash combines the entry's own text with every policy currently covering it, so a disposition goes stale whether the entry's own text changed or an applicable policy did
-				- for a manifest entry that's already stamped, keeps it only if both hashes still match the entry's current state; otherwise drops it as stale, along with any entry whose key no longer exists
+				- repeats resolution for each key already in the change manifest:
+					- checks whether the key still names a current entry:
+						- if no, drops it as orphaned
+					- for a fresh (plain-string) value case:
+						- stamps it with the entry's current spec hash and code hash
+					- for an already-stamped value case:
+						- keeps it only if both recorded hashes still match the entry's current state
+						- otherwise drops it as stale
 				- writes both the new lockfile and the updated (stamped and pruned) manifest file
 			←---- returns the built lock data
 			- exits 1 and prints the error on failure
